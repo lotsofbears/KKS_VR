@@ -24,6 +24,7 @@ namespace KKS_VR.Camera
         private Vector3 _lastPosition;
         private Quaternion _lastRotation;
         private readonly KoikatuSettings _settings;
+        private KoikatuInterpreter _interpreter;
 
         public delegate void OnMoveAction();
 
@@ -34,6 +35,7 @@ namespace KKS_VR.Camera
             _lastPosition = Vector3.zero;
             _lastRotation = Quaternion.identity;
             _settings = VR.Settings as KoikatuSettings;
+            _interpreter = VR.Interpreter as KoikatuInterpreter;
         }
 
         /// <summary>
@@ -60,9 +62,17 @@ namespace KKS_VR.Camera
             _lastPosition = position;
             _lastRotation = rotation;
 
+
             // Trim out X (pitch) and Z (roll) to prevent player from being upside down and such
-            var trimmedRotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
-            VR.Mode.MoveToPosition(position, trimmedRotation, keepHeight);
+            //var trimmedRotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+            //VR.Mode.MoveToPosition(position, trimmedRotation, keepHeight);
+
+            // And when to have fun if you are always upright ?
+            // Should be done properly through the hooks, for now a clutch,
+            if (_interpreter.CurrentScene == KoikatuInterpreter.SceneType.HScene && VRMoverH.Instance != null && _settings.FlyInH)
+                VRMoverH.Instance.MoveToInH(position);
+            else
+                VR.Mode.MoveToPosition(position, rotation, ignoreHeight: keepHeight);
             OnMove?.Invoke();
         }
 
@@ -72,9 +82,6 @@ namespace KKS_VR.Camera
         /// The position and rotation arguments should represent the pose
         /// the camera would take in the 2D version of the game.
         /// </summary>
-        /// <param name="position"></param>
-        /// <param name="rotation"></param>
-        /// <param name="keepHeight"></param>
         public void MaybeMoveTo(Vector3 position, Quaternion rotation, bool keepHeight)
         {
             MoveWithHeuristics(position, rotation, keepHeight, false);
@@ -232,7 +239,7 @@ namespace KKS_VR.Camera
         private bool IsDestinationFar(Vector3 position, Quaternion rotation)
         {
             var distance = (position - _lastPosition).magnitude;
-            var angleDistance = Mathf.DeltaAngle(rotation.eulerAngles.y, _lastRotation.eulerAngles.y);
+            var angleDistance = Mathf.Abs(Mathf.DeltaAngle(rotation.eulerAngles.y, _lastRotation.eulerAngles.y));
             return 1f < distance / 2f + angleDistance / 90f;
         }
 

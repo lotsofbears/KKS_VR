@@ -107,7 +107,7 @@ namespace KKS_VR.Features
             if (existingCollider == null)
             {
                 //Add a DB collider to the controller
-                return AddDbCollider(controllerGameObject, colliderName);
+                return AddDbCollider(controllerGameObject, colliderName, 0.05f,0f, new Vector3(0f, -0.015f, -0.06f));
             }
 
             return existingCollider;

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Valve.VR;
+using VRGIN.Core;
 
 namespace VRGIN.Controls
 {

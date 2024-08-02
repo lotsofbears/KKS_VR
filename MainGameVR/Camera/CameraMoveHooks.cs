@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
+using KKS_VR.Features;
 using UnityEngine;
 using VRGIN.Core;
 
@@ -84,7 +85,16 @@ namespace KKS_VR.Camera
         [HarmonyPostfix]
         public static void PostChangeAnimator(HSceneProc __instance, bool _isForceCameraReset, List<ChaControl> ___lstFemale)
         {
-            if (_isForceCameraReset) UpdateVRCamera(__instance, ___lstFemale, null);
+            if (POV.Instance != null)
+            {
+                POV.Instance.OnPoseChange();
+            }
+            if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
+            {
+                VRMoverH.Instance.MoveToInH();
+            }
+            else if (_isForceCameraReset)
+                UpdateVRCamera(__instance, ___lstFemale, null);
         }
 
         [HarmonyPatch("ChangeCategory")]
@@ -98,7 +108,16 @@ namespace KKS_VR.Camera
         [HarmonyPostfix]
         public static void PostChangeCategory(HSceneProc __instance, List<ChaControl> ___lstFemale, float __state)
         {
-            UpdateVRCamera(__instance, ___lstFemale, __state);
+            if (POV.Instance != null)
+            {
+                POV.Instance.OnSpotChange();
+            }
+            if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
+            {
+                VRMoverH.Instance.MoveToInH();
+            }
+            else
+                UpdateVRCamera(__instance, ___lstFemale, __state);
         }
 
 

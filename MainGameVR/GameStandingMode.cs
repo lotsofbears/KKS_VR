@@ -17,6 +17,7 @@ namespace KKS_VR
         public override IEnumerable<Type> Tools { get; } = new[]
         {
             typeof(VRGIN.Controls.Tools.MenuTool),
+            // Uncommented some fix, and  broke it a bit, but oh well, useless feature anyway.
             //typeof(Controls.KoikatuWarpTool),
             typeof(Controls.GameplayTool)
         };

@@ -204,7 +204,7 @@ namespace VRGIN.Controls
             if (!keepTool)
             {
                 ToolEnabled = false;
-                _AlphaConcealer.SetActive(false);
+                //_AlphaConcealer.SetActive(false);
             }
         }
 
@@ -213,7 +213,7 @@ namespace VRGIN.Controls
             if (!keepTool)
             {
                 ToolEnabled = true;
-                _AlphaConcealer.SetActive(true);
+                //_AlphaConcealer.SetActive(true);
             }
         }
 
@@ -228,8 +228,11 @@ namespace VRGIN.Controls
             SteamVR_Events.RenderModelLoaded.Listen(_OnRenderModelLoaded);
             Tracking = gameObject.AddComponent<SteamVR_Behaviour_Pose>();
             _Input = new DeviceLegacyAdapter(Tracking);
+
+            // Rumble is broken somewhere on openxr side.
             Rumble = gameObject.AddComponent<RumbleManager>();
             gameObject.AddComponent<BodyRumbleHandler>();
+
             gameObject.AddComponent<MenuHandler>();
             Model = new GameObject("Model").AddComponent<SteamVR_RenderModel>();
             Model.shader = VRManager.Instance.Context.Materials.StandardShader;
@@ -241,8 +244,11 @@ namespace VRGIN.Controls
             BuildCanvas();
             Collider = new GameObject("Collider").AddComponent<BoxCollider>();
             Collider.transform.SetParent(transform, false);
-            Collider.center = new Vector3(0f, -0.02f, -0.06f);
-            Collider.size = new Vector3(0.05f, 0.05f, 0.2f);
+
+            Collider.center = new Vector3(0f, -0.01f, -0.04f);
+            Collider.size = new Vector3(0.05f, 0.04f, 0.05f);
+            //Collider.center = new Vector3(0f, -0.02f, -0.06f);
+            //Collider.size = new Vector3(0.05f, 0.05f, 0.2f);
             Collider.isTrigger = true;
             gameObject.AddComponent<Rigidbody>().isKinematic = true;
         }
@@ -324,15 +330,15 @@ namespace VRGIN.Controls
             }
             if (_Lock != null && _Lock.IsValid) return;
             if (Input.GetPressDown(EVRButtonId.k_EButton_ApplicationMenu)) appButtonPressTime = Time.unscaledTime;
-            if (Input.GetPress(EVRButtonId.k_EButton_ApplicationMenu) && Time.unscaledTime - appButtonPressTime > 0.5f)
-            {
-                ShowHelp();
-                appButtonPressTime = null;
-            }
+            //if (Input.GetPress(EVRButtonId.k_EButton_ApplicationMenu) && Time.unscaledTime - appButtonPressTime > 0.5f)
+            //{
+            //    ShowHelp();
+            //    appButtonPressTime = null;
+            //}
 
             if (!Input.GetPressUp(EVRButtonId.k_EButton_ApplicationMenu)) return;
-            if (helpShown)
-                HideHelp();
+            //if (helpShown)
+            //    HideHelp();
             else
             {
                 if ((bool)ActiveTool) ActiveTool.enabled = false;
@@ -387,18 +393,26 @@ namespace VRGIN.Controls
             var canvas = _Canvas = new GameObject("ToolIconCanvas").AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             canvas.transform.SetParent(transform, false);
+
             canvas.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 950f);
             canvas.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 950f);
-            canvas.transform.localPosition = new Vector3(0f, -0.02725995f, 0.0279f);
-            canvas.transform.localRotation = Quaternion.Euler(30f, 180f, 180f);
-            canvas.transform.localScale = new Vector3(4.930151E-05f, 4.930148E-05f, 0f);
+
+
+            // Pico 4 setup.
+            canvas.transform.localPosition = new Vector3(0f, 0f, -0.025f);//(0f, -0.02f, -0.02f);//Vector3(0, -0.02725995f, 0.0279f);
+            canvas.transform.localRotation = Quaternion.Euler(120f, 0, 0); ;//Quaternion.Euler(30, 180, 180);
+            canvas.transform.localScale = new Vector3(0.00002f, 0.00002f, 0);  //(4.930151e-05f, 4.930148e-05f, 0);
+
+            //canvas.transform.localPosition = new Vector3(0f, -0.02725995f, 0.0279f);
+            //canvas.transform.localRotation = Quaternion.Euler(30f, 180f, 180f);
+            //canvas.transform.localScale = new Vector3(4.930151E-05f, 4.930148E-05f, 0f);
             canvas.gameObject.layer = 0;
-            _AlphaConcealer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            _AlphaConcealer.transform.SetParent(transform, false);
-            _AlphaConcealer.transform.localScale = new Vector3(0.05f, 0.0001f, 0.05f);
-            _AlphaConcealer.transform.localPosition = new Vector3(0, -0.0303f, 0.0142f);
-            _AlphaConcealer.transform.localRotation = Quaternion.Euler(60, 0, 0);
-            _AlphaConcealer.GetComponent<Collider>().enabled = false;
+            //_AlphaConcealer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //_AlphaConcealer.transform.SetParent(transform, false);
+            //_AlphaConcealer.transform.localScale = new Vector3(0.05f, 0.0001f, 0.05f);
+            //_AlphaConcealer.transform.localPosition = new Vector3(0, -0.0303f, 0.0142f);
+            //_AlphaConcealer.transform.localRotation = Quaternion.Euler(60, 0, 0);
+            //_AlphaConcealer.GetComponent<Collider>().enabled = false;
         }
 
         private void CreateToolCanvas(Tool tool)

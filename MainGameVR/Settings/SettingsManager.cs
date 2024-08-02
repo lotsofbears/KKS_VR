@@ -27,6 +27,7 @@ namespace KKS_VR.Settings
         public const string SectionRoaming = "1. Roaming";
         public const string SectionCaress = "1. Caress";
         public const string SectionEventScenes = "1. Event scenes";
+        public const string SectionPov = "4. Pov";
 
         public static ConfigEntry<bool> EnableBoop { get; private set; }
 
@@ -160,6 +161,44 @@ namespace KKS_VR.Settings
             EnableBoop = config.Bind(SectionGeneral, "Enable Boop", true,
                 "Adds colliders to the controllers so you can boop things.\nGame restart required for change to take effect.");
 
+
+            var enablePOV = config.Bind(SectionPov, "EnablePOV", true,
+                "Switch POV between characters in free H scenes (only works in Hand Tool)");
+            Tie(enablePOV, v => settings.EnablePOV = v);
+
+            var HeadPosPoVY = config.Bind(SectionPov, "Y Offset", 0f,
+                new ConfigDescription(
+                    "Offset from the head on Y axis.",
+                    new AcceptableValueRange<float>(-1f, 1f)));
+            Tie(HeadPosPoVY, v => settings.PositionOffsetY = v);
+
+            var HeadPosPoVZ = config.Bind(SectionPov, "Z Offset", 0f,
+                new ConfigDescription(
+                    "Z Offset",
+                    new AcceptableValueRange<float>(-1f, 1f)));
+            Tie(HeadPosPoVZ, v => settings.PositionOffsetZ = v);
+
+            var hideHeadInPOV = config.Bind(SectionPov, "HideHead", true,
+                "Hide the corresponding head when the camera is in it.");
+            Tie(hideHeadInPOV, v => settings.HideHeadInPOV = v);
+
+            var flyInPov = config.Bind(SectionPov, "FlyInPov", true,
+                "On position (or location) change, instead of teleporting, fly toward new position.");
+            Tie(flyInPov, v => settings.FlyInPov = v);
+
+            var autoEnter = config.Bind(SectionPov, "AutoEnterPov", true,
+                "If disabled, on position change will be automatically activated when there is a dude.");
+            Tie(autoEnter, v => settings.AutoEnterPov = v);
+
+            var flyInH = config.Bind(SectionCaress, "CameraInH", true,
+                "Instead of teleporting to the new position, progressively moves camera to it.");
+            Tie(flyInH, v => settings.FlyInH = v);
+
+            var flightSpeed = config.Bind(SectionCaress, "CameraInH Speed", 1f,
+                new ConfigDescription(
+                    "Speed of progressive movement of the camera.",
+                    new AcceptableValueRange<float>(0.1f, 2f)));
+            Tie(flightSpeed, v => settings.FlightSpeed = v);
             KeySetsConfig keySetsConfig = null;
 
             void updateKeySets()
@@ -236,6 +275,7 @@ namespace KKS_VR.Settings
         private readonly ConfigEntry<AssignableFunction> _right;
         private readonly ConfigEntry<AssignableFunction> _left;
         private readonly ConfigEntry<AssignableFunction> _center;
+        private readonly ConfigEntry<AssignableFunction> _buttonAX;
 
         public KeySetConfig(ConfigFile config, Action onUpdate, string section, bool isH, bool advanced)
         {

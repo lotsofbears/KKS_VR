@@ -37,7 +37,10 @@ namespace KKS_VR.Features
                     // this case, it's important that the head disappears with
                     // 0 frame delay, so we proactively deactive it here.
                     _control.objHead.SetActive(false);
-                    foreach (var hair in _control.objHair) hair.SetActive(false);
+                    foreach (var hair in _control.objHair)
+                    {
+                        hair.SetActive(false);
+                    }
                 }
             }
             else
@@ -47,14 +50,17 @@ namespace KKS_VR.Features
         }
     }
 
-    [HarmonyPatch(typeof(ChaControl))]
     internal class HideMaleHeadPatches
     {
-        [HarmonyPatch(nameof(ChaControl.Initialize))]
         [HarmonyPostfix]
-        private static void PostInitialize(ChaControl __instance)
+        [HarmonyPatch(typeof(ChaControl), nameof(ChaControl.Initialize))]
+        static void PostInitialize(ChaControl __instance)
         {
-            if (__instance.sex == 0) __instance.GetOrAddComponent<HideMaleHead>();
+            if (__instance.sex == 0 && __instance.transform.parent.name.Equals("HScene"))
+            {
+                // In H we do this more lazily/appropriately through POV.
+                __instance.GetOrAddComponent<HideMaleHead>();
+            }
         }
     }
 }

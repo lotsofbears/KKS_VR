@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using KKS_VR.Camera;
+using KKS_VR.Features;
+using UnityEngine;
 using VRGIN.Core;
 
 namespace KKS_VR.Interpreters
@@ -8,6 +10,8 @@ namespace KKS_VR.Interpreters
         private bool _active;
         private HSceneProc _proc;
         private Caress.VRMouth _vrMouth;
+        POV _pov;
+        VRMoverH _vrMoverH;
 
         private Color _currentBackgroundColor;
         private bool _currentShowMap;
@@ -43,6 +47,10 @@ namespace KKS_VR.Interpreters
             {
                 _vrMouth = VR.Camera.gameObject.AddComponent<Caress.VRMouth>();
                 AddControllerComponent<Caress.CaressController>();
+                _vrMoverH = VR.Camera.gameObject.AddComponent<VRMoverH>();
+                _vrMoverH.Initialize(proc);
+                _pov = VR.Camera.gameObject.AddComponent<POV>();
+                _pov.Initialize(proc);
                 _proc = proc;
                 _active = true;
             }
@@ -53,7 +61,9 @@ namespace KKS_VR.Interpreters
             if (_active)
             {
                 VR.Camera.SteamCam.camera.clearFlags = CameraClearFlags.Skybox;
-                Object.Destroy(_vrMouth);
+                GameObject.Destroy(_pov);
+                GameObject.Destroy(_vrMouth);
+                GameObject.Destroy(_vrMoverH);
                 DestroyControllerComponent<Caress.CaressController>();
                 _proc = null;
                 _active = false;

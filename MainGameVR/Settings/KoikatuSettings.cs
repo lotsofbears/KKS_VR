@@ -126,6 +126,15 @@ namespace KKS_VR.Settings
         }
 
         private float _NearClipPlane;
+
+        public bool FlyInH { get; set; }
+        public float FlightSpeed { get; set; }
+        public bool EnablePOV { get; set; }
+        public float PositionOffsetY { get; set; }
+        public float PositionOffsetZ { get; set; }
+        public bool HideHeadInPOV { get; set; }
+        public bool FlyInPov { get; set; }
+        public bool AutoEnterPov { get; set; }
     }
 
     public class KeySet

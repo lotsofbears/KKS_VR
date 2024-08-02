@@ -13,13 +13,9 @@ namespace KKS_VR.Caress
         private float? _startTime; // null iff not kissing
         private bool _prevEntryConditionMet = true;
 
-        public bool Step(
-            float currentTime,
-            Vector3 femaleFromHmd,
-            Vector3 hmdFromFemale,
-            float femaleFaceAngleY)
+        public bool Step(float currentTime, Vector3 femaleFromHmd, Vector3 hmdFromFemale)
         {
-            var entryConditionMet = EntryScore(femaleFromHmd, hmdFromFemale, femaleFaceAngleY) < 0;
+            var entryConditionMet = EntryScore(femaleFromHmd, hmdFromFemale) < 0;
             bool result;
             if (_startTime is float startTime)
             {
@@ -35,8 +31,13 @@ namespace KKS_VR.Caress
             _prevEntryConditionMet = entryConditionMet;
 
             if (result)
+            {
                 _startTime = _startTime ?? currentTime;
-            else if (_startTime != null) _startTime = null;
+            }
+            else if (_startTime != null)
+            {
+                _startTime = null;
+            }
             return result;
         }
 
@@ -46,9 +47,9 @@ namespace KKS_VR.Caress
             _prevEntryConditionMet = true;
         }
 
-        private static float EntryScore(Vector3 femaleFromHmd, Vector3 hmdFromFemale, float femaleFaceAngle)
+        private static float EntryScore(Vector3 femaleFromHmd, Vector3 hmdFromFemale)
         {
-            var total = OneSidedScore(femaleFromHmd) + OneSidedScore(hmdFromFemale) + 0.1f * Mathf.Abs(femaleFaceAngle);
+            var total = OneSidedScore(femaleFromHmd) + OneSidedScore(hmdFromFemale) + 0.1f;
             return total - 2.0f;
         }
 
