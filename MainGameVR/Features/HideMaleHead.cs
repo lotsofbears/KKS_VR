@@ -50,13 +50,14 @@ namespace KKS_VR.Features
         }
     }
 
+    [HarmonyPatch(typeof(ChaControl))]
     internal class HideMaleHeadPatches
     {
+        [HarmonyPatch(nameof(ChaControl.Initialize))]
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(ChaControl), nameof(ChaControl.Initialize))]
         static void PostInitialize(ChaControl __instance)
         {
-            if (__instance.sex == 0 && __instance.transform.parent.name.Equals("HScene"))
+            if (__instance.sex == 0 && !__instance.transform.parent.name.Equals("HScene"))
             {
                 // In H we do this more lazily/appropriately through POV.
                 __instance.GetOrAddComponent<HideMaleHead>();

@@ -67,8 +67,6 @@ namespace KKS_VR.Camera
             //var trimmedRotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
             //VR.Mode.MoveToPosition(position, trimmedRotation, keepHeight);
 
-            // And when to have fun if you are always upright ?
-            // Should be done properly through the hooks, for now a clutch,
             if (_interpreter.CurrentScene == KoikatuInterpreter.SceneType.HScene && VRMoverH.Instance != null && _settings.FlyInH)
                 VRMoverH.Instance.MoveToInH(position);
             else
@@ -92,7 +90,7 @@ namespace KKS_VR.Camera
         /// </summary>
         public void MaybeMoveADV(ADV.TextScenario textScenario, Vector3 position, Quaternion rotation, bool keepHeight)
         {
-            var advFade = new Traverse(textScenario).Field<ADVFade>("advFade").Value;
+            var advFade = textScenario.advFade;// new Traverse(textScenario).Field<ADVFade>("advFade").Value;
 
             var closerPosition = AdjustAdvPosition(textScenario, position, rotation);
 
@@ -216,6 +214,7 @@ namespace KKS_VR.Camera
 
         private IEnumerator ImpersonateCo(bool isFadingOut, Transform head)
         {
+
             // For reasons I don't understand, the male may not have a correct pose
             // until later in the update loop.
             yield return new WaitForEndOfFrame();
@@ -229,8 +228,12 @@ namespace KKS_VR.Camera
         private void MoveWithHeuristics(Vector3 position, Quaternion rotation, bool keepHeight, bool pretendFading)
         {
             var fade = Manager.Scene.sceneFadeCanvas;
-            var fadeOk = fade.isEnd; //(fade._Fade == SimpleFade.Fade.Out) ^ fade.IsEnd;
-            if (pretendFading || fadeOk || IsDestinationFar(position, rotation))
+
+            // No clue what this hook should be about, in KKS it doesn't work (always true).
+            // KK has no problem with it('s alternative).
+
+            //var fadeOk = fade.isEnd; //(fade._Fade == SimpleFade.Fade.Out) ^ fade.IsEnd;
+            if (pretendFading || IsDestinationFar(position, rotation))
                 MoveTo(position, rotation, keepHeight);
             else
                 VRLog.Debug("Not moving because heuristic conditions are not met");

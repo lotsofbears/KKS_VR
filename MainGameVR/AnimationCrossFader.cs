@@ -101,7 +101,7 @@ namespace KKS_VR
             {
                 // Make the animation cross fade from the current one, uses stock game code
                 __instance.isCrossFade = true;
-                __instance.transitionDuration = Random.Range(0.1f, 0.3f);
+                __instance.transitionDuration = Random.Range(0.2f, 0.5f);  //(0.1f, 0.3f);
             }
 
             #region Disable screen fade effect when ADV is changing character animations

@@ -29,23 +29,24 @@ namespace VRGIN.Controls
             _RumbleSessions.Clear();
         }
 
-        protected override void OnUpdate()
-        {
-            base.OnUpdate();
-            if (_RumbleSessions.Count <= 0) return;
-            var rumbleSession = _RumbleSessions.Max();
-            var num = Time.unscaledTime - _LastImpulse;
-            if (!_Controller.Tracking.isValid || !(num >= rumbleSession.MilliInterval * 0.001f) || !(num > 0.0050000004f)) return;
-            if (rumbleSession.IsOver)
-            {
-                _RumbleSessions.Remove(rumbleSession);
-                return;
-            }
+        // Broken in this implementation of OpenXR (probably).
+        //protected override void OnUpdate()
+        //{
+        //    base.OnUpdate();
+        //    if (_RumbleSessions.Count <= 0) return;
+        //    var rumbleSession = _RumbleSessions.Max();
+        //    var num = Time.unscaledTime - _LastImpulse;
+        //    if (!_Controller.Tracking.isValid || !(num >= rumbleSession.MilliInterval * 0.001f) || !(num > 0.0050000004f)) return;
+        //    if (rumbleSession.IsOver)
+        //    {
+        //        _RumbleSessions.Remove(rumbleSession);
+        //        return;
+        //    }
 
-            if (VR.Settings.Rumble) _Controller.Input.TriggerHapticPulse(rumbleSession.MicroDuration);
-            _LastImpulse = Time.unscaledTime;
-            rumbleSession.Consume();
-        }
+        //    if (VR.Settings.Rumble) _Controller.Input.TriggerHapticPulse(rumbleSession.MicroDuration);
+        //    _LastImpulse = Time.unscaledTime;
+        //    rumbleSession.Consume();
+        //}
 
         public void StartRumble(IRumbleSession session)
         {

@@ -85,9 +85,9 @@ namespace KKS_VR.Camera
         [HarmonyPostfix]
         public static void PostChangeAnimator(HSceneProc __instance, bool _isForceCameraReset, List<ChaControl> ___lstFemale)
         {
-            if (POV.Instance != null)
+            if (PoV.Instance != null)
             {
-                POV.Instance.OnPoseChange();
+                PoV.Instance.OnPoseChange();
             }
             if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
             {
@@ -108,9 +108,9 @@ namespace KKS_VR.Camera
         [HarmonyPostfix]
         public static void PostChangeCategory(HSceneProc __instance, List<ChaControl> ___lstFemale, float __state)
         {
-            if (POV.Instance != null)
+            if (PoV.Instance != null)
             {
-                POV.Instance.OnSpotChange();
+                PoV.Instance.OnSpotChange();
             }
             if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
             {

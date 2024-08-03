@@ -95,31 +95,40 @@ namespace KKS_VR.Camera
 
         public static void SetIdealPositionAndRotation(Transform t, Vector3 position, Quaternion rotation)
         {
-            if (position.Equals(Vector3.zero))
+            // The "Better" solution doesn't work at all.
+            if (!position.Equals(Vector3.zero))
             {
-                VRLog.Warn("position=0,0,0 in " + new StackTrace());
-                return;
-            }
-
-            if (TalkScene.isPaly)
-            {
-                // todo keep old height?
-                var heroine = TalkScene.instance.targetHeroine.transform;
-                var newPosition = heroine.TransformPoint(new Vector3(0, GetPlayerHeight(), TalkSceneInterpreter.TalkDistance));
-                if (HeadIsAwayFromPosition(newPosition))
-                    GetIdealTransformFor(t).SetPositionAndRotation(newPosition, heroine.rotation * Quaternion.Euler(0, 180f, 0));
-            }
-            else
-            {
-                var add = rotation.eulerAngles.normalized * 1f;
-                add.y = 0;
-                var added = position + add;
-
-                // breaks position at talk scene start
-                //if (HeadIsAwayFromPosition(added))
-                GetIdealTransformFor(t).SetPositionAndRotation(added, rotation);
+                GetIdealTransformFor(t).SetPositionAndRotation(position, rotation);
             }
         }
+        //public static void SetIdealPositionAndRotation(Transform t, Vector3 position, Quaternion rotation)
+        //{
+        //    if (position.Equals(Vector3.zero))
+        //    {
+        //        VRLog.Warn("position=0,0,0 in " + new StackTrace());
+        //        return;
+        //    }
+
+        //    if (TalkScene.isPaly)
+        //    {
+        //        VRLog.Debug($"SetIdealPositionAndRotation[isPaly]");
+        //        // todo keep old height?
+        //        var heroine = TalkScene.instance.targetHeroine.transform;
+        //        var newPosition = heroine.TransformPoint(new Vector3(0, GetPlayerHeight(), TalkSceneInterpreter.TalkDistance));
+        //        if (HeadIsAwayFromPosition(newPosition))
+        //            GetIdealTransformFor(t).SetPositionAndRotation(newPosition, rotation);// , heroine.rotation * Quaternion.Euler(0, 180f, 0));
+        //    }
+        //    else
+        //    {
+        //        var add = rotation.eulerAngles.normalized * 1f;
+        //        add.y = 0;
+        //        var added = position + add;
+
+        //        // breaks position at talk scene start
+        //        //if (HeadIsAwayFromPosition(added))
+        //        GetIdealTransformFor(t).SetPositionAndRotation(added, rotation);
+        //    }
+        //}
 
         public static float GetPlayerHeight()
         {
@@ -137,7 +146,7 @@ namespace KKS_VR.Camera
 
         public static float GetDistanceFromCurrentHeadPos(Vector3 targetPosition)
         {
-            var dist = Vector3.Distance(targetPosition, VR.Camera.SteamCam.head.position);
+            var dist = Vector3.Distance(targetPosition, VR.Camera.Head.position);
             VRLog.Debug("Distance of head from pos={0} is {1}", targetPosition, dist);
             return dist;
         }

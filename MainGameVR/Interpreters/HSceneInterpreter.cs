@@ -10,7 +10,7 @@ namespace KKS_VR.Interpreters
         private bool _active;
         private HSceneProc _proc;
         private Caress.VRMouth _vrMouth;
-        POV _pov;
+        PoV _pov;
         VRMoverH _vrMoverH;
 
         private Color _currentBackgroundColor;
@@ -49,7 +49,7 @@ namespace KKS_VR.Interpreters
                 AddControllerComponent<Caress.CaressController>();
                 _vrMoverH = VR.Camera.gameObject.AddComponent<VRMoverH>();
                 _vrMoverH.Initialize(proc);
-                _pov = VR.Camera.gameObject.AddComponent<POV>();
+                _pov = VR.Camera.gameObject.AddComponent<PoV>();
                 _pov.Initialize(proc);
                 _proc = proc;
                 _active = true;

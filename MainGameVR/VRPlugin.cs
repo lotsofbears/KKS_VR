@@ -144,10 +144,14 @@ namespace KKS_VR
 
         private static void TweakShadowSettings()
         {
+            // This helps environment shadows a bit, and brings flickering chara shadows, while also degrading them.
+            // Grab "KKS_BetterShadowQualitySettings.dll" from HongFire patch, it does the job much better.
+            // Still negatively affects chara shadows, to lesser extent though.
+
             // Default shadows look too wobbly in VR.
-            QualitySettings.shadowProjection = ShadowProjection.StableFit;
-            QualitySettings.shadowCascades = 4;
-            QualitySettings.shadowCascade4Split = new Vector4(0.05f, 0.1f, 0.2f);
+            //QualitySettings.shadowProjection = ShadowProjection.StableFit;
+            //QualitySettings.shadowCascades = 4;
+            //QualitySettings.shadowCascade4Split = new Vector4(0.05f, 0.1f, 0.2f);
         }
 
         private static class NativeMethods

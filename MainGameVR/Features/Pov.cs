@@ -9,8 +9,6 @@ using UnityEngine;
 using VRGIN.Controls;
 using VRGIN.Core;
 using VRGIN.Helpers;
-using KKAPI;
-using UniRx;
 using Manager;
 using KKS_VR.Caress;
 using KKS_VR.Settings;
@@ -20,12 +18,12 @@ using static Valve.VR.EVRButtonId;
 
 namespace KKS_VR.Features
 {
-    // No AX buttons in this VRGIN apparently, oh well.
+    // No AX buttons in this VRGIN apparently, they are being read as joystick(touchpad) click, oh well.
     // Exit from Pov is a stub. 
-    public class POV : ProtectedBehaviour
+    public class PoV : ProtectedBehaviour
     {
 
-        public static POV Instance;
+        public static PoV Instance;
         /// <summary>
         /// girlPOV is NOT set proactively, use "active" to monitor state.
         /// </summary>
@@ -327,7 +325,7 @@ namespace KKS_VR.Features
             {
                 NewPosition();
             }
-            else if (!_newAttachPoint && (_controller.Input.GetPress(k_EButton_Grip) || _otherController.Input.GetPress(k_EButton_Grip)))
+            else if (_controller.Input.GetPress(k_EButton_Grip) || _otherController.Input.GetPress(k_EButton_Grip))
             {
                 _wasAway = true;
                 if (_controller.Input.GetPressUp(k_EButton_SteamVR_Touchpad) || _otherController.Input.GetPressUp(k_EButton_SteamVR_Touchpad))
@@ -409,7 +407,7 @@ namespace KKS_VR.Features
         private void HideHead()
         {
             // Every so often a shadow of a headless body during the kiss disturbs me deeply. So we don't hide it during kiss.
-            if (_target.objTop.activeSelf && VRMouth._kissCoShouldEnd == false)// && !_hand.isKiss)
+            if (_target.objTop.activeSelf && VRMouth._kissCoShouldEnd != false)// && !_hand.isKiss)
             {
                 var head = _target.objHead.transform;
                 var wasVisible = _target.fileStatus.visibleHeadAlways;

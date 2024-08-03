@@ -36,11 +36,11 @@ namespace KKS_VR.Camera
         public void MoveToInH(Vector3 position = new Vector3())
         {
             VRLog.Debug($"MoveToInH {_settings.FlyInPov} {_settings.AutoEnterPov}");
-            if (POV.Active)
+            if (PoV.Active)
             {
                 if (_settings.FlyInPov)
                 {
-                    POV.Active = false;
+                    PoV.Active = false;
                     StartCoroutine(FlyToPov());
                 }
             }
@@ -83,7 +83,7 @@ namespace KKS_VR.Camera
             // We wait for the lag of position change.
             yield return null;
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
-            POV.Instance.StartPov();
+            PoV.Instance.StartPov();
         }
         private IEnumerator FlyTowardPosition(Vector3 position)
         {
