@@ -21,16 +21,18 @@ namespace KKS_VR.Camera
         public static VRMoverH Instance;
         private Transform _poi;
         private Transform _eyes;
+        private Transform _chara;
         private HFlag _hFlag;
         internal KoikatuSettings _settings;
 
         public void Initialize(HSceneProc proc)
         {
             Instance = this;
-            var chaControl = Traverse.Create(proc).Field("lstFemale").GetValue<List<ChaControl>>().FirstOrDefault();
+            var chara = Traverse.Create(proc).Field("lstFemale").GetValue<List<ChaControl>>().FirstOrDefault();
             _hFlag = Traverse.Create(proc).Field("flags").GetValue<HFlag>();
-            _poi = chaControl.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_spine01/cf_j_spine02/cf_j_spine03/cf_d_backsk_00");
-            _eyes = chaControl.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
+            _poi = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_spine01/cf_j_spine02/cf_j_spine03/cf_d_backsk_00");
+            _eyes = chara.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
+            _chara = chara.transform;
             _settings = VR.Context.Settings as KoikatuSettings;
         }
         public void MoveToInH(Vector3 position = new Vector3())
@@ -94,16 +96,16 @@ namespace KKS_VR.Camera
             var origin = VR.Camera.Origin;
             var head = VR.Camera.Head;
             var poi = _poi;
-            VRMouth.NoKissingAllowed = true;
-            if (poi.position.y < 1f)
+            VRMouth.NoActionAllowed = true;
+            if (_eyes.position.y - _chara.position.y < 0.8f)
             {
                 // Not standing position(probably). For now we simply fly to the side.
                 var leftSide = Vector3.Distance(poi.position + poi.right * 0.001f, head.position);
                 var rightSide = Vector3.Distance(poi.position + poi.right * -0.001f, head.position);
                 if (leftSide < rightSide)
-                    position = poi.position + poi.right * 0.3f;
+                    position = poi.TransformPoint(new Vector3(0.3f, 0f, 0f));
                 else
-                    position = poi.position + poi.right * -0.3f;
+                    position = poi.TransformPoint(new Vector3(-0.3f, 0f, 0f));
                 position.y += 0.15f;
             }
             else
@@ -131,7 +133,7 @@ namespace KKS_VR.Camera
                     break;
                 yield return new WaitForEndOfFrame();
             }
-            VRMouth.NoKissingAllowed = false;
+            VRMouth.NoActionAllowed = false;
             VRLog.Debug($"EndOfFlight");
         }
         private IEnumerator FlyTowardPoi()
@@ -144,16 +146,16 @@ namespace KKS_VR.Camera
             var origin = VR.Camera.Origin;
             var head = VR.Camera.Head;
             var poi = _poi;
-            VRMouth.NoKissingAllowed = true;
-            if (poi.position.y < 1f)
+            VRMouth.NoActionAllowed = true;
+            if (_eyes.position.y - _chara.position.y < 0.8f)
             {
                 // Not standing position(probably). For now we simply fly to the side.
                 var leftSide = Vector3.Distance(poi.position + poi.right * 0.001f, head.position);
                 var rightSide = Vector3.Distance(poi.position + poi.right * -0.001f, head.position);
                 if (leftSide < rightSide)
-                    position = poi.position + poi.right * 0.3f;
+                    position = poi.TransformPoint(new Vector3(0.3f, 0f, 0f));
                 else
-                    position = poi.position + poi.right * -0.3f;
+                    position = poi.TransformPoint(new Vector3(-0.3f, 0f, 0f));
                 position.y += 0.15f;
             }
             else
@@ -178,7 +180,7 @@ namespace KKS_VR.Camera
                     break;
                 yield return new WaitForEndOfFrame();
             }
-            VRMouth.NoKissingAllowed = false;
+            VRMouth.NoActionAllowed = false;
             VRLog.Debug($"EndOfFlight");
         }
     }

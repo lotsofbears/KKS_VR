@@ -1,4 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEngine;
+
+using VRGIN.Core;
 
 namespace KKS_VR.Caress
 {
@@ -10,12 +16,16 @@ namespace KKS_VR.Caress
     /// </summary>
     public class LongDistanceKissMachine
     {
-        private float? _startTime; // null iff not kissing
-        private bool _prevEntryConditionMet = true;
+        float? _startTime; // null if not kissing
+        bool _prevEntryConditionMet = true;
 
-        public bool Step(float currentTime, Vector3 femaleFromHmd, Vector3 hmdFromFemale)
+        public bool Step(
+            float currentTime,
+            Vector3 femaleFromHmd,
+            Vector3 hmdFromFemale,
+            float femaleFaceAngleY)
         {
-            var entryConditionMet = EntryScore(femaleFromHmd, hmdFromFemale) < 0;
+            bool entryConditionMet = EntryScore(femaleFromHmd, hmdFromFemale, femaleFaceAngleY) < 0;
             bool result;
             if (_startTime is float startTime)
             {
@@ -47,9 +57,9 @@ namespace KKS_VR.Caress
             _prevEntryConditionMet = true;
         }
 
-        private static float EntryScore(Vector3 femaleFromHmd, Vector3 hmdFromFemale)
+        private static float EntryScore(Vector3 femaleFromHmd, Vector3 hmdFromFemale, float femaleFaceAngle)
         {
-            var total = OneSidedScore(femaleFromHmd) + OneSidedScore(hmdFromFemale) + 0.1f;
+            var total = OneSidedScore(femaleFromHmd) + OneSidedScore(hmdFromFemale) + 0.1f * Mathf.Abs(femaleFaceAngle);
             return total - 2.0f;
         }
 

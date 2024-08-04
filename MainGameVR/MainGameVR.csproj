@@ -201,6 +201,7 @@
     <Compile Include="AnimationCrossFader.cs" />
     <Compile Include="Camera\VREffector.cs" />
     <Compile Include="Camera\VRMoverH.cs" />
+    <Compile Include="Caress\CaressHelper.cs" />
     <Compile Include="Caress\Undresser.cs" />
     <Compile Include="Features\Pov.cs" />
     <Compile Include="Fixes\ReduceAssetUnloads.cs" />

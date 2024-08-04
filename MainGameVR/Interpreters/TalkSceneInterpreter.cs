@@ -8,7 +8,7 @@ namespace KKS_VR.Interpreters
     internal class TalkSceneInterpreter : SceneInterpreter
     {
         private Canvas _canvasBack;
-        public static float TalkDistance = 0.65f;
+        public static float TalkDistance = 0.55f;
 
         public override void OnDisable()
         {
@@ -53,6 +53,7 @@ namespace KKS_VR.Interpreters
             // The default camera location is a bit too far for a friendly
             // conversation.
             var heroine = talkScene.targetHeroine.transform;
+            TalkDistance = 0.35f + Random.value * 0.25f;
             VRCameraMover.Instance.MoveTo(
                 heroine.TransformPoint(new Vector3(0, ActionCameraControl.GetPlayerHeight(), TalkDistance)),
                 heroine.rotation * Quaternion.Euler(0, 180f, 0),

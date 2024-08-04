@@ -95,7 +95,7 @@ namespace KKS_VR.Camera
 
         public static void SetIdealPositionAndRotation(Transform t, Vector3 position, Quaternion rotation)
         {
-            // The "Better" solution doesn't work at all.
+            // No clue how it all works, but this way atleast it works.
             if (!position.Equals(Vector3.zero))
             {
                 GetIdealTransformFor(t).SetPositionAndRotation(position, rotation);
