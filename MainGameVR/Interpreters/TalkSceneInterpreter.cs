@@ -52,11 +52,11 @@ namespace KKS_VR.Interpreters
 
             // The default camera location is a bit too far for a friendly
             // conversation.
-            var heroine = talkScene.targetHeroine.transform;
-            TalkDistance = 0.35f + Random.value * 0.25f;
+            var heroine = talkScene.targetHeroine;
+            TalkDistance = 0.35f + (heroine.isGirlfriend ? 0f : 0.1f) + (0.15f - (int)heroine.HExperience * 0.05f); //  + Random.value * 0.25f;
             VRCameraMover.Instance.MoveTo(
-                heroine.TransformPoint(new Vector3(0, ActionCameraControl.GetPlayerHeight(), TalkDistance)),
-                heroine.rotation * Quaternion.Euler(0, 180f, 0),
+                heroine.transform.TransformPoint(new Vector3(0, ActionCameraControl.GetPlayerHeight(), TalkDistance)),
+                heroine.transform.rotation * Quaternion.Euler(0, 180f, 0),
                 false);
         }
 

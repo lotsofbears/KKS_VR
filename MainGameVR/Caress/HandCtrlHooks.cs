@@ -13,7 +13,7 @@ namespace KKS_VR.Caress
     /// faking mouse clicks using VR.Input, but is safer because it doesn't
     /// accidentally interact with the game UI.
     /// </summary>
-    internal class HandCtrlHooks
+    public class HandCtrlHooks
     {
         private static HandCtrlHooks _instance;
 

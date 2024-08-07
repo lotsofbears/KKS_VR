@@ -8,6 +8,7 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using KKAPI.Utilities;
 using KKS_VR.Settings;
+using Unity.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Motion = Illusion.Game.Elements.EasyLoader.Motion;
@@ -164,14 +165,14 @@ namespace KKS_VR
             }
 
 #if DEBUG
-            [HarmonyPrefix]
-            [HarmonyWrapSafe]
-            [HarmonyPatch(typeof(CrossFade), nameof(CrossFade.FadeStart))]
-            public static void DebugCrossFadeStartHook(CrossFade __instance, float time)
-            {
-                if (__instance.texBase != null)
-                    VRPlugin.Logger.LogWarning($"CrossFade.FadeStart called (obj={__instance.GetFullPath()} time={time}) from:\n{new StackTrace(2)}");
-            }
+            //[HarmonyPrefix]
+            //[HarmonyWrapSafe]
+            //[HarmonyPatch(typeof(CrossFade), nameof(CrossFade.FadeStart))]
+            //public static void DebugCrossFadeStartHook(CrossFade __instance, float time)
+            //{
+            //    if (__instance.texBase != null)
+            //        VRPlugin.Logger.LogWarning($"CrossFade.FadeStart called (obj={__instance.GetFullPath()} time={time}) from:\n{new StackTrace(2)}");
+            //}
 #endif
 
             #endregion

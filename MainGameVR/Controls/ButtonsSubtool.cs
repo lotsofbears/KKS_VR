@@ -28,6 +28,7 @@ namespace KKS_VR.Controls
         private readonly KoikatuSettings _Settings;
         private int _ScrollRepeatAmount;
 
+        private float _contRotation = 0f;
         private float _ScrollRepeatTime;
 
         public ButtonsSubtool(KoikatuInterpreter interpreter, KoikatuSettings settings)
@@ -49,6 +50,10 @@ namespace KKS_VR.Controls
             {
                 _ScrollRepeatTime += 0.1f;
                 VR.Input.Mouse.VerticalScroll(_ScrollRepeatAmount);
+            }
+            if (_contRotation != 0)
+            {
+                ContRotation(_contRotation);
             }
         }
 
@@ -101,10 +106,10 @@ namespace KKS_VR.Controls
                     VR.Input.Mouse.MiddleButtonDown();
                     break;
                 case AssignableFunction.LROTATION:
-                    Rotate(-_Settings.RotationAngle);
+                    Rotation(-_Settings.RotationAngle);
                     break;
                 case AssignableFunction.RROTATION:
-                    Rotate(_Settings.RotationAngle);
+                    Rotation(_Settings.RotationAngle);
                     // ここでは何もせず、上げたときだけ処理する
                     break;
                 case AssignableFunction.SCROLLUP:
@@ -157,6 +162,7 @@ namespace KKS_VR.Controls
                     break;
                 case AssignableFunction.LROTATION:
                 case AssignableFunction.RROTATION:
+                    StopRotation();
                     break;
                 case AssignableFunction.SCROLLUP:
                 case AssignableFunction.SCROLLDOWN:
@@ -177,20 +183,34 @@ namespace KKS_VR.Controls
 
             _SentUnmatchedDown.Remove(fun);
         }
-
         private void StartScroll(int amount)
         {
             VR.Input.Mouse.VerticalScroll(amount);
             _ScrollRepeatTime = Time.unscaledTime + 0.5f;
             _ScrollRepeatAmount = amount;
         }
+        private void Rotation(float degrees)
+        {
+            if (_Settings.ContinuousRotation)
+            {
+                _contRotation = degrees * 0.05f;
+            }
+            else
+            {
+                SnapRotation(degrees);
+            }
+        }
+        private void StopRotation()
+        {
+            _contRotation = 0f;
+        }
 
         /// <summary>
         /// Rotate the camera. If we are in Roaming, rotate the protagonist as well.
         /// </summary>
-        private void Rotate(float degrees)
+        private void SnapRotation(float degrees)
         {
-            VRLog.Debug("Rotating {0} degrees", degrees);
+            //VRLog.Debug("Rotating {0} degrees", degrees);
             var actInterpreter = _Interpreter.SceneInterpreter as ActionSceneInterpreter;
             if (actInterpreter != null)
             {
@@ -200,6 +220,21 @@ namespace KKS_VR.Controls
             var newRotation = Quaternion.AngleAxis(degrees, Vector3.up) * camera.rotation;
             VRCameraMover.Instance.MoveTo(camera.position, newRotation, false);
             if (actInterpreter != null)
+            {
+                actInterpreter.MovePlayerToCamera();
+            }
+        }
+        private void ContRotation(float degrees)
+        {
+            var origin = VR.Camera.Origin;
+            var head = VR.Camera.Head;
+            var newRotation = Quaternion.AngleAxis(degrees, Vector3.up) * origin.rotation;
+            var oldPos = head.position;
+            origin.rotation = newRotation;
+            origin.position += oldPos - head.position;
+
+            var actInterpreter = _Interpreter.SceneInterpreter as ActionSceneInterpreter;
+            if (actInterpreter != null && !actInterpreter._Walking)
             {
                 actInterpreter.MovePlayerToCamera();
             }

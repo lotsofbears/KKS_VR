@@ -53,6 +53,7 @@ namespace KKS_VR.Caress
         //private Action<HandCtrl.AibuColliderKind> _callMoMi;
         private CaressHelper _helper;
         private bool _sensibleH;
+        private float _proximityTimestamp;
 
 
         protected override void OnAwake()
@@ -123,7 +124,7 @@ namespace KKS_VR.Caress
         private void HandleScoreBasedKissing()
         {
             var inCaressMode = _hFlag.mode == HFlag.EMode.aibu;
-            if (inCaressMode)
+            if (inCaressMode && _proximityTimestamp < Time.time)
             {
                 if (_sensibleH)
                 {
@@ -133,8 +134,11 @@ namespace KKS_VR.Caress
                     if (dist < 0.2f
                         && angle < 30f)
                     {
-                        VRLog.Debug($"HandleScoreBasedKissing[SensibleH] dist[{dist}] [{angle}]");
-                        StartKiss();
+                        if (IsKissingAllowed())
+                        {
+                            StartKiss();
+                        }
+                        _proximityTimestamp = Time.time + 10f;
                     }
                 }
                 else
@@ -147,7 +151,10 @@ namespace KKS_VR.Caress
                         Mathf.DeltaAngle(_firstFemale.eulerAngles.y, _firstFemaleMouth.transform.eulerAngles.y));
                     if (decision)
                     {
-                        StartKiss();
+                        if (IsKissingAllowed())
+                        {
+                            StartKiss();
+                        }
                     }
                     else
                     {
@@ -162,10 +169,25 @@ namespace KKS_VR.Caress
             }
             _inCaressMode = inCaressMode;
         }
+        private bool IsKissingAllowed()
+        {
+            var heroine = _hFlag.lstHeroine[0];
+            if (!_hFlag.isFreeH && heroine.denial.kiss == false && heroine.isGirlfriend == false)
+            {
+                if (_aibuTracker.Proc.voice.nowVoices[0].state != HVoiceCtrl.VoiceKind.voice)
+                {
+                    _hFlag.voice.playVoices[0] = 103;
+                }
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
 
         private void HandleTriggerEnter(Collider other)
         {
-            VRLog.Debug($"HandleTriggerEnter");
             if (_aibuTracker.AddIfRelevant(other) && !NoActionAllowed)
             {
                 var colliderKind = _aibuTracker.GetCurrentColliderKind(out int femaleIndex);
@@ -186,7 +208,6 @@ namespace KKS_VR.Caress
 
         //private IEnumerator TriggerReactionCo(int femaleIndex, HandCtrl.AibuColliderKind colliderKind)
         //{
-        //    VRLog.Debug("TriggerReactionCo[ClickCo]");
         //    var kindFields = CaressUtil.GetHands(_aibuTracker.Proc)
         //        .Select(h => new Traverse(h).Field<HandCtrl.AibuColliderKind>("selectKindTouch"))
         //        .ToList();
@@ -200,7 +221,6 @@ namespace KKS_VR.Caress
         //}
         private void HandleTriggerExit(Collider other)
         {
-            VRLog.Debug($"HandleTriggerExit");
             if (_aibuTracker.RemoveIfRelevant(other) && !NoActionAllowed)
             {
                 var colliderKind = _aibuTracker.GetCurrentColliderKind(out int _);
@@ -209,7 +229,6 @@ namespace KKS_VR.Caress
         }
         private void UpdateKissLick(HandCtrl.AibuColliderKind colliderKind)
         {
-            VRLog.Debug($"{colliderKind}");
             if (_settings.AutomaticKissing && !_inCaressMode && colliderKind == HandCtrl.AibuColliderKind.mouth)
             {
                 StartKiss();
@@ -252,7 +271,7 @@ namespace KKS_VR.Caress
             if (colliderKind == HandCtrl.AibuColliderKind.muneL || colliderKind == HandCtrl.AibuColliderKind.muneR)
             {
 
-                if (_chara.fileStatus.clothesState[0] == 0 || _chara.fileStatus.clothesState[2] == 0)
+                if ((_chara.IsClothes(0) && _chara.fileStatus.clothesState[0] == 0) || (_chara.IsClothes(2) && _chara.fileStatus.clothesState[2] == 0))
                 {
                     return false;
                 }

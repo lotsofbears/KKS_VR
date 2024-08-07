@@ -318,7 +318,6 @@ namespace VRGIN.Controls
 
             _Started = true;
         }
-
         protected override void OnUpdate()
         {
             base.OnUpdate();
@@ -332,13 +331,15 @@ namespace VRGIN.Controls
             if (Input.GetPressDown(EVRButtonId.k_EButton_ApplicationMenu)) appButtonPressTime = Time.unscaledTime;
             //if (Input.GetPress(EVRButtonId.k_EButton_ApplicationMenu) && Time.unscaledTime - appButtonPressTime > 0.5f)
             //{
-            //    ShowHelp();
+            //    //ShowHelp();
             //    appButtonPressTime = null;
             //}
-
             if (!Input.GetPressUp(EVRButtonId.k_EButton_ApplicationMenu)) return;
             //if (helpShown)
-            //    HideHelp();
+            //{
+            //    Model.gameObject.SetActive(true);
+            //   //HideHelp();
+            //}
             else
             {
                 if ((bool)ActiveTool) ActiveTool.enabled = false;

@@ -24,7 +24,6 @@ namespace KKS_VR.Camera
         private Vector3 _lastPosition;
         private Quaternion _lastRotation;
         private readonly KoikatuSettings _settings;
-        private KoikatuInterpreter _interpreter;
 
         public delegate void OnMoveAction();
 
@@ -35,7 +34,6 @@ namespace KKS_VR.Camera
             _lastPosition = Vector3.zero;
             _lastRotation = Quaternion.identity;
             _settings = VR.Settings as KoikatuSettings;
-            _interpreter = VR.Interpreter as KoikatuInterpreter;
         }
 
         /// <summary>
@@ -52,7 +50,8 @@ namespace KKS_VR.Camera
             if (!quiet)
             {
 #if DEBUG
-                VRLog.Debug("Moving camera to pos={0} rot={1} Trace:\n{2}", position, rotation.eulerAngles, new StackTrace(1));
+                //VRLog.Debug("Moving camera to pos={0} rot={1} Trace:\n{2}", position, rotation.eulerAngles, new StackTrace(1));
+                VRLog.Debug("Moving camera to pos={0} rot={1}", position, rotation.eulerAngles);
 #else
                 VRLog.Debug("Moving camera to pos={0} rot={1}", position, rotation.eulerAngles);
 #endif
@@ -64,13 +63,10 @@ namespace KKS_VR.Camera
 
 
             // Trim out X (pitch) and Z (roll) to prevent player from being upside down and such
-            //var trimmedRotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
-            //VR.Mode.MoveToPosition(position, trimmedRotation, keepHeight);
+            var trimmedRotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+            VR.Mode.MoveToPosition(position, trimmedRotation, keepHeight);
 
-            if (_interpreter.CurrentScene == KoikatuInterpreter.SceneType.HScene && VRMoverH.Instance != null && _settings.FlyInH)
-                VRMoverH.Instance.MoveToInH(position);
-            else
-                VR.Mode.MoveToPosition(position, rotation, ignoreHeight: keepHeight);
+            //VR.Mode.MoveToPosition(position, rotation, ignoreHeight: keepHeight);
             OnMove?.Invoke();
         }
 

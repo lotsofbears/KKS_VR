@@ -209,7 +209,6 @@ namespace KKS_VR.Controls
                     InputDown(fun, EVRButtonId.k_EButton_SteamVR_Touchpad);
                 }
             }
-
             if (_buttonsSubtool == null) return;
 
             // 上げたときの位置によらず、押したボタンを離す
@@ -310,7 +309,7 @@ namespace KKS_VR.Controls
 
                 case AssignableFunction.SCROLLUP:
                 case AssignableFunction.SCROLLDOWN:
-                case AssignableFunction.LBUTTON:
+                //case AssignableFunction.LBUTTON:
                 case AssignableFunction.MBUTTON:
                 case AssignableFunction.RBUTTON:
                     // Move the cursor to the bottom right corner so buttons/scrolling affect the H speed control
@@ -341,7 +340,6 @@ namespace KKS_VR.Controls
                     break;
             }
         }
-
         public override List<HelpText> GetHelpTexts()
         {
             return new List<HelpText>(new[]

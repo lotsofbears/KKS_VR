@@ -83,15 +83,15 @@ namespace KKS_VR.Camera
     {
         [HarmonyPatch("ChangeAnimator")]
         [HarmonyPostfix]
-        public static void PostChangeAnimator(HSceneProc __instance, bool _isForceCameraReset, List<ChaControl> ___lstFemale)
+        public static void PostChangeAnimator(HSceneProc.AnimationListInfo _nextAinmInfo, bool _isForceCameraReset, HSceneProc __instance, List<ChaControl> ___lstFemale)
         {
             if (PoV.Instance != null)
             {
-                PoV.Instance.OnPoseChange();
+                PoV.Instance.OnPoseChange(_nextAinmInfo);
             }
             if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
             {
-                VRMoverH.Instance.MoveToInH();
+                VRMoverH.Instance.MoveToInH(_nextAinmInfo);
             }
             else if (_isForceCameraReset)
                 UpdateVRCamera(__instance, ___lstFemale, null);
@@ -124,8 +124,6 @@ namespace KKS_VR.Camera
         /// <summary>
         /// Update the transform of the VR camera.
         /// </summary>
-        /// <param name="instance"></param>
-        /// <param name="lstFemale"></param>
         private static void UpdateVRCamera(HSceneProc instance, List<ChaControl> lstFemale, float? previousFemaleY)
         {
             var baseTransform = lstFemale[0].objTop.transform;

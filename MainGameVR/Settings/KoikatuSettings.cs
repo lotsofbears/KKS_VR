@@ -135,6 +135,8 @@ namespace KKS_VR.Settings
         public bool HideHeadInPOV { get; set; }
         public bool FlyInPov { get; set; }
         public bool AutoEnterPov { get; set; }
+        public float ProximityDuringKiss { get; set; }
+        public bool ContinuousRotation { get; set; }
     }
 
     public class KeySet

@@ -35,23 +35,21 @@ namespace KKS_VR.Camera
             _chara = chara.transform;
             _settings = VR.Context.Settings as KoikatuSettings;
         }
-        public void MoveToInH(Vector3 position = new Vector3())
+        public void MoveToInH(HSceneProc.AnimationListInfo _nextAinmInfo = null, Vector3 position = new Vector3())
         {
             VRLog.Debug($"MoveToInH {_settings.FlyInPov} {_settings.AutoEnterPov}");
             if (PoV.Active)
             {
-                if (_settings.FlyInPov)
-                {
-                    PoV.Active = false;
-                    StartCoroutine(FlyToPov());
-                }
+                PoV.Active = false;
+                StartCoroutine(FlyToPov());
+                
             }
             else
             {
-                if (_settings.AutoEnterPov)
+                if (_settings.AutoEnterPov && _nextAinmInfo != null)
                 {
                     var poseWithMale = false;
-                    switch (_hFlag.mode)
+                    switch (_nextAinmInfo.mode)
                     {
                         case HFlag.EMode.houshi:
                         case HFlag.EMode.sonyu:

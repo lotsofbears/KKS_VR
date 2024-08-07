@@ -93,7 +93,7 @@ namespace KKS_VR.Features
             }
             else
             {
-                origin.rotation = Quaternion.RotateTowards(origin.rotation, _targetEyes.rotation, Time.deltaTime * 60f);
+                origin.rotation = Quaternion.RotateTowards(origin.rotation, _targetEyes.rotation, Time.deltaTime * 30f);
                 origin.position += GetEyesPosition() - VR.Camera.Head.position;
             }
         }
@@ -144,21 +144,15 @@ namespace KKS_VR.Features
         }
         public void OnSpotChange()
         {
-            //if (settings.FlyInPov)
-            //{ 
-            //    _wasAway = true;
-            //}
+            _newAttachPoint = false;
         }
-        public void OnPoseChange()
+        public void OnPoseChange(HSceneProc.AnimationListInfo nextAinmInfo)
         {
-            if (_target != null && !_target.visibleAll)
+            if (Active && ((_target != null && !_target.visibleAll) || (GirlPOV && nextAinmInfo.mode == HFlag.EMode.aibu)))
             {
                 Active = false;
             }
-            //else if (settings.FlyInPov)
-            // {
-            //     _wasAway = true;
-            // }
+            _newAttachPoint = false;
         }
         private void ResetRotation()
         {
@@ -318,10 +312,8 @@ namespace KKS_VR.Features
             if (VRMouth._lickCoShouldEnd == false || VRMouth._kissCoShouldEnd == false || !Scene.AddSceneName.Equals("HProc"))
             {
                 // We don't want pov while kissing/licking or if config/pointmove scene pops up.
-                if (settings.FlyInPov)
-                {
-                    _wasAway = true;
-                }
+                _wasAway = true;
+                
             }
             else if (_newAttachPoint && (_device.Input.GetPressUp(k_EButton_Grip) || _device1.Input.GetPressUp(k_EButton_Grip)))
             {
@@ -329,10 +321,8 @@ namespace KKS_VR.Features
             }
             else if (_device.Input.GetPress(k_EButton_Grip) || _device1.Input.GetPress(k_EButton_Grip))
             {
-                if (settings.FlyInPov)
-                {
-                    _wasAway = true;
-                }
+                _wasAway = true;
+                
                 if (_device.Input.GetPressDown(k_EButton_SteamVR_Touchpad) || _device1.Input.GetPressDown(k_EButton_SteamVR_Touchpad))
                 {
                     // Most likely a bad idea to kiss/lick when detached from the head but still inheriting all the movements.
@@ -341,7 +331,7 @@ namespace KKS_VR.Features
                 }
 
             }
-            else if (_wasAway)
+            else if (_wasAway && settings.FlyInPov)
             {
                 MoveToDesignatedHead();
             }
@@ -377,14 +367,7 @@ namespace KKS_VR.Features
             if (!buttonA && ((_device.Input.GetPressDown(k_EButton_SteamVR_Touchpad) && !_device.Input.GetPress(k_EButton_Grip))
                 || (_device1.Input.GetPressDown(k_EButton_SteamVR_Touchpad) && !_device1.Input.GetPress(k_EButton_Grip))))
             {
-                if (_newAttachPoint)
-                {
-                    _newAttachPoint = false;
-                    _wasAway = true;
-                    VRMouth.NoActionAllowed = false;
-                }
-                else
-                    StartCoroutine(GetButtonA());
+                StartCoroutine(GetButtonA());
             }
             if (Active) //!_scene.AddSceneName.StartsWith("Con", System.StringComparison.Ordinal) && !_scene.AddSceneName.StartsWith("HPo", System.StringComparison.Ordinal))
             {
@@ -433,35 +416,35 @@ namespace KKS_VR.Features
                         break;
                     timer = 0.4f;
                 }
-                //else if (device.GetPressDown(ButtonMask.Trigger))
-                //{
-                //    // Trigger.
-                // 
-                //    buttonA = false;
-                //    yield break;
-                //}
-                //else if (device.GetPressDown(ButtonMask.Grip))
-                //{
-                //    // Grip.
-                //    Utils.Sound.Play(SystemSE.ok_l);
-                //    VR.Input.Keyboard.KeyPress(VirtualKeyCode.TAB);
-                //    buttonA = false;
-                //    yield break;
-                //}
                 timer -= Time.deltaTime;
                 yield return new WaitForEndOfFrame();
             }
-            //Utils.Sound.Play(SystemSE.ok_l);
             if (clicks == 2 && Active)
             {
-                if (povMode == POV_Mode.Eyes)
-                    ResetRotation();
-                povMode = POV_Mode.Disable;
-                //povMode = (POV_Mode)(((int)povMode + 1) % 3);
+                // Adding double click for non-Active state creates problems with undresser.
+                if (_newAttachPoint)
+                {
+                    _newAttachPoint = false;
+                    _wasAway = true;
+                    VRMouth.NoActionAllowed = false;
+                }
+                else
+                {
+                    if (povMode == POV_Mode.Eyes)
+                        ResetRotation();
+                    povMode = POV_Mode.Disable;
+                    //povMode = (POV_Mode)(((int)povMode + 1) % 3);
+                }
             }
-            else if (clicks != 0)
+            else if (clicks == 0)
             {
-                if (Active)
+                if (_newAttachPoint)
+                {
+                    _newAttachPoint = false;
+                    _wasAway = true;
+                    VRMouth.NoActionAllowed = false;
+                }
+                else if (Active)
                 {
                     NextChara();
                     _wasAway = true;
@@ -473,10 +456,10 @@ namespace KKS_VR.Features
                 }
 
             }
-            else //click = 0
-            {
-                povMode = (POV_Mode)(((int)povMode + 1) % 3);
-            }
+            //else //click = 0
+            //{
+            //    povMode = (POV_Mode)(((int)povMode + 1) % 3);
+            //}
             buttonA = false;
         }
         private Dictionary<string, PoIPatternInfo> poiDicDev = new Dictionary<string, PoIPatternInfo>()

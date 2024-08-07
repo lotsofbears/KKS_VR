@@ -88,7 +88,7 @@ namespace KKS_VR.Settings
                     new AcceptableValueRange<float>(0.001f, 0.2f)));
             Tie(nearClipPlane, v => settings.NearClipPlane = v);
 
-            var usingHeadPos = config.Bind(SectionRoaming, "Use head position", false,
+            var usingHeadPos = config.Bind(SectionRoaming, "Use head position", true,
                 new ConfigDescription(
                     "Place the camera exactly at the protagonist's head (may cause motion sickness). If disabled, use a fixed height from the floor.",
                     null,
@@ -166,40 +166,53 @@ namespace KKS_VR.Settings
                 "Switch POV between characters in free H scenes (only works in Hand Tool)");
             Tie(enablePOV, v => settings.EnablePOV = v);
 
-            var HeadPosPoVY = config.Bind(SectionPov, "Y Offset", 0f,
+            var HeadPosPoVY = config.Bind(SectionGeneral, "Camera offset Y", 0.05f,
                 new ConfigDescription(
-                    "Offset from the head on Y axis.",
+                    "Camera offset from attachment point. Applies in Roaming and H PoV mode.",
                     new AcceptableValueRange<float>(-1f, 1f)));
             Tie(HeadPosPoVY, v => settings.PositionOffsetY = v);
 
-            var HeadPosPoVZ = config.Bind(SectionPov, "Z Offset", 0f,
+            var HeadPosPoVZ = config.Bind(SectionGeneral, "Camera offset Z", 0.05f,
                 new ConfigDescription(
-                    "Z Offset",
+                    "Camera offset from attachment point. Applies in Roaming and H PoV mode.",
                     new AcceptableValueRange<float>(-1f, 1f)));
             Tie(HeadPosPoVZ, v => settings.PositionOffsetZ = v);
 
-            var hideHeadInPOV = config.Bind(SectionPov, "HideHead", true,
+            var hideHeadInPOV = config.Bind(SectionPov, "Hide Head", true,
                 "Hide the corresponding head when the camera is in it.");
             Tie(hideHeadInPOV, v => settings.HideHeadInPOV = v);
 
-            var flyInPov = config.Bind(SectionPov, "FlyInPov", true,
+            var flyInPov = config.Bind(SectionPov, "Fly in PoV", true,
                 "On position (or location) change, instead of teleporting, fly toward new position.");
             Tie(flyInPov, v => settings.FlyInPov = v);
 
-            var autoEnter = config.Bind(SectionPov, "AutoEnterPov", true,
+            var autoEnter = config.Bind(SectionPov, "Auto Enter PoV", true,
                 "If disabled, on position change will be automatically activated when there is a dude.");
             Tie(autoEnter, v => settings.AutoEnterPov = v);
 
-            var flyInH = config.Bind(SectionCaress, "CameraInH", true,
+            var flyInH = config.Bind(SectionCaress, "Camera in H", true,
                 "Instead of teleporting to the new position, progressively moves camera to it.");
             Tie(flyInH, v => settings.FlyInH = v);
 
-            var flightSpeed = config.Bind(SectionCaress, "CameraInH Speed", 1f,
+            var flightSpeed = config.Bind(SectionCaress, "Camera in H speed", 1f,
                 new ConfigDescription(
                     "Speed of progressive movement of the camera.",
                     new AcceptableValueRange<float>(0.1f, 2f)));
             Tie(flightSpeed, v => settings.FlightSpeed = v);
+
+            var contRot = config.Bind(SectionRoaming, "Continuous turn", false,
+                    "Enable continuous turn in roaming mod instead of snap turn.");
+            Tie(contRot, v => settings.ContinuousRotation = v);
+
+            
+            var proximityKiss = config.Bind(SectionCaress, "KissProximity", 0.1f,
+                new ConfigDescription(
+                    "Distance between camera and partner's head.",
+                    new AcceptableValueRange<float>(0.05f, 0.15f)));
+            Tie(proximityKiss, v => settings.ProximityDuringKiss = v);
+
             KeySetsConfig keySetsConfig = null;
+
 
             void updateKeySets()
             {
