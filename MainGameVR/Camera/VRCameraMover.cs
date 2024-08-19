@@ -43,8 +43,8 @@ namespace KKS_VR.Camera
         {
             if (position.Equals(Vector3.zero))
             {
-                VRLog.Warn($"Prevented something from moving camera to pos={position} rot={rotation.eulerAngles} Trace:\n{new StackTrace(1)}");
-                Console.WriteLine();
+                //VRLog.Warn($"Prevented something from moving camera to pos={position} rot={rotation.eulerAngles} Trace:\n{new StackTrace(1)}");
+                //Console.WriteLine();
                 return;
             }
             if (!quiet)
@@ -210,7 +210,6 @@ namespace KKS_VR.Camera
 
         private IEnumerator ImpersonateCo(bool isFadingOut, Transform head)
         {
-
             // For reasons I don't understand, the male may not have a correct pose
             // until later in the update loop.
             yield return new WaitForEndOfFrame();
@@ -225,7 +224,7 @@ namespace KKS_VR.Camera
         {
             var fade = Manager.Scene.sceneFadeCanvas;
 
-            // No clue what this hook should be about, in KKS it doesn't work (always true).
+            // No clue what this condition should be about, in KKS it doesn't work (always true).
             // KK has no problem with it('s alternative).
 
             //var fadeOk = fade.isEnd; //(fade._Fade == SimpleFade.Fade.Out) ^ fade.IsEnd;

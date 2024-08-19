@@ -41,5 +41,7 @@ namespace KKS_VR.Fixes
         }
 
         private static UnityEngine.Camera _vrGuiCamera;
+
+
     }
 }

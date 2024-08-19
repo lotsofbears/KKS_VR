@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
+using IllusionUtility.SetUtility;
+using KKS_VR.Caress;
 using KKS_VR.Features;
 using UnityEngine;
 using VRGIN.Core;
@@ -81,45 +83,60 @@ namespace KKS_VR.Camera
     [HarmonyPatch(typeof(HSceneProc))]
     internal class HSceneProcPatches
     {
+
+        [HarmonyPatch("ChangeAnimator")]
+        [HarmonyPrefix]
+        public static void ChangeAnimatorPrefix(HSceneProc __instance)
+        {
+            __instance.ctrlObi.solver.gameObject.SetActive(true);
+        }
+
         [HarmonyPatch("ChangeAnimator")]
         [HarmonyPostfix]
         public static void PostChangeAnimator(HSceneProc.AnimationListInfo _nextAinmInfo, bool _isForceCameraReset, HSceneProc __instance, List<ChaControl> ___lstFemale)
         {
-            if (PoV.Instance != null)
+            if (VRMouth.Instance != null)
             {
-                PoV.Instance.OnPoseChange(_nextAinmInfo);
+                VRMouth.Instance.OnPositionChange(_nextAinmInfo);
             }
-            if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
+            //else if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
+            //{
+            //if (_isForceCameraReset)
             {
-                VRMoverH.Instance.MoveToInH(_nextAinmInfo);
-            }
-            else if (_isForceCameraReset)
                 UpdateVRCamera(__instance, ___lstFemale, null);
+            }
+            Fixes.ObiCtrlFix.SetFluidsState(false);
         }
 
-        [HarmonyPatch("ChangeCategory")]
-        [HarmonyPrefix]
-        public static void PreChangeCategory(List<ChaControl> ___lstFemale, out float __state)
-        {
-            __state = ___lstFemale[0].objTop.transform.position.y;
-        }
+        //[HarmonyPatch("ChangeCategory")]
+        //[HarmonyPrefix]
+        //public static void PreChangeCategory(List<ChaControl> ___lstFemale, out float __state)
+        //{
+        //    __state = ___lstFemale[0].objTop.transform.position.y;
+        //}
 
         [HarmonyPatch("ChangeCategory")]
         [HarmonyPostfix]
-        public static void PostChangeCategory(HSceneProc __instance, List<ChaControl> ___lstFemale, float __state)
+        public static void PostChangeCategory(HSceneProc __instance, List<ChaControl> ___lstFemale)//, float __state)
         {
             if (PoV.Instance != null)
             {
                 PoV.Instance.OnSpotChange();
             }
-            if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
-            {
-                VRMoverH.Instance.MoveToInH();
-            }
-            else
-                UpdateVRCamera(__instance, ___lstFemale, __state);
-        }
 
+            UpdateVRCamera(__instance, ___lstFemale, null);// __state);
+            
+            Fixes.ObiCtrlFix.SetFluidsState(false);
+        }
+        [HarmonyPatch(nameof(HSceneProc.GotoPointMoveScene))]
+        [HarmonyPostfix]
+        public static void GotoPointMoveScenePostfix()
+        {
+            if (VRMoverH.Instance != null)
+            {
+                VRMoverH.Instance.MakeUpright();
+            }
+        }
 
         /// <summary>
         /// Update the transform of the VR camera.
@@ -127,7 +144,7 @@ namespace KKS_VR.Camera
         private static void UpdateVRCamera(HSceneProc instance, List<ChaControl> lstFemale, float? previousFemaleY)
         {
             var baseTransform = lstFemale[0].objTop.transform;
-            var camDat = new Traverse(instance.flags.ctrlCamera).Field<BaseCameraControl_Ver2.CameraData>("CamDat").Value;
+            var camDat = instance.flags.ctrlCamera.CamDat;// new Traverse(instance.flags.ctrlCamera).Field<BaseCameraControl_Ver2.CameraData>("CamDat").Value;
             var cameraRotation = baseTransform.rotation * Quaternion.Euler(camDat.Rot);
             Vector3 dir;
             switch (instance.flags.mode)
@@ -145,20 +162,38 @@ namespace KKS_VR.Camera
             }
 
             var cameraPosition = cameraRotation * dir + baseTransform.TransformPoint(camDat.Pos);
-            if (previousFemaleY is float prevY)
-            {
-                // Keep the relative Y coordinate from the female.
-                var cameraHeight = VR.Camera.transform.position.y + baseTransform.position.y - prevY;
-                var destination = new Vector3(cameraPosition.x, cameraHeight, cameraPosition.z);
-                VRCameraMover.Instance.MaybeMoveTo(destination, cameraRotation, false);
-            }
-            else
+            //if (previousFemaleY is float prevY)
+            //{
+            //    // Keep the relative Y coordinate from the female.
+            //    var cameraHeight = VR.Camera.transform.position.y + baseTransform.position.y - prevY;
+            //    var destination = new Vector3(cameraPosition.x, cameraHeight, cameraPosition.z);
+
+            //    if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
+            //    {
+            //        VRMoverH.Instance.MoveToInH(position: destination);
+            //    }
+            //    else
+            //    {
+            //        VRCameraMover.Instance.MaybeMoveTo(destination, cameraRotation, false);
+            //    }
+            //}
+            //else
             {
                 // We are starting from scratch.
                 // TODO: the height calculation below assumes standing mode.
-                var cameraHeight = lstFemale[0].transform.position.y + VR.Camera.transform.localPosition.y;
-                var destination = new Vector3(cameraPosition.x, cameraHeight, cameraPosition.z);
-                VRCameraMover.Instance.MoveTo(destination, cameraRotation, false);
+
+                if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
+                {
+                    VRMoverH.Instance.MoveToInH(cameraPosition, cameraRotation, previousFemaleY == null, instance.flags.mode);
+                }
+                else
+                {
+                    var cameraHeight = lstFemale[0].transform.position.y + VR.Camera.transform.localPosition.y;
+                    var destination = new Vector3(cameraPosition.x, cameraHeight, cameraPosition.z);
+                    VRCameraMover.Instance.MoveTo(destination, cameraRotation, false);
+                }
+
+                
             }
         }
     }

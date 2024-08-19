@@ -4,6 +4,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.XR;
 using VRGIN.Controls;
+using VRGIN.Core;
 
 namespace KKS_VR.Features
 {
@@ -107,7 +108,10 @@ namespace KKS_VR.Features
             if (existingCollider == null)
             {
                 //Add a DB collider to the controller
+                // Pico 4
                 return AddDbCollider(controllerGameObject, colliderName, 0.03f, 0f, new Vector3(0f, -0.015f, -0.06f));
+                // Default
+                //return AddDbCollider(controllerGameObject, colliderName);
             }
 
             return existingCollider;

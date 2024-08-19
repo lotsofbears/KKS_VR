@@ -217,5 +217,23 @@ namespace KKS_VR.Caress
                     yield return inst;
                 }
         }
+
+        [HarmonyPatch]
+        internal class HandCtrlHelperHook
+        {
+            // Should be safe kill switch.
+            [HarmonyPostfix, HarmonyPatch(typeof(HandCtrl), nameof(HandCtrl.ForceFinish))]
+            //[HarmonyPostfix, HarmonyPatch(typeof(HAibu), nameof(HAibu.GotoDislikes))]
+            public static void ForceFinishPostfix()
+            {
+                var helper = CaressHelper.Instance;
+                if (helper != null && !helper.IsEndKissCo)
+                {
+                    helper.Halt();
+                }
+            }
+
+        }
     }
+    
 }

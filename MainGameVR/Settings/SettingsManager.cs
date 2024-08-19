@@ -158,6 +158,10 @@ namespace KKS_VR.Settings
                 "Prefer first person view in event scenes");
             Tie(firstPersonADV, v => settings.FirstPersonADV = v);
 
+            var headsetType = config.Bind(SectionGeneral, "Controller adjustments", KoikatuSettings.HeadsetType.None,
+                "Enables controller adjustments made for particular headset model.");
+            Tie(headsetType, v => settings.HeadsetSpecifications = v);
+
             EnableBoop = config.Bind(SectionGeneral, "Enable Boop", true,
                 "Adds colliders to the controllers so you can boop things.\nGame restart required for change to take effect.");
 
@@ -179,16 +183,23 @@ namespace KKS_VR.Settings
             Tie(HeadPosPoVZ, v => settings.PositionOffsetZ = v);
 
             var hideHeadInPOV = config.Bind(SectionPov, "Hide Head", true,
-                "Hide the corresponding head when the camera is in it.");
+                "Hide the corresponding head when the camera is in it. Can be used in combination with camera offset to have simultaneously visible head and PoV mode.");
             Tie(hideHeadInPOV, v => settings.HideHeadInPOV = v);
 
-            var flyInPov = config.Bind(SectionPov, "Fly in PoV", true,
-                "On position (or location) change, instead of teleporting, fly toward new position.");
+            var flyInPov = config.Bind(SectionPov, "Smooth transition", true,
+                "On position (or location) change, instead of teleportation, transition smoothly to the new location.");
             Tie(flyInPov, v => settings.FlyInPov = v);
 
             var autoEnter = config.Bind(SectionPov, "Auto Enter PoV", true,
-                "If disabled, on position change will be automatically activated when there is a dude.");
+                "If PoV mode disabled, on position change PoV mode will be automatically activated if there is a dude.");
             Tie(autoEnter, v => settings.AutoEnterPov = v);
+
+            var RotationFootprint = config.Bind(SectionPov, "Loose rotation", 0.1f,
+                new ConfigDescription(
+                    "Introduces lazy rotation when above 0. The lower the number, the lazier camera rotates in PoV mode.\n" +
+                    "Changes take place after new impersonation.",
+                    new AcceptableValueRange<float>(0f, 1f)));
+            Tie(RotationFootprint, v => settings.RotationFootprint = v);
 
             var flyInH = config.Bind(SectionCaress, "Camera in H", true,
                 "Instead of teleporting to the new position, progressively moves camera to it.");
@@ -200,7 +211,7 @@ namespace KKS_VR.Settings
                     new AcceptableValueRange<float>(0.1f, 2f)));
             Tie(flightSpeed, v => settings.FlightSpeed = v);
 
-            var contRot = config.Bind(SectionRoaming, "Continuous turn", false,
+            var contRot = config.Bind(SectionRoaming, "Continuous rotation", false,
                     "Enable continuous turn in roaming mod instead of snap turn.");
             Tie(contRot, v => settings.ContinuousRotation = v);
 

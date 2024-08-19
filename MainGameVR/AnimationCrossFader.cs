@@ -22,6 +22,8 @@ namespace KKS_VR
     /// </summary>
     public static class AnimationCrossFader
     {
+        public static bool IsInTransition => _inTransition;
+        private static bool _inTransition;
         public enum CrossFaderMode
         {
             Disabled,
@@ -243,7 +245,7 @@ namespace KKS_VR
                 if (_hflag == null) _hflag = Object.FindObjectOfType<HFlag>();
                 if (_hflag == null) return true;
 
-                //VRPlugin.Logger.LogDebug($"syncPlay hflag={_hflag} namehash={_strameHash} nlayer={_nLayer} normalizedtime={_fnormalizedTime} chara={__instance}");
+                VRPlugin.Logger.LogDebug($"ChaControl:syncPlay hflag={_hflag} namehash={_strameHash} nlayer={_nLayer} normalizedtime={_fnormalizedTime} chara={__instance}");
 
                 switch (_hflag.mode)
                 {
@@ -289,8 +291,8 @@ namespace KKS_VR
             [HarmonyPatch(typeof(H3PDarkSonyu), nameof(H3PDarkSonyu.Proc))]
             public static bool HSceneProcOverrideHook(HActionBase __instance)
             {
-                var inTransition = !__instance.female.animBody.GetCurrentAnimatorStateInfo(0).IsName(__instance.flags.nowAnimStateName);
-                return !inTransition;
+                _inTransition = !__instance.female.animBody.GetCurrentAnimatorStateInfo(0).IsName(__instance.flags.nowAnimStateName);
+                return !_inTransition;
             }
         }
     }

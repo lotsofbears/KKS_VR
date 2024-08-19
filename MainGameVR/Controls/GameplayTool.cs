@@ -310,7 +310,7 @@ namespace KKS_VR.Controls
                 case AssignableFunction.SCROLLUP:
                 case AssignableFunction.SCROLLDOWN:
                 //case AssignableFunction.LBUTTON:
-                case AssignableFunction.MBUTTON:
+                //case AssignableFunction.MBUTTON:
                 case AssignableFunction.RBUTTON:
                     // Move the cursor to the bottom right corner so buttons/scrolling affect the H speed control
                     // Extremely fiddly but what can you do

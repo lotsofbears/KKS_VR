@@ -47,10 +47,10 @@ namespace KKS_VR.Interpreters
             {
                 _vrMouth = VR.Camera.gameObject.AddComponent<Caress.VRMouth>();
                 AddControllerComponent<Caress.CaressController>();
-                _vrMoverH = VR.Camera.gameObject.AddComponent<VRMoverH>();
-                _vrMoverH.Initialize(proc);
                 _pov = VR.Camera.gameObject.AddComponent<PoV>();
                 _pov.Initialize(proc);
+                _vrMoverH = VR.Camera.gameObject.AddComponent<VRMoverH>();
+                _vrMoverH.Initialize(proc);
                 _proc = proc;
                 _active = true;
             }
@@ -67,6 +67,7 @@ namespace KKS_VR.Interpreters
                 DestroyControllerComponent<Caress.CaressController>();
                 _proc = null;
                 _active = false;
+                Fixes.ObiCtrlFix.OnHSceneEnd();
             }
         }
 

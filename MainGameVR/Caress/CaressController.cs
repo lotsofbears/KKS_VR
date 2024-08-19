@@ -86,7 +86,6 @@ namespace KKS_VR.Caress
                 {
                     if (!wasIntersecting && _aibuTracker.IsIntersecting())
                     {
-                        VRPlugin.Logger.LogDebug($"OnTriggerEnter[RUMBLE]");
                         _controller.StartRumble(new RumbleImpulse(1000));
                         if (_lock != null && _settings.AutomaticTouching)
                         {

@@ -72,6 +72,10 @@
       <HintPath>..\packages\ExtensibleSaveFormat.KoikatsuSunshine.16.8.1\lib\net46\KKS_ExtensibleSaveFormat.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Obi, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>F:\Illusion\KKS\KoikatsuSunshine_Data\Managed\Obi.dll</HintPath>
+    </Reference>
     <Reference Include="Sirenix.Serialization, Version=2.1.13.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.CoreModule.2019.4.9\lib\net46\Sirenix.Serialization.dll</HintPath>
       <Private>False</Private>
@@ -204,6 +208,7 @@
     <Compile Include="Caress\CaressHelper.cs" />
     <Compile Include="Caress\Undresser.cs" />
     <Compile Include="Features\Pov.cs" />
+    <Compile Include="Fixes\ObiControlFix.cs" />
     <Compile Include="Fixes\ReduceAssetUnloads.cs" />
     <Compile Include="Controls\ButtonsSubtool.cs" />
     <Compile Include="Camera\CameraControlControl.cs" />
