@@ -222,14 +222,24 @@ namespace KKS_VR.Caress
         internal class HandCtrlHelperHook
         {
             // Should be safe kill switch.
+            // Triggered by overlap menus too (does so beforehand).
             [HarmonyPostfix, HarmonyPatch(typeof(HandCtrl), nameof(HandCtrl.ForceFinish))]
-            //[HarmonyPostfix, HarmonyPatch(typeof(HAibu), nameof(HAibu.GotoDislikes))]
             public static void ForceFinishPostfix()
             {
                 var helper = CaressHelper.Instance;
                 if (helper != null && !helper.IsEndKissCo)
                 {
-                    helper.Halt();
+                    helper.Halt(disengage: false);
+                }
+            }
+
+            [HarmonyPostfix, HarmonyPatch(typeof(HAibu), nameof(HAibu.GotoDislikes))]
+            public static void GotoDislikesPostfix()
+            {
+                var helper = CaressHelper.Instance;
+                if (helper != null && !helper.IsEndKissCo)
+                {
+                    helper.Halt(disengage: true);
                 }
             }
 

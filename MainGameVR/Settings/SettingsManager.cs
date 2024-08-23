@@ -159,15 +159,14 @@ namespace KKS_VR.Settings
             Tie(firstPersonADV, v => settings.FirstPersonADV = v);
 
             var headsetType = config.Bind(SectionGeneral, "Controller adjustments", KoikatuSettings.HeadsetType.None,
-                "Enables controller adjustments made for particular headset model.");
+                "Placeholder.\nEnables controller adjustments made for particular headset model.");
             Tie(headsetType, v => settings.HeadsetSpecifications = v);
 
             EnableBoop = config.Bind(SectionGeneral, "Enable Boop", true,
                 "Adds colliders to the controllers so you can boop things.\nGame restart required for change to take effect.");
 
-
             var enablePOV = config.Bind(SectionPov, "EnablePOV", true,
-                "Switch POV between characters in free H scenes (only works in Hand Tool)");
+                "Enable the ability to impersonate characters.");
             Tie(enablePOV, v => settings.EnablePOV = v);
 
             var HeadPosPoVY = config.Bind(SectionGeneral, "Camera offset Y", 0.05f,
@@ -190,13 +189,13 @@ namespace KKS_VR.Settings
                 "On position (or location) change, instead of teleportation, transition smoothly to the new location.");
             Tie(flyInPov, v => settings.FlyInPov = v);
 
-            var autoEnter = config.Bind(SectionPov, "Auto Enter PoV", true,
+            var autoEnter = config.Bind(SectionPov, "Auto enter PoV", true,
                 "If PoV mode disabled, on position change PoV mode will be automatically activated if there is a dude.");
             Tie(autoEnter, v => settings.AutoEnterPov = v);
 
             var RotationFootprint = config.Bind(SectionPov, "Loose rotation", 0.1f,
                 new ConfigDescription(
-                    "Introduces lazy rotation when above 0. The lower the number, the lazier camera rotates in PoV mode.\n" +
+                    "Introduces lazy rotation when above 0. The higher the number, the lazier camera rotates in PoV mode.\n" +
                     "Changes take place after new impersonation.",
                     new AcceptableValueRange<float>(0f, 1f)));
             Tie(RotationFootprint, v => settings.RotationFootprint = v);
@@ -216,7 +215,7 @@ namespace KKS_VR.Settings
             Tie(contRot, v => settings.ContinuousRotation = v);
 
             
-            var proximityKiss = config.Bind(SectionCaress, "KissProximity", 0.1f,
+            var proximityKiss = config.Bind(SectionCaress, "Kiss proximity", 0.1f,
                 new ConfigDescription(
                     "Distance between camera and partner's head.",
                     new AcceptableValueRange<float>(0.05f, 0.15f)));

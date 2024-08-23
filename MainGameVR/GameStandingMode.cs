@@ -17,7 +17,9 @@ namespace KKS_VR
         public override IEnumerable<Type> Tools { get; } = new[]
         {
             typeof(VRGIN.Controls.Tools.MenuTool),
-            // Uncommented some fix, and  broke it a bit, but oh well, useless feature anyway.
+
+            // No clue how i broke it, no intention to fix it.
+            // Completely useless feature.
             //typeof(Controls.KoikatuWarpTool),
             typeof(Controls.GameplayTool)
         };
@@ -33,7 +35,7 @@ namespace KKS_VR
         {
             var controller = base.CreateLeftController();
             AddComponents(controller, EyeSide.Left);
-            controller.ToolIndex = 2;
+            controller.ToolIndex = 1;
             return controller;
         }
 
@@ -41,6 +43,7 @@ namespace KKS_VR
         {
             var controller = base.CreateRightController();
             AddComponents(controller, EyeSide.Right);
+            //controller.ToolIndex = 0;
             controller.ToolIndex = 0;
             return controller;
         }
@@ -49,7 +52,9 @@ namespace KKS_VR
         {
             controller.gameObject.AddComponent<Controls.LocationPicker>();
             if (SettingsManager.EnableBoop.Value)
+            {
                 VRBoop.Initialize(controller, controllerSide);
+            }
         }
 
         protected override void SyncCameras()

@@ -42,9 +42,6 @@ namespace KKS_VR.Caress
             public float directionForward;
         }
 
-        /// <summary>
-        /// State of disengagement of camera from action.
-        /// </summary>
         internal static CaressHelper Instance;
         internal static Vector2 FakeDragLength;
 
@@ -77,6 +74,9 @@ namespace KKS_VR.Caress
         private Action<HandCtrl.AibuColliderKind> MoMiOnKissStart;
         private Action MoMiOnKissEnd;
 
+        /// <summary>
+        /// State of disengagement of camera from action.
+        /// </summary>
         public bool IsEndKissCo => _endKissCo;
         private float GetFpsDelta => Time.deltaTime * 60f;
         internal bool IsTouch => _hFlag.nowAnimStateName.EndsWith("Touch", StringComparison.Ordinal);
@@ -113,11 +113,12 @@ namespace KKS_VR.Caress
         }
         private void OnDestroy()
         {
-            foreach (var coroutine in _activeCoroutines)
-            {
-                if (coroutine != null)
-                    StopCoroutine(coroutine);
-            }
+            //foreach (var coroutine in _activeCoroutines)
+            //{
+            //    if (coroutine != null)
+            //        StopCoroutine(coroutine);
+            //}
+            StopAllCoroutines();
             foreach (var patch in _activePatches)
             {
                 patch.UnpatchSelf();
@@ -484,6 +485,7 @@ namespace KKS_VR.Caress
                 yield return new WaitForEndOfFrame();
                 if (_hFlag.isDenialvoiceWait)
                 {
+                    // There is a proper kill switch for bad states now, this shouldn't be necessary.
                     Halt();
                     yield break;
                 }
@@ -536,7 +538,9 @@ namespace KKS_VR.Caress
                         yield break;
                     }
                     if (Vector3.Distance(poi.position, head.position) > 0.15f)
+                    {
                         break;
+                    }
                 }
                 else
                 {

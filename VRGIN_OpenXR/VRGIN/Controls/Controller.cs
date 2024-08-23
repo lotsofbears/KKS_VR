@@ -165,17 +165,6 @@ namespace VRGIN.Controls
                 return false;
             }
         }
-        //public bool TryAcquireFocus(out Lock lockObj)
-        //{
-        //    lockObj = null;
-        //    if (CanAcquireFocus())
-        //    {
-        //        lockObj = new Lock(this);
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
 
         public Lock AcquireFocus(bool keepTool = false)
         {
@@ -245,10 +234,14 @@ namespace VRGIN.Controls
             Collider = new GameObject("Collider").AddComponent<BoxCollider>();
             Collider.transform.SetParent(transform, false);
 
+            // Pico 4
             Collider.center = new Vector3(0f, -0.01f, -0.04f);
             Collider.size = new Vector3(0.05f, 0.04f, 0.05f);
+
+            // Original
             //Collider.center = new Vector3(0f, -0.02f, -0.06f);
             //Collider.size = new Vector3(0.05f, 0.05f, 0.2f);
+
             Collider.isTrigger = true;
             gameObject.AddComponent<Rigidbody>().isKinematic = true;
         }
@@ -404,16 +397,18 @@ namespace VRGIN.Controls
             canvas.transform.localRotation = Quaternion.Euler(120f, 0, 0); ;//Quaternion.Euler(30, 180, 180);
             canvas.transform.localScale = new Vector3(0.00002f, 0.00002f, 0);  //(4.930151e-05f, 4.930148e-05f, 0);
 
+            // Original
             //canvas.transform.localPosition = new Vector3(0f, -0.02725995f, 0.0279f);
             //canvas.transform.localRotation = Quaternion.Euler(30f, 180f, 180f);
             //canvas.transform.localScale = new Vector3(4.930151E-05f, 4.930148E-05f, 0f);
-            canvas.gameObject.layer = 0;
             //_AlphaConcealer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             //_AlphaConcealer.transform.SetParent(transform, false);
             //_AlphaConcealer.transform.localScale = new Vector3(0.05f, 0.0001f, 0.05f);
             //_AlphaConcealer.transform.localPosition = new Vector3(0, -0.0303f, 0.0142f);
             //_AlphaConcealer.transform.localRotation = Quaternion.Euler(60, 0, 0);
             //_AlphaConcealer.GetComponent<Collider>().enabled = false;
+
+            canvas.gameObject.layer = 0;
         }
 
         private void CreateToolCanvas(Tool tool)

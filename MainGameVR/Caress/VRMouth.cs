@@ -112,7 +112,9 @@ namespace KKS_VR.Caress
         public void StopLick()
         {
             FinishLicking();
-            //_proximityTimestamp = Time.time + 1f;
+
+            // Easiest way.
+            _proximityTimestamp = Time.time + 1f;
         }
         public void StopKiss()
         {
@@ -314,7 +316,6 @@ namespace KKS_VR.Caress
             }
             if (colliderKind == HandCtrl.AibuColliderKind.muneL || colliderKind == HandCtrl.AibuColliderKind.muneR)
             {
-
                 if ((_chara.IsClothes(0) && _chara.fileStatus.clothesState[0] == 0) || (_chara.IsClothes(2) && _chara.fileStatus.clothesState[2] == 0))
                 {
                     return false;
