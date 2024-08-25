@@ -188,14 +188,14 @@ namespace KKS_VR.Caress
             if (_undressing is Util.ValueTuple<ChaControl, ChaFileDefine.ClothesKind, Vector3> undressing
                 && _controller.Input.GetPressUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
             {
-                if (0.3f * 0.3f < (transform.position - undressing.Field3).sqrMagnitude)
-                {
-                    undressing.Field1.SetClothesState((int)undressing.Field2, 3);
-                }
-                else
-                {
+                //if (0.3f * 0.3f < (transform.position - undressing.Field3).sqrMagnitude)
+                //{
+                //    undressing.Field1.SetClothesState((int)undressing.Field2, 3);
+                //}
+                //else
+                //{
                     undressing.Field1.SetClothesStateNext((int)undressing.Field2);
-                }
+                //}
                 _undressing = null;
             }
         }

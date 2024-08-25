@@ -202,7 +202,7 @@
   <ItemGroup>
     <Compile Include="Camera\ActionCameraControl.cs" />
     <Compile Include="Camera\BackgroundDisplayer.cs" />
-    <Compile Include="AnimationCrossFader.cs" />
+    <Compile Include="Features\CrossFader.cs" />
     <Compile Include="Camera\VREffector.cs" />
     <Compile Include="Camera\VRMoverH.cs" />
     <Compile Include="Caress\CaressHelper.cs" />
@@ -219,7 +219,7 @@
     <Compile Include="Caress\LongDistanceKissMachine.cs" />
     <Compile Include="Caress\VRMouth.cs" />
     <Compile Include="Fixes\Util.cs" />
-    <Compile Include="Util\DebugHooks.cs" />
+    <Compile Include="Utils\DebugHooks.cs" />
     <Compile Include="Fixes\GameFixes.cs" />
     <Compile Include="Features\PrivacyScreen.cs" />
     <Compile Include="Interpreters\ActionSceneInterpreter.cs" />
@@ -235,7 +235,7 @@
     <Compile Include="Controls\TalkSceneHandler.cs" />
     <Compile Include="Controls\KoikatuWarpTool.cs" />
     <Compile Include="Fixes\UnityPatches.cs" />
-    <Compile Include="Util\Extensions.cs" />
+    <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Interpreters\HSceneInterpreter.cs" />
     <Compile Include="Interpreters\KoikatuGameInterpreter.cs" />
     <Compile Include="Interpreters\OtherSceneInterpreter.cs" />
@@ -244,7 +244,7 @@
     <Compile Include="Features\VRFade.cs" />
     <Compile Include="Features\HideMaleHead.cs" />
     <Compile Include="Camera\VRCameraMover.cs" />
-    <Compile Include="Util\WindowTools.cs" />
+    <Compile Include="Utils\WindowTools.cs" />
     <Compile Include="VRPlugin.cs" />
     <Compile Include="Controls\GameplayTool.cs" />
     <Compile Include="Settings\KoikatuSettings.cs" />

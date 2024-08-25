@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text.RegularExpressions;
 using ADV;
 using ADV.Commands.Base;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using Cinemachine;
 using HarmonyLib;
+using KKAPI.MainGame;
 using KKAPI.Utilities;
 using KKS_VR.Settings;
+using Manager;
 using Unity.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,12 +20,12 @@ using Motion = Illusion.Game.Elements.EasyLoader.Motion;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
-namespace KKS_VR
+namespace KKS_VR.Features
 {
     /// <summary>
     /// Based on KKS_CrossFader by Sabakan
     /// </summary>
-    public static class AnimationCrossFader
+    public static class CrossFader
     {
         public static bool IsInTransition => _inTransition;
         private static bool _inTransition;
@@ -40,7 +45,6 @@ namespace KKS_VR
                 VRPlugin.Logger.LogWarning("Disabling the AnimationCrossFader feature because KKS_CrossFader is installed");
                 return;
             }
-
             var enabled = config.Bind(SettingsManager.SectionGeneral, "Cross-fade character animations", CrossFaderMode.OnlyInVr,
                                       "Interpolate between animations/poses to make transitions look less jarring.\nChanges take effect after a scene change.");
 
@@ -73,7 +77,7 @@ namespace KKS_VR
             {
                 if (enable && _hi == null)
                 {
-                    _hi = new Harmony(typeof(AnimationCrossFader).FullName);
+                    _hi = new Harmony(typeof(CrossFader).FullName);
                     _hi.PatchAll(typeof(AdvHooks));
                     _hi.PatchAll(typeof(HSceneHooks));
                 }
@@ -97,6 +101,8 @@ namespace KKS_VR
         // CrossFade animations in ADV and TalkScene
         private static class AdvHooks
         {
+            private static bool _reaction;
+            private static readonly string _animReaction = "f_reaction_";
             [HarmonyPrefix]
             [HarmonyWrapSafe]
             [HarmonyPatch(typeof(Motion), nameof(Motion.Play))]
@@ -104,11 +110,23 @@ namespace KKS_VR
             {
                 // Make the animation cross fade from the current one, uses stock game code
                 __instance.isCrossFade = true;
-                __instance.transitionDuration = Random.Range(0.2f, 0.5f);  //(0.1f, 0.3f);
+
+                if ((TalkScene.instance != null && TalkScene.instance.isActive) || (GameAPI.GetADVScene() != null && GameAPI.GetADVScene().isActiveAndEnabled))
+                {
+                    // We use extra long fades for talk scenes and tiny after interactions.
+                    __instance.transitionDuration = _reaction ? Random.Range(0.1f, 0.2f) : Random.Range(0.5f, 1f);
+                    _reaction = false;
+                    if (__instance.state.StartsWith(_animReaction, StringComparison.Ordinal))
+                    {
+                        _reaction = true;
+                    }
+                    //VRPlugin.Logger.LogDebug($"CrossFade:Test:Motion:Play:{__instance.state}:{__instance.transitionDuration}");
+                }
+                else
+                    __instance.transitionDuration = Random.Range(0.3f, 0.6f);
+
             }
-
             #region Disable screen fade effect when ADV is changing character animations
-
             [HarmonyPrefix]
             [HarmonyWrapSafe]
             [HarmonyPatch(typeof(TalkScene), nameof(TalkScene.AnimePlay))]
@@ -125,7 +143,6 @@ namespace KKS_VR
             {
                 if (isCrossFade)
                 {
-                    VRPlugin.Logger.LogDebug("Disabling isCrossFade in MotionPlay");
                     isCrossFade = false;
                 }
             }
@@ -199,7 +216,7 @@ namespace KKS_VR
                     var newHash = __instance.bundle + "|" + __instance.asset;
                     if (newHash == hash)
                     {
-                        VRPlugin.Logger.LogDebug($"Skipping loading already loaded animator controller from [{newHash}] on [{animator.GetFullPath()}]");
+                        //VRPlugin.Logger.LogDebug($"Skipping loading already loaded animator controller from [{newHash}] on [{animator.GetFullPath()}]");
                         return false;
                     }
                     else _AnimationControllerLookup.Remove(animatorController);
@@ -226,8 +243,9 @@ namespace KKS_VR
         }
 
         // CrossFade animations in HScenes, same as the KKS_CrossFader plugin but more compact
-        private static class HSceneHooks
+        internal static class HSceneHooks
         {
+            internal static void SetFlag(HFlag flag) => _hflag = flag;
             private static HFlag _hflag;
 
             [HarmonyPrefix]
@@ -245,7 +263,7 @@ namespace KKS_VR
                 if (_hflag == null) _hflag = Object.FindObjectOfType<HFlag>();
                 if (_hflag == null) return true;
 
-                VRPlugin.Logger.LogDebug($"ChaControl:syncPlay hflag={_hflag} namehash={_strameHash} nlayer={_nLayer} normalizedtime={_fnormalizedTime} chara={__instance}");
+                //VRPlugin.Logger.LogDebug($"ChaControl:syncPlay hflag={_hflag} namehash={_strameHash} nlayer={_nLayer} normalizedtime={_fnormalizedTime} chara={__instance}");
 
                 switch (_hflag.mode)
                 {

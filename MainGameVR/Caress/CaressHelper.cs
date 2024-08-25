@@ -228,7 +228,7 @@ namespace KKS_VR.Caress
             //yield return new WaitForSeconds(0.2f);
 
             yield return CaressUtil.ClickCo();
-            yield return new WaitUntil(() => !AnimationCrossFader.IsInTransition);
+            yield return new WaitUntil(() => !CrossFader.IsInTransition);
 
             //yield return CaressUtil.ClickCo();
             _mousePressDown = true;
@@ -420,7 +420,7 @@ namespace KKS_VR.Caress
                 VRPlugin.Logger.LogDebug($"CaressHelper:EndKissCo[Rotate]");
                 if (Math.Abs(Mathf.DeltaAngle(origin.eulerAngles.x, 0f)) < 45f)
                 {
-                    while ((int)origin.eulerAngles.z != 0 || (int)origin.eulerAngles.x != 0)
+                    while (Mathf.Abs(origin.eulerAngles.z) > 0.1f || Mathf.Abs(origin.eulerAngles.x) > 0.1f)
                     {
                         if (IsGripPress())
                         {
@@ -445,7 +445,7 @@ namespace KKS_VR.Caress
                         origin.rotation = Quaternion.RotateTowards(origin.rotation, Quaternion.Euler(lookAt.eulerAngles.x, origin.eulerAngles.y, 0f), GetFpsDelta);
                         origin.position += oldHeadPos - head.position;
 
-                        if ((int)origin.eulerAngles.z == 0 && (int)origin.eulerAngles.x == (int)lookAt.eulerAngles.x)
+                        if (Mathf.Abs(origin.eulerAngles.z) < 0.1f && Mathf.Abs(origin.eulerAngles.x - lookAt.eulerAngles.x) < 0.1f)
                         {
                             break;
                         }

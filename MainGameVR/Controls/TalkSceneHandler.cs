@@ -22,7 +22,7 @@ namespace KKS_VR.Controls
             = new HashSet<Collider>();
 
         private Controller.Lock _lock; // null or valid
-        private TalkScene _talkScene;
+        private  TalkScene _talkScene;
 
         protected override void OnStart()
         {

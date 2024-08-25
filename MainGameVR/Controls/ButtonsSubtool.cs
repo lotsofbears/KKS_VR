@@ -16,7 +16,6 @@ namespace KKS_VR.Controls
     /// </summary>
     internal class ButtonsSubtool
     {
-        private readonly KoikatuInterpreter _Interpreter;
 
         /// <summary>
         /// The set of keys for which we've sent a down message but not a
@@ -25,11 +24,12 @@ namespace KKS_VR.Controls
         private readonly HashSet<AssignableFunction> _SentUnmatchedDown
             = new HashSet<AssignableFunction>();
 
+        private readonly KoikatuInterpreter _Interpreter;
         private readonly KoikatuSettings _Settings;
         private int _ScrollRepeatAmount;
+        private float _ScrollRepeatTime;
 
         private float _contRotation = 0f;
-        private float _ScrollRepeatTime;
 
         public ButtonsSubtool(KoikatuInterpreter interpreter, KoikatuSettings settings)
         {

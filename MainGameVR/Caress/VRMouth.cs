@@ -185,7 +185,7 @@ namespace KKS_VR.Caress
         public void OnDisengageStart() => _headsetPosLastFrame = Vector3.zero;
         private bool IsKissingAllowed()
         {
-            if (_proximityTimestamp < Time.time && !AnimationCrossFader.IsInTransition)
+            if (_proximityTimestamp < Time.time && !Features.CrossFader.IsInTransition)
             {
                 if (_denial)
                 {

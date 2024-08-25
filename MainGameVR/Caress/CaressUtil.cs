@@ -16,7 +16,8 @@ namespace KKS_VR.Caress
             for (var i = 0; i < hands.Count; i++)
             {
                 var kind = i == femaleIndex ? colliderKind : HandCtrl.AibuColliderKind.none;
-                new Traverse(hands[i]).Field("selectKindTouch").SetValue(kind);
+                hands[i].selectKindTouch = kind;
+                //new Traverse(hands[i]).Field("selectKindTouch").SetValue(kind);
             }
         }
 

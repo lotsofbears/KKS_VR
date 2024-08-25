@@ -10,8 +10,8 @@ namespace KKS_VR.Interpreters
         private bool _active;
         private HSceneProc _proc;
         private Caress.VRMouth _vrMouth;
-        PoV _pov;
-        VRMoverH _vrMoverH;
+        private PoV _pov;
+        private VRMoverH _vrMoverH;
 
         private Color _currentBackgroundColor;
         private bool _currentShowMap;

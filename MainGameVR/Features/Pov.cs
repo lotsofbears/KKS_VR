@@ -48,25 +48,17 @@ namespace KKS_VR.Features
             Eyes,
 
             // Okay even if there are outliers that would use this, we simply don't have a hotkey for it. Keyboard for VR? Big fat NO.
-            // Fine we may add grip or trigger as modifiers for long press of touchpad(joystick). Still shady hotkey though
+            // Fine we may add grip or trigger as modifiers for long press of touchpad(joystick). Still shady hotkey though.
+            // Scroll through all modes? That's even worse then keyboard.
             Head,     
             Disable 
         }
-        private enum ReturnBias
-        {
-            None,
-            Position,
-            Rotation
-        }
-        private ReturnBias _returnType;
         private ChaControl _target;
-        //private HandCtrl _hand;
         private Transform _targetEyes;
         private POV_Mode povMode;
         private KoikatuSettings settings;
         private bool buttonA;
         private bool _wasAway;
-        //private Transform _poi;
         private List<ChaControl> _chaControls;
         private Controller _device;
         private Controller _device1;
@@ -81,7 +73,6 @@ namespace KKS_VR.Features
         private float _rotIntensity;
         private float _rotFootprint;
         private bool _precisionPoint;
-        //private float _rotFootprintCoef;
 
         private HFlag _hFlag;
         private bool IsClimax => _hFlag.nowAnimStateName.EndsWith("_Loop", System.StringComparison.Ordinal);
@@ -91,6 +82,7 @@ namespace KKS_VR.Features
             settings = VR.Context.Settings as KoikatuSettings;
             //_hand = Traverse.Create(proc).Field("hand").GetValue<HandCtrl>(); 
             _hFlag = Traverse.Create(proc).Field("flags").GetValue<HFlag>();
+            CrossFader.HSceneHooks.SetFlag(_hFlag);
             _chaControls = Traverse.Create(proc).Field("lstFemale").GetValue<List<ChaControl>>();
             _device = FindObjectOfType<Controller>();
             _device1 = _device.Other;
@@ -128,7 +120,6 @@ namespace KKS_VR.Features
                 _rotIntensity -= Time.deltaTime * 10f;
                 if (_rotIntensity < 1f)
                 {
-                    _rotationFull = false;
                     _rotationZero = true;
                     _rotIntensity = 1f;
                 }
@@ -276,12 +267,12 @@ namespace KKS_VR.Features
         }
         public void OnPoseChange()
         {
+            // VRMoverH does it.
             StartPov();
         }
         private void ResetRotation()
         {
             VR.Camera.Origin.rotation = Quaternion.Euler(0f, VR.Camera.Origin.rotation.eulerAngles.y, 0f);
-            //headY = Quaternion.identity;
         }
         public Vector3 GetDestination()
         {
@@ -370,7 +361,7 @@ namespace KKS_VR.Features
         //}
         private int GetCurrentCharaIndex(List<ChaControl> _chaControls)
         {
-            if (_target)
+            if (_target != null)
             {
                 for (int i = 0; i < _chaControls.Count; i++)
                 {
@@ -425,7 +416,7 @@ namespace KKS_VR.Features
         }
         private void NewPosition()
         {
-            // Most likely a bad idea to kiss/lick when detached from the head but still inheriting all the movements.
+            // Most likely a bad idea to kiss/lick when detached from the head but still inheriting all movements.
             CameraIsNear();
             _offsetPosition = VR.Camera.Head.position - GetEyesPosition();
             _offsetRotation = VR.Camera.Origin.rotation;
@@ -433,7 +424,7 @@ namespace KKS_VR.Features
 
         private void SetPOV()
         {
-            if (VRMouth.Instance.IsAction || !Scene.AddSceneName.Equals("HProc"))
+            if (VRMouth.Instance.IsAction || Scene.IsOverlap)//!Scene.AddSceneName.Equals("HProc"))
             {
                 // We don't want pov while kissing/licking or if config/pointmove scene pops up.
                 CameraIsFar();

@@ -32,19 +32,20 @@ namespace KKS_VR
         {
             Logger = base.Logger;
 
+            VRPlugin.Logger.LogDebug($"VRPlugin:Awake");
             var vrActivated = Environment.CommandLine.Contains("--vr");
-            bool vrDeactivated = Environment.CommandLine.Contains("--novr");
-            bool enabled = vrActivated || (!vrDeactivated && SteamVRDetector.IsRunning);
+            //bool vrDeactivated = Environment.CommandLine.Contains("--novr");
+            bool enabled = vrActivated || SteamVRDetector.IsRunning;
+            var settings = SettingsManager.Create(Config);
             if (enabled)
             {
                 BepInExVrLogBackend.ApplyYourself();
                 OpenVRHelperTempfixHook.Patch();
 
-                var settings = SettingsManager.Create(Config);
                 StartCoroutine(LoadDevice(settings));
             }
 
-            AnimationCrossFader.Initialize(Config, vrActivated);
+            CrossFader.Initialize(Config, enabled);
         }
 
         private IEnumerator LoadDevice(KoikatuSettings settings)
@@ -108,7 +109,7 @@ namespace KKS_VR
             Logger.LogInfo("Initializing the plugin...");
 
             new Harmony(GUID).PatchAll(typeof(VRPlugin).Assembly);
-            TopmostToolIcons.Patch();
+            //TopmostToolIcons.Patch();
 
             VRManager.Create<Interpreters.KoikatuInterpreter>(new KoikatuContext(settings));
 
@@ -146,6 +147,7 @@ namespace KKS_VR
         {
             // This helps environment shadows a bit, and brings flickering chara shadows.
             // Grab "KKS_BetterShadowQualitySettings.dll" from HongFire patch, it does the job much better.
+            // Goes without saying, configuration according to the taste is due, as the stock setting is bad, and there is no golden middle for vr.
 
             // Default shadows look too wobbly in VR.
             //QualitySettings.shadowProjection = ShadowProjection.StableFit;
