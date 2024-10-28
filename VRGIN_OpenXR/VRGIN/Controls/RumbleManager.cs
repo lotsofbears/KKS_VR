@@ -29,7 +29,17 @@ namespace VRGIN.Controls
             _RumbleSessions.Clear();
         }
 
-        // Broken in this implementation of OpenXR (probably).
+        // Broken.
+        // What i've gather so far:
+        // The input that we send to 'Unity.XR.OpenVR' seems fine, device checks out, played around with timings but for naught.
+        // no errors all the way to the delegate to unmanaged code at 'Unity.XR.OpenVR' side.
+        // It also has different methods with a tad different inputs for haptic feedback, but none work.
+        // Atleast some delegates to unmanaged code work. As i understand unmanaged code of 'Unity.XR.OpenVR' references SteamVR. We can't get into that.
+        // Haptic feedback that happens on trigger/grip doesn't produce a single call related to haptic in any library shipped with the plugin. 
+        // Took a peak at those packages in unity, and it all seems VERY strange.
+        // My very best bet that i'm missing something crucial right before my eyes. As SteamVR shouldn't trigger no haptic on input by default, yet we have it.
+
+
         //protected override void OnUpdate()
         //{
         //    base.OnUpdate();

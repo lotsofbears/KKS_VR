@@ -26,7 +26,6 @@ namespace VRGIN.Controls.Handlers
         private Vector2? mouseDownPosition;
         private GUIQuad _Target;
         MenuHandler _Other;
-        ResizeHandler _ResizeHandler;
         private Vector3 _ScaleVector;
         private Buttons _PressedButtons;
         private Controller.TrackpadDirection _LastDirection;
@@ -56,7 +55,8 @@ namespace VRGIN.Controls.Handlers
             {
                 if (!_Controller)
                     _Controller = GetComponent<Controller>();
-                var attachPosition = _Controller.FindAttachPosition("tip");
+                //var attachPosition = _Controller.FindAttachPosition("tip");
+                var attachPosition = _Controller.transform;
 
                 if (!attachPosition)
                 {
@@ -74,6 +74,10 @@ namespace VRGIN.Controls.Handlers
                     Laser.transform.localRotation = Quaternion.Euler(60, 0, 0);
                     Laser.transform.position += Laser.transform.forward * 0.06f;
                 }
+                else
+                {
+                    Laser.transform.localRotation *= Quaternion.Euler(30f, 0, 0);
+                }
                 Laser.SetVertexCount(2);
                 Laser.useWorldSpace = true;
                 Laser.SetWidth(0.002f, 0.002f);
@@ -83,41 +87,18 @@ namespace VRGIN.Controls.Handlers
                 VRLog.Error(e);
             }
         }
-
-        /// <summary>
-        /// Gets the attached controller input object.
-        /// </summary>
-        //protected SteamVR_Controller.Device Device
-        //{
-        //    get
-        //    {
-        //        return SteamVR_Controller.Input((int)_Controller.Tracking.index);
-        //    }
-        //}
-
         protected override void OnUpdate()
         {
-            base.OnUpdate();
-
             if (LaserVisible)
             {
-                if (IsResizing)
-                {
-                    Laser.SetPosition(0, Laser.transform.position);
-                    Laser.SetPosition(1, Laser.transform.position);
-                }
-                else
-                {
-                    UpdateLaser();
-                }
-
+                UpdateLaser();
+                CheckInput();
             }
             else if (_Controller.CanAcquireFocus())
             {
                 CheckForNearMenu();
             }
 
-            CheckInput();
         }
 
         private void OnDisable()
@@ -129,49 +110,53 @@ namespace VRGIN.Controls.Handlers
             }
         }
 
-        private void EnsureResizeHandler()
-        {
-            if (!_ResizeHandler)
-            {
-                _ResizeHandler = _Target.GetComponent<ResizeHandler>();
-                if (!_ResizeHandler)
-                {
-                    _ResizeHandler = _Target.gameObject.AddComponent<ResizeHandler>();
-                }
-            }
-        }
+        //private void EnsureResizeHandler()
+        //{
+        //    if (!_ResizeHandler)
+        //    {
+        //        _ResizeHandler = _Target.GetComponent<ResizeHandler>();
+        //        if (!_ResizeHandler)
+        //        {
+        //            _ResizeHandler = _Target.gameObject.AddComponent<ResizeHandler>();
+        //        }
+        //    }
+        //}
 
-        private void EnsureNoResizeHandler()
-        {
-            if (_ResizeHandler)
-            {
-                DestroyImmediate(_ResizeHandler);
-            }
-            _ResizeHandler = null;
-        }
+        //private void EnsureNoResizeHandler()
+        //{
+        //    if (_ResizeHandler)
+        //    {
+        //        DestroyImmediate(_ResizeHandler);
+        //    }
+        //    _ResizeHandler = null;
+        //}
 
+        private bool _triggerPressed;
         protected void CheckInput()
         {
             if (LaserVisible && _Target)
             {
-                if (_Other.LaserVisible && _Other._Target == _Target)
-                {
-                    // No double input - this is handled by ResizeHandler
-                    EnsureResizeHandler();
-                }
-                else
-                {
-                    EnsureNoResizeHandler();
-                }
+                var _triggerPressed = false;
+                //if (_Other.LaserVisible && _Other._Target == _Target)
+                //{
+                //    // No double input - this is handled by ResizeHandler
+                //    EnsureResizeHandler();
+                //}
+                //else
+                //{
+                //    EnsureNoResizeHandler();
+                //}
 
                 if (_Controller.Input.GetPressDown(EVRButtonId.k_EButton_SteamVR_Trigger))
                 {
+                    _triggerPressed = true;
                     VR.Input.Mouse.LeftButtonDown();
                     _PressedButtons |= Buttons.Left;
                     mouseDownPosition = Vector2.Scale(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y), _ScaleVector);
                 }
-                if (_Controller.Input.GetPressUp(EVRButtonId.k_EButton_SteamVR_Trigger))
+                else if (_Controller.Input.GetPressUp(EVRButtonId.k_EButton_SteamVR_Trigger))
                 {
+                    _triggerPressed = false;
                     _PressedButtons &= ~Buttons.Left;
                     VR.Input.Mouse.LeftButtonUp();
                     mouseDownPosition = null;
@@ -179,22 +164,31 @@ namespace VRGIN.Controls.Handlers
                 var currentDirection = _Controller.GetTrackpadDirection();
                 if (_Controller.Input.GetPressDown(EVRButtonId.k_EButton_SteamVR_Touchpad))
                 {
-                    _LastDirection = currentDirection;
-                    switch (_LastDirection)
+                    if (_Target.IsOwned && _triggerPressed)
                     {
-                        case Controller.TrackpadDirection.Right:
-                            VR.Input.Mouse.RightButtonDown();
-                            _PressedButtons |= Buttons.Right;
-                            break;
-                        case Controller.TrackpadDirection.Center:
-                            VR.Input.Mouse.MiddleButtonDown();
-                            _PressedButtons |= Buttons.Middle;
-                            break;
-                        default:
-                            break;
+                        _Target.transform.SetParent(VR.Manager.transform, true);
+                        _Target.IsOwned = false;
                     }
+                    else
+                    {
+                        _LastDirection = currentDirection;
+                        switch (_LastDirection)
+                        {
+                            case Controller.TrackpadDirection.Right:
+                                VR.Input.Mouse.RightButtonDown();
+                                _PressedButtons |= Buttons.Right;
+                                break;
+                            case Controller.TrackpadDirection.Center:
+                                VR.Input.Mouse.MiddleButtonDown();
+                                _PressedButtons |= Buttons.Middle;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
                 }
-                if (_Controller.Input.GetPressUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
+                else if (_Controller.Input.GetPressUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
                 {
                     switch (_LastDirection)
                     {
@@ -213,10 +207,30 @@ namespace VRGIN.Controls.Handlers
                 switch (currentDirection)
                 {
                     case Controller.TrackpadDirection.Up:
-                        Scroll(1);
+                        if (_Target.IsOwned)
+                        {
+                            if (_triggerPressed)
+                                MoveGui(Time.deltaTime);
+                            else
+                                ChangeGuiSize(Time.deltaTime);
+                        }
+                        else
+                        {
+                            Scroll(1);
+                        }
                         break;
                     case Controller.TrackpadDirection.Down:
-                        Scroll(-1);
+                        if (_Target.IsOwned)
+                        {
+                            if (_triggerPressed)
+                                MoveGui(-Time.deltaTime);
+                            else
+                                ChangeGuiSize(-Time.deltaTime);
+                        }
+                        else
+                        {
+                            Scroll(-1);
+                        }
                         break;
                     default:
                         _NextScrollTime = null;
@@ -225,15 +239,23 @@ namespace VRGIN.Controls.Handlers
 
                 if (_Controller.Input.GetPressDown(EVRButtonId.k_EButton_Grip) && !_Target.IsOwned)
                 {
-                    _Target.transform.SetParent(_Controller.transform, true);
+                    _Target.transform.SetParent(_Controller.transform, worldPositionStays: true);
                     _Target.IsOwned = true;
                 }
-                if (_Controller.Input.GetPressUp(EVRButtonId.k_EButton_Grip))
+                else if (_Controller.Input.GetPressUp(EVRButtonId.k_EButton_Grip))
                 {
                     AbandonGUI();
                 }
-                UpdateHelp();
+                //UpdateHelp();
             }
+        }
+        private void ChangeGuiSize(float number)
+        {
+            _Target.transform.localScale *= 1 + number;
+        }
+        private void MoveGui(float number)
+        {
+            _Target.transform.position += number * 0.6f * Laser.transform.forward;
         }
 
         private void Scroll(int amount)
@@ -253,58 +275,58 @@ namespace VRGIN.Controls.Handlers
             VR.Input.Mouse.VerticalScroll(amount);
         }
 
-        private void UpdateHelp()
-        {
-            if (_AppButtonPressTime is float pressTime)
-            {
-                if (pressTime + 0.5f < Time.unscaledTime && _HelpTexts.Count == 0)
-                {
-                    ShowHelp();
-                }
-                else if (!_Controller.Input.GetPress(EVRButtonId.k_EButton_ApplicationMenu))
-                {
-                    _AppButtonPressTime = null;
-                    HideHelp();
-                }
-            }
-            else
-            {
-                if (_Controller.Input.GetPress(EVRButtonId.k_EButton_ApplicationMenu))
-                {
-                    _AppButtonPressTime = Time.unscaledTime;
-                }
-            }
-        }
+        //private void UpdateHelp()
+        //{
+        //    if (_AppButtonPressTime is float pressTime)
+        //    {
+        //        if (pressTime + 0.5f < Time.unscaledTime && _HelpTexts.Count == 0)
+        //        {
+        //            ShowHelp();
+        //        }
+        //        else if (!_Controller.Input.GetPress(EVRButtonId.k_EButton_ApplicationMenu))
+        //        {
+        //            _AppButtonPressTime = null;
+        //            HideHelp();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (_Controller.Input.GetPress(EVRButtonId.k_EButton_ApplicationMenu))
+        //        {
+        //            _AppButtonPressTime = Time.unscaledTime;
+        //        }
+        //    }
+        //}
 
-        private void ShowHelp()
-        {
-            var trigger = _Controller.FindAttachPosition("trigger");
-            var trackpad = _Controller.FindAttachPosition("trackpad") ?? _Controller.FindAttachPosition("thumbstick");
-            var grip = _Controller.FindAttachPosition("lgrip") ?? _Controller.FindAttachPosition("handgrip");
-            _HelpTexts.Add(HelpText.Create("Click", trigger, new Vector3(0.06f, -0.04f, -0.05f)));
-            _HelpTexts.Add(HelpText.Create("Right click", trackpad, new Vector3(0.05f, 0.04f, 0), new Vector3(0.01f, 0, 0)));
-            _HelpTexts.Add(HelpText.Create("Middle click", trackpad, new Vector3(0, 0.06f, 0.02f)));
-            _HelpTexts.Add(HelpText.Create("Scroll up", trackpad, new Vector3(0, 0.04f, 0.07f), new Vector3(0, 0, 0.01f)));
-            _HelpTexts.Add(HelpText.Create("Scroll down", trackpad, new Vector3(0, 0.04f, -0.05f), new Vector3(0, 0, -0.01f)));
-            _HelpTexts.Add(HelpText.Create("Grab screen", grip, new Vector3(-0.06f, 0, -0.05f)));
-        }
+        //private void ShowHelp()
+        //{
+        //    var trigger = _Controller.FindAttachPosition("trigger");
+        //    var trackpad = _Controller.FindAttachPosition("trackpad") ?? _Controller.FindAttachPosition("thumbstick");
+        //    var grip = _Controller.FindAttachPosition("lgrip") ?? _Controller.FindAttachPosition("handgrip");
+        //    _HelpTexts.Add(HelpText.Create("Click", trigger, new Vector3(0.06f, -0.04f, -0.05f)));
+        //    _HelpTexts.Add(HelpText.Create("Right click", trackpad, new Vector3(0.05f, 0.04f, 0), new Vector3(0.01f, 0, 0)));
+        //    _HelpTexts.Add(HelpText.Create("Middle click", trackpad, new Vector3(0, 0.06f, 0.02f)));
+        //    _HelpTexts.Add(HelpText.Create("Scroll up", trackpad, new Vector3(0, 0.04f, 0.07f), new Vector3(0, 0, 0.01f)));
+        //    _HelpTexts.Add(HelpText.Create("Scroll down", trackpad, new Vector3(0, 0.04f, -0.05f), new Vector3(0, 0, -0.01f)));
+        //    _HelpTexts.Add(HelpText.Create("Grab screen", grip, new Vector3(-0.06f, 0, -0.05f)));
+        //}
 
-        private void HideHelp()
-        {
-            foreach (var help in _HelpTexts)
-            {
-                Destroy(help.gameObject);
-            }
-            _HelpTexts.Clear();
-        }
+        //private void HideHelp()
+        //{
+        //    foreach (var help in _HelpTexts)
+        //    {
+        //        Destroy(help.gameObject);
+        //    }
+        //    _HelpTexts.Clear();
+        //}
 
-        bool IsResizing
-        {
-            get
-            {
-                return _ResizeHandler && _ResizeHandler.IsDragging;
-            }
-        }
+        //bool IsResizing
+        //{
+        //    get
+        //    {
+        //        return _ResizeHandler && _ResizeHandler.IsDragging;
+        //    }
+        //}
         void CheckForNearMenu()
         {
             _Target = GUIQuadRegistry.Quads.FirstOrDefault(IsLaserable);
@@ -316,74 +338,64 @@ namespace VRGIN.Controls.Handlers
 
         bool IsLaserable(GUIQuad quad)
         {
-            RaycastHit hit;
-            return IsWithinRange(quad) && Raycast(quad, out hit);
+            return IsWithinRange(quad) && Raycast(quad, out _);
         }
 
         float GetRange(GUIQuad quad)
         {
-            return Mathf.Clamp(quad.transform.localScale.magnitude * RANGE, RANGE, RANGE * 5) * VR.Settings.IPDScale;
+            return quad.transform.localScale.z;
+            //return Mathf.Clamp(quad.transform.localScale.magnitude * RANGE, RANGE, RANGE * 5) * VR.Settings.IPDScale;
         }
         bool IsWithinRange(GUIQuad quad)
         {
             if (!Laser) return false;
 
-            var normal = -quad.transform.forward;
-            var otherPos = quad.transform.position;
+            return (quad.transform.position - Laser.transform.position).magnitude < GetRange(quad);
+            //var normal = -quad.transform.forward;
+            ////var otherPos = quad.transform.position;
 
-            var myPos = Laser.transform.position;
-            var laser = Laser.transform.forward;
-            var heightOverMenu = -quad.transform.InverseTransformPoint(myPos).z * quad.transform.localScale.magnitude;
-            return heightOverMenu > 0 && heightOverMenu < GetRange(quad)
-                && Vector3.Dot(normal, laser) < 0; // They have to point the other way
+            //var myPos = Laser.transform.position;
+            //var laser = Laser.transform.forward;
+            //var heightOverMenu = -quad.transform.InverseTransformPoint(myPos).z * quad.transform.localScale.magnitude;
+            //return heightOverMenu > 0 && heightOverMenu < GetRange(quad)
+            //    && Vector3.Dot(normal, laser) < 0; // They have to point the other way
         }
 
         bool Raycast(GUIQuad quad, out RaycastHit hit)
         {
-            var myPos = Laser.transform.position;
-            var laser = Laser.transform.forward;
-            var collider = quad.GetComponent<Collider>();
-            if (collider)
-            {
-                var ray = new Ray(myPos, laser);
-                // So far so good. Now raycast!
-                return collider.Raycast(ray, out hit, GetRange(quad));
-            }
-            else
-            {
-                hit = new RaycastHit();
-                return false;
-            }
+            //var myPos = Laser.transform.position;
+            //var laser = Laser.transform.forward;
+            //var collider = quad.GetComponent<Collider>();
+            //if (collider)
+            //{
+            //var ray = new Ray(myPos, laser);
+            // So far so good. Now raycast!
+            return quad.GetComponent<Collider>().Raycast(new Ray(Laser.transform.position, Laser.transform.forward), out hit, GetRange(quad));
+            //}
+            //else
+            //{
+            //    hit = new RaycastHit();
+            //    return false;
+            //}
         }
-
         void UpdateLaser()
         {
-            Laser.SetPosition(0, Laser.transform.position);
-            Laser.SetPosition(1, Laser.transform.position + Laser.transform.forward);
-
-            if (_Target && _Target.gameObject.activeInHierarchy)
+            if (_Target
+                && _Target.gameObject.activeInHierarchy
+                && IsWithinRange(_Target)
+                && Raycast(_Target, out var hit))
             {
-                RaycastHit hit;
-                if (IsWithinRange(_Target) && Raycast(_Target, out hit))
+                Laser.SetPosition(0, Laser.transform.position);
+                Laser.SetPosition(1, hit.point);
+                if (!IsOtherWorkingOn(_Target))
                 {
-
-                    Laser.SetPosition(1, hit.point);
-                    if (!IsOtherWorkingOn(_Target))
+                    var newPos = new Vector2(hit.textureCoord.x * VRGUI.Width, (1 - hit.textureCoord.y) * VRGUI.Height);
+                    //VRLog.Info("New Pos: {0}, textureCoord: {1}", newPos, hit.textureCoord);
+                    if (!mouseDownPosition.HasValue || Vector2.Distance(mouseDownPosition.Value, newPos) > MOUSE_STABILIZER_THRESHOLD)
                     {
-                        var newPos = new Vector2(hit.textureCoord.x * VRGUI.Width, (1 - hit.textureCoord.y) * VRGUI.Height);
-                        //VRLog.Info("New Pos: {0}, textureCoord: {1}", newPos, hit.textureCoord);
-                        if (!mouseDownPosition.HasValue || Vector2.Distance(mouseDownPosition.Value, newPos) > MOUSE_STABILIZER_THRESHOLD)
-                        {
-                            SetMousePosition(newPos);
-                            mouseDownPosition = null;
-                        }
+                        SetMousePosition(newPos);
+                        mouseDownPosition = null;
                     }
-                }
-                else
-                {
-                    // Out of view
-                    LaserVisible = false;
-                    ClearPresses();
                 }
             }
             else
@@ -397,7 +409,6 @@ namespace VRGIN.Controls.Handlers
         private void ClearPresses()
         {
             AbandonGUI();
-            HideHelp();
             if ((_PressedButtons & Buttons.Left) != 0)
             {
                 VR.Input.Mouse.LeftButtonUp();
@@ -484,91 +495,90 @@ namespace VRGIN.Controls.Handlers
                 (clientRect.Top + y - virtualScreenRect.Top) * 65535.0 / (virtualScreenRect.Bottom - virtualScreenRect.Top));
         }
 
-        class ResizeHandler : ProtectedBehaviour
-        {
-            GUIQuad _Gui;
-            Vector3? _StartLeft;
-            Vector3? _StartRight;
-            Vector3? _StartScale;
-            Quaternion? _StartRotation;
-            Vector3? _StartPosition;
-            Quaternion _StartRotationController;
-            Vector3? _OffsetFromCenter;
-            Controller _Controller;
-            Controller _OtherController;
+        //class ResizeHandler : ProtectedBehaviour
+        //{
+        //    GUIQuad _Gui;
+        //    Vector3? _StartLeft;
+        //    Vector3? _StartRight;
+        //    Vector3? _StartScale;
+        //    Quaternion? _StartRotation;
+        //    Vector3? _StartPosition;
+        //    Quaternion _StartRotationController;
+        //    Vector3? _OffsetFromCenter;
+        //    Controller _Controller;
+        //    Controller _OtherController;
 
-            public bool IsDragging { get; private set; }
-            protected override void OnStart()
-            {
-                base.OnStart();
-                _Gui = GetComponent<GUIQuad>();
-                _Controller = GetComponent<Controller>();
-                _OtherController = _Controller.Other;
-            }
+        //    public bool IsDragging { get; private set; }
+        //    protected override void OnStart()
+        //    {
+        //        base.OnStart();
+        //        _Gui = GetComponent<GUIQuad>();
+        //        _Controller = GetComponent<Controller>();
+        //        _OtherController = _Controller.Other;
+        //    }
 
-            protected override void OnUpdate()
-            {
-                base.OnUpdate();
-                IsDragging = _Controller.Input.GetPress(EVRButtonId.k_EButton_Grip) &&
-                       _OtherController.Input.GetPress(EVRButtonId.k_EButton_Grip);
+        //    protected override void OnUpdate()
+        //    {
+        //        base.OnUpdate();
+        //        IsDragging = _Controller.Input.GetPress(EVRButtonId.k_EButton_Grip) &&
+        //               _OtherController.Input.GetPress(EVRButtonId.k_EButton_Grip);
 
-                if (IsDragging)
-                {
-                    if (_StartScale == null)
-                    {
-                        Initialize();
-                    }
-                    var newLeft = VR.Mode.Left.transform.position;
-                    var newRight = VR.Mode.Right.transform.position;
+        //        if (IsDragging)
+        //        {
+        //            if (_StartScale == null)
+        //            {
+        //                Initialize();
+        //            }
+        //            var newLeft = VR.Mode.Left.transform.position;
+        //            var newRight = VR.Mode.Right.transform.position;
 
-                    var distance = Vector3.Distance(newLeft, newRight);
-                    var originalDistance = Vector3.Distance(_StartLeft.Value, _StartRight.Value);
-                    var newDirection = newRight - newLeft;
-                    var newCenter = newLeft + newDirection * 0.5f;
+        //            var distance = Vector3.Distance(newLeft, newRight);
+        //            var originalDistance = Vector3.Distance(_StartLeft.Value, _StartRight.Value);
+        //            var newDirection = newRight - newLeft;
+        //            var newCenter = newLeft + newDirection * 0.5f;
 
-                    // It would probably be easier than that but Quaternions have never been a strength of mine...
-                    var inverseOriginRot = Quaternion.Inverse(VR.Camera.SteamCam.origin.rotation);
-                    var avgRot = GetAverageRotation();
-                    var rotation = (inverseOriginRot * avgRot) * Quaternion.Inverse(inverseOriginRot * _StartRotationController);
+        //            // It would probably be easier than that but Quaternions have never been a strength of mine...
+        //            var inverseOriginRot = Quaternion.Inverse(VR.Camera.SteamCam.origin.rotation);
+        //            var avgRot = GetAverageRotation();
+        //            var rotation = (inverseOriginRot * avgRot) * Quaternion.Inverse(inverseOriginRot * _StartRotationController);
 
-                    _Gui.transform.localScale = (distance / originalDistance) * _StartScale.Value;
-                    _Gui.transform.localRotation = rotation * _StartRotation.Value;
-                    _Gui.transform.position = newCenter + (avgRot * Quaternion.Inverse(_StartRotationController)) * _OffsetFromCenter.Value;
+        //            _Gui.transform.localScale = (distance / originalDistance) * _StartScale.Value;
+        //            _Gui.transform.localRotation = rotation * _StartRotation.Value;
+        //            _Gui.transform.position = newCenter + (avgRot * Quaternion.Inverse(_StartRotationController)) * _OffsetFromCenter.Value;
 
-                }
-                else
-                {
-                    _StartScale = null;
-                }
-            }
+        //        }
+        //        else
+        //        {
+        //            _StartScale = null;
+        //        }
+        //    }
 
-            private Quaternion GetAverageRotation()
-            {
-                var leftPos = VR.Mode.Left.transform.position;
-                var rightPos = VR.Mode.Right.transform.position;
+        //private Quaternion GetAverageRotation()
+        //{
+        //    var leftPos = VR.Mode.Left.transform.position;
+        //    var rightPos = VR.Mode.Right.transform.position;
 
-                var right = (rightPos - leftPos).normalized;
-                var up = Vector3.Lerp(VR.Mode.Left.transform.forward, VR.Mode.Right.transform.forward, 0.5f);
-                var forward = Vector3.Cross(right, up).normalized;
+        //    var right = (rightPos - leftPos).normalized;
+        //    var up = Vector3.Lerp(VR.Mode.Left.transform.forward, VR.Mode.Right.transform.forward, 0.5f);
+        //    var forward = Vector3.Cross(right, up).normalized;
 
-                return Quaternion.LookRotation(forward, up);
-            }
-            private void Initialize()
-            {
-                _StartLeft = VR.Mode.Left.transform.position;
-                _StartRight = VR.Mode.Right.transform.position;
-                _StartScale = _Gui.transform.localScale;
-                _StartRotation = _Gui.transform.localRotation;
-                _StartPosition = _Gui.transform.position;
-                _StartRotationController = GetAverageRotation();
+        //    return Quaternion.LookRotation(forward, up);
+        //}
+        //private void Initialize()
+        //{
+        //    _StartLeft = VR.Mode.Left.transform.position;
+        //    _StartRight = VR.Mode.Right.transform.position;
+        //    _StartScale = _Gui.transform.localScale;
+        //    _StartRotation = _Gui.transform.localRotation;
+        //    _StartPosition = _Gui.transform.position;
+        //    _StartRotationController = GetAverageRotation();
 
-                var originalDistance = Vector3.Distance(_StartLeft.Value, _StartRight.Value);
-                var originalDirection = _StartRight.Value - _StartLeft.Value;
-                var originalCenter = _StartLeft.Value + originalDirection * 0.5f;
-                _OffsetFromCenter = transform.position - originalCenter;
-            }
+        //    var originalDistance = Vector3.Distance(_StartLeft.Value, _StartRight.Value);
+        //    var originalDirection = _StartRight.Value - _StartLeft.Value;
+        //    var originalCenter = _StartLeft.Value + originalDirection * 0.5f;
+        //    _OffsetFromCenter = transform.position - originalCenter;
+        //}
 
 
-        }
     }
 }

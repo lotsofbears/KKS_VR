@@ -9,6 +9,7 @@ namespace KKS_VR.Features
     internal class HideMaleHead : ProtectedBehaviour
     {
         public static bool ForceHideHead { get; set; }
+        public static bool ForceShowHead { get; set; }
 
         private ChaControl _control;
 
@@ -22,6 +23,11 @@ namespace KKS_VR.Features
             // Hide the head if the VR camera is inside it.
             // This also essentially negates the effect of scenairo-controlled
             // head hiding, which is found in some ADV scenes.
+            if (ForceShowHead)
+            {
+                _control.fileStatus.visibleHeadAlways = true;
+                return;
+            }
             var head = _control.objHead?.transform;
             if (_control.objTop?.activeSelf == true && head != null)
             {

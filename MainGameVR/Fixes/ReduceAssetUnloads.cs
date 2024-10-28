@@ -34,7 +34,6 @@ namespace KKS_VR.Fixes
                 return null;
             }
         }
-
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> insts, MethodBase __originalMethod)
         {
             foreach (var inst in insts)

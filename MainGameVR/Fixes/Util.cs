@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KKS_VR.Handlers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -63,15 +64,34 @@ namespace KKS_VR.Fixes
         }
         public static Component CopyComponent(Component original, GameObject destination)
         {
-            System.Type type = original.GetType();
-            Component copy = destination.AddComponent(type);
+            var type = original.GetType();
+            var copy = destination.AddComponent(type);
             // Copied fields can be restricted with BindingFlags
-            System.Reflection.FieldInfo[] fields = type.GetFields();
-            foreach (System.Reflection.FieldInfo field in fields)
+            var fields = type.GetFields();
+            foreach (var field in fields)
             {
                 field.SetValue(copy, field.GetValue(original));
             }
             return copy;
+        }
+        public static Vector3 Divide(Vector3 a, Vector3 b) => new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
+        public static GameObject CreatePrimitive(PrimitiveType primitive, Vector3 size, Transform parent, Color color, float alpha, bool removeCollider = true)
+        {
+            return CreatePrimitive(primitive, size, parent, new Color(color.r, color.g, color.b, alpha), removeCollider);
+        }
+        public static GameObject CreatePrimitive(PrimitiveType primitive, Vector3 size, Transform parent, Color color, bool removeCollider = true)
+        {
+            var sphere = GameObject.CreatePrimitive(primitive);
+            if (removeCollider)
+            {
+                GameObject.Destroy(sphere.GetComponent<Collider>());
+            }
+            var renderer = sphere.GetComponent<Renderer>();
+            renderer.material = HandHolder.Material;
+            renderer.material.color = color;
+            sphere.transform.SetParent(parent, false);
+            sphere.transform.localScale = size;
+            return sphere;
         }
     }
 }

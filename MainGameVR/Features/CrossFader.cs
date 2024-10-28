@@ -7,10 +7,10 @@ using ADV;
 using ADV.Commands.Base;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using Cinemachine;
 using HarmonyLib;
 using KKAPI.MainGame;
 using KKAPI.Utilities;
+using KKS_VR.Interpreters;
 using KKS_VR.Settings;
 using Manager;
 using Unity.Linq;
@@ -99,10 +99,9 @@ namespace KKS_VR.Features
         }
 
         // CrossFade animations in ADV and TalkScene
-        private static class AdvHooks
+        internal static class AdvHooks
         {
-            private static bool _reaction;
-            private static readonly string _animReaction = "f_reaction_";
+            internal static bool Reaction { get; private set; }
             [HarmonyPrefix]
             [HarmonyWrapSafe]
             [HarmonyPatch(typeof(Motion), nameof(Motion.Play))]
@@ -110,17 +109,15 @@ namespace KKS_VR.Features
             {
                 // Make the animation cross fade from the current one, uses stock game code
                 __instance.isCrossFade = true;
-
-                if ((TalkScene.instance != null && TalkScene.instance.isActive) || (GameAPI.GetADVScene() != null && GameAPI.GetADVScene().isActiveAndEnabled))
+                if (KoikatuInterpreter.CurrentScene == KoikatuInterpreter.SceneType.TalkScene)
                 {
-                    // We use extra long fades for talk scenes and tiny after interactions.
-                    __instance.transitionDuration = _reaction ? Random.Range(0.1f, 0.2f) : Random.Range(0.5f, 1f);
-                    _reaction = false;
-                    if (__instance.state.StartsWith(_animReaction, StringComparison.Ordinal))
+                    // Speed up considerably crossFade after touchScene reaction.
+                    __instance.transitionDuration = Reaction ? Random.Range(0.1f, 0.2f) : Random.Range(0.5f, 1f);
+                    Reaction = false;
+                    if (__instance.state.StartsWith("f_reaction_", StringComparison.Ordinal))
                     {
-                        _reaction = true;
+                        Reaction = true;
                     }
-                    //VRPlugin.Logger.LogDebug($"CrossFade:Test:Motion:Play:{__instance.state}:{__instance.transitionDuration}");
                 }
                 else
                     __instance.transitionDuration = Random.Range(0.3f, 0.6f);
@@ -245,6 +242,7 @@ namespace KKS_VR.Features
         // CrossFade animations in HScenes, same as the KKS_CrossFader plugin but more compact
         internal static class HSceneHooks
         {
+            // Because first crossFade matters.
             internal static void SetFlag(HFlag flag) => _hflag = flag;
             private static HFlag _hflag;
 

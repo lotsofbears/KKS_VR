@@ -1,35 +1,61 @@
-﻿using KKS_VR.Camera;
-using KKS_VR.Features;
-using KKS_VR.Settings;
-using StrayTech;
-using UnityEngine;
+﻿using UnityEngine;
 using VRGIN.Core;
 using WindowsInput.Native;
+using StrayTech;
+using KKS_VR.Settings;
+using KKS_VR.Features;
+using KKS_VR.Camera;
+using Manager;
+using VRGIN.Controls;
+using Valve.VR;
+using KKS_VR.Handlers;
+using static VRGIN.Controls.Controller;
+using System.Collections.Generic;
+using KKS_VR.Controls;
+using ADV.Commands.Object;
 
 namespace KKS_VR.Interpreters
 {
-    internal class ActionSceneInterpreter : SceneInterpreter
+    class ActionSceneInterpreter : SceneInterpreter
     {
-        private KoikatuSettings _Settings;
-        private ActionScene _ActionScene;
+        private ActionScene actionScene;
 
-        private GameObject _Map;
-        private GameObject _CameraSystem;
+        public static Transform FakeCamera;
+        private ActionSceneHandler[] _handlers;
+        private GameObject _map;
+        private GameObject _cameraSystem;
         private Transform _eyes;
-        private bool _NeedsResetCamera;
-        private bool _IsStanding = true;
-        internal bool _Walking = false;
-        private bool _Dashing = false; // ダッシュ時は_Walkingと両方trueになる
+        private bool _resetCamera;
+        private bool _standing = true;
+        private bool _walking = false;
+        private bool _dashing = false; // ダッシュ時は_Walkingと両方trueになる
+        private State _state;
+        private float _continuousRotation = 0f;
+        private float _originAngle;
+        private TrackpadDirection _lastDirection;
+        private EVRButtonId[] _modifierList = new EVRButtonId[2];
+        enum State
+        {
+            None,
+            Walking,
+            Striding,
+        }
+        //private ModelHandler _modelHandler;
 
         public override void OnStart()
         {
             VRLog.Info("ActionScene OnStart");
 
-            _Settings = VR.Context.Settings as KoikatuSettings;
-            _ActionScene = Object.FindObjectOfType<ActionScene>();
+            _settings = VR.Context.Settings as KoikatuSettings;
+            actionScene = ActionScene.instance;
 
             ResetState();
             HoldCamera();
+            //var height = VR.Camera.Head.position.y - actionScene.Player.chaCtrl.transform.position.y;
+            //VRPlugin.Logger.LogWarning($"Interpreter:Action:Start:{height}");
+            //_handlers = AddControllerComponent<ActionSceneHandler>();
+            //_modelHandler = new ModelHandler();
+            //ModelHandler.SetHandColor(Game.Instance.actScene.Player.chaCtrl);
         }
 
         public override void OnDisable()
@@ -39,6 +65,205 @@ namespace KKS_VR.Interpreters
             ResetState();
             ReleaseCamera();
         }
+        public override void OnUpdate()
+        {
+            var map = actionScene.Map.mapRoot?.gameObject;
+
+            if (map != _map)
+            {
+
+                VRLog.Info("! map changed.");
+
+                ResetState();
+                _map = map;
+                _resetCamera = true;
+            }
+
+            if (_walking)
+            {
+                MoveCameraToPlayer(true, true);
+            }
+
+            if (_resetCamera)
+            {
+                ResetCamera();
+            }
+            if (_continuousRotation != 0f)
+            {
+                ContinuousRotation(_continuousRotation);
+            }
+            UpdateCrouch();
+        }
+        private readonly bool[] _mouseState = new bool[3];
+        public override bool OnDirectionDown(int index, TrackpadDirection direction)
+        {
+            _lastDirection = direction;
+            switch (direction)
+            {
+                case TrackpadDirection.Up:
+                    if (actionScene.Player.isGateHit || actionScene.Player.actionTarget != null
+                        || actionScene.Player.isActionPointHit)
+                    {
+                        VR.Input.Mouse.RightButtonDown();
+                        _mouseState[1] = true;
+                    }
+                    break;
+                case TrackpadDirection.Down:
+                    switch (_state)
+                    {
+                        case State.None:
+                        case State.Striding:
+                            break;
+                        case State.Walking:
+                            Crouch();
+                            break;
+                    }
+                    break;
+                case TrackpadDirection.Left:
+                    if (_state != State.Striding)
+                    {
+                        Rotation(-_settings.RotationAngle);
+                    }
+                    break;
+                case TrackpadDirection.Right:
+                    if (_state != State.Striding)
+                    {
+                        Rotation(_settings.RotationAngle);
+                    }
+                    break;
+            }
+            return false;
+        }
+        public override void OnDirectionUp(int index, TrackpadDirection direction)
+        {
+            StopRotation();
+            if (_mouseState[0])
+            {
+                VR.Input.Mouse.LeftButtonUp();
+                _mouseState[0] = false;
+            }
+            if (_mouseState[1])
+            {
+                VR.Input.Mouse.RightButtonUp();
+                _mouseState[1] = false;
+            }
+            if (_mouseState[2])
+            {
+                VR.Input.Mouse.MiddleButtonUp();
+                _mouseState[2] = false;
+            }
+        }
+        public override bool OnButtonDown(int index, EVRButtonId buttonId, TrackpadDirection direction)
+        {
+            switch (buttonId)
+            {
+                case EVRButtonId.k_EButton_SteamVR_Trigger:
+                    if (_state == State.None)
+                    {
+                        StartWalking();
+                    }
+                    break;
+            }
+            EvaluateModifiers();
+            return false;
+        }
+        public override void OnButtonUp(int index, EVRButtonId buttonId, TrackpadDirection direction)
+        {
+
+            switch (buttonId)
+            {
+                case EVRButtonId.k_EButton_SteamVR_Trigger:
+                    StopWalking();
+                    break;
+            }
+            EvaluateModifiers();
+            StandUp();
+        }
+        private void StartStride()
+        {
+            _state = State.Striding;
+            _originAngle = VR.Camera.Origin.rotation.eulerAngles.y;
+        }
+        private void EvaluateModifiers()
+        {
+            switch (_state)
+            {
+                case State.Walking:
+                    if (_modifierList[1] > 0)
+                    {
+                        StartWalking(dash: true);
+                    }
+                    else
+                    {
+                        StartWalking(dash: false);
+                    }
+                    break;
+            }
+        }
+        private void Stride()
+        {
+
+        }
+        private void CreateFakeCamera()
+        {
+            if (FakeCamera == null)
+            {
+                FakeCamera = new GameObject("FakeCamera").transform;
+                FakeCamera.SetParent(MonoBehaviourSingleton<CameraSystem>.Instance.CurrentCamera.transform, worldPositionStays: false);
+            }
+            VRPlugin.Logger.LogDebug($"Interpreter:Create:FakeCamera");
+        }
+        private void Rotation(float degrees)
+        {
+            if (_settings.ContinuousRotation)
+            {
+                _continuousRotation = degrees * (Mathf.Min(Time.deltaTime, 0.04f) * 2f);
+            }
+            else
+            {
+                SnapRotation(degrees);
+            }
+        }
+        private void StopRotation()
+        {
+            _continuousRotation = 0f;
+        }
+
+        /// <summary>
+        /// Rotate the camera. If we are in Roaming, rotate the protagonist as well.
+        /// </summary>
+        private void SnapRotation(float degrees)
+        {
+            //VRLog.Debug("Rotating {0} degrees", degrees);
+            var actInterpreter = KoikatuInterpreter.SceneInterpreter as ActionSceneInterpreter;
+            if (actInterpreter != null)
+            {
+                actInterpreter.MoveCameraToPlayer(true);
+            }
+            var camera = VR.Camera.transform;
+            var newRotation = Quaternion.AngleAxis(degrees, Vector3.up) * camera.rotation;
+            VRCameraMover.Instance.MoveTo(camera.position, newRotation);
+            if (actInterpreter != null)
+            {
+                actInterpreter.MovePlayerToCamera();
+            }
+        }
+        private void ContinuousRotation(float degrees)
+        {
+            var origin = VR.Camera.Origin;
+            var head = VR.Camera.Head;
+            var newRotation = Quaternion.AngleAxis(degrees, Vector3.up) * origin.rotation;
+            var oldPos = head.position;
+            origin.rotation = newRotation;
+            origin.position += oldPos - head.position;
+
+            var actInterpreter = KoikatuInterpreter.SceneInterpreter as ActionSceneInterpreter;
+            if (actInterpreter != null && !actInterpreter._walking)
+            {
+                actInterpreter.MovePlayerToCamera();
+            }
+        }
+
 
         private void ResetState()
         {
@@ -46,38 +271,37 @@ namespace KKS_VR.Interpreters
 
             StandUp();
             StopWalking();
-            _NeedsResetCamera = false;
+            _resetCamera = false;
         }
 
         private void ResetCamera()
         {
-            var pl = _ActionScene.Player?.chaCtrl.objTop;
+            var pl = actionScene.Player?.chaCtrl.objTop;
 
             if (pl != null && pl.activeSelf)
             {
-                _CameraSystem = MonoBehaviourSingleton<CameraSystem>.Instance.gameObject;
+                _cameraSystem = MonoBehaviourSingleton<CameraSystem>.Instance.gameObject;
 
                 // トイレなどでFPS視点になっている場合にTPS視点に戻す
-                _CameraSystem.GetComponent<ActionGame.CameraStateDefinitionChange>().ModeChangeForce((ActionGame.CameraMode?)ActionGame.CameraMode.TPS, true);
+                _cameraSystem.GetComponent<ActionGame.CameraStateDefinitionChange>().ModeChangeForce((ActionGame.CameraMode?)ActionGame.CameraMode.TPS, true);
                 //scene.GetComponent<ActionScene>().isCursorLock = false;
 
                 // カメラをプレイヤーの位置に移動
                 MoveCameraToPlayer();
 
-                _NeedsResetCamera = false;
+                _resetCamera = false;
                 VRLog.Info("ResetCamera succeeded");
             }
         }
-
         private void HoldCamera()
         {
             VRLog.Info("ActionScene HoldCamera");
 
-            _CameraSystem = MonoBehaviourSingleton<CameraSystem>.Instance.gameObject;
+            _cameraSystem = MonoBehaviourSingleton<CameraSystem>.Instance.gameObject;
 
-            if (_CameraSystem != null)
+            if (_cameraSystem != null)
             {
-                _CameraSystem.SetActive(false);
+                _cameraSystem.SetActive(false);
 
                 VRLog.Info("succeeded");
             }
@@ -87,125 +311,115 @@ namespace KKS_VR.Interpreters
         {
             VRLog.Info("ActionScene ReleaseCamera");
 
-            if (_CameraSystem != null)
+            if (_cameraSystem != null)
             {
-                _CameraSystem.SetActive(true);
+                _cameraSystem.SetActive(true);
 
                 VRLog.Info("succeeded");
             }
         }
 
-        public override void OnUpdate()
-        {
-            var map = _ActionScene.Map.mapRoot?.gameObject;
-
-            if (map != _Map)
-            {
-                VRLog.Info("! map changed.");
-
-                ResetState();
-                _Map = map;
-                _NeedsResetCamera = true;
-            }
-
-            if (_Walking) MoveCameraToPlayer(true, true);
-
-            if (_NeedsResetCamera) ResetCamera();
-
-            UpdateCrouch();
-        }
 
         private void UpdateCrouch()
         {
-            var pl = _ActionScene.Player?.chaCtrl.objTop;
+            var pl = actionScene.Player?.chaCtrl.objTop;
 
-            if (_Settings.CrouchByHMDPos && pl?.activeInHierarchy == true)
+            if (_settings.CrouchByHMDPos && pl?.activeInHierarchy == true)
             {
                 var cam = VR.Camera.transform;
                 var delta_y = cam.position.y - pl.transform.position.y;
 
-                if (_IsStanding && delta_y < _Settings.CrouchThreshold)
+                if (_standing && delta_y < _settings.CrouchThreshold)
+                {
                     Crouch();
-                else if (!_IsStanding && delta_y > _Settings.StandUpThreshold) StandUp();
+                }
+                else if (!_standing && delta_y > _settings.StandUpThreshold)
+                {
+                    StandUp();
+                }
             }
         }
 
         public void MoveCameraToPlayer(bool onlyPosition = false, bool quiet = false)
         {
 
-            //var playerHead = player.chaCtrl.objHead.transform;
-            var headCam = VR.Camera.transform;
-
+            //var headCam = VR.Camera.transform;
 
             var pos = GetEyesPosition();
-            if (!_Settings.UsingHeadPos)
+            if (!_settings.UsingHeadPos)
             {
-                var player = _ActionScene.Player;
-                pos.y = player.position.y + (_IsStanding ? _Settings.StandingCameraPos : _Settings.CrouchingCameraPos);
+                var player = actionScene.Player;
+                pos.y = player.position.y + (_standing ? _settings.StandingCameraPos : _settings.CrouchingCameraPos);
             }
 
-            VRCameraMover.Instance.MoveTo(
-                //pos + cf * 0.23f, // 首が見えるとうざいのでほんの少し前目にする
-                pos,
-                onlyPosition ? headCam.rotation : _eyes.rotation,
-                false,
-                quiet);
+            VR.Mode.MoveToPosition(pos, onlyPosition ? Quaternion.Euler(0f, VR.Camera.transform.eulerAngles.y, 0f) : _eyes.rotation, false);
+            //VRMover.Instance.MoveTo(
+            //    //pos + cf * 0.23f, // 首が見えるとうざいのでほんの少し前目にする
+            //    pos,
+            //    onlyPosition ? headCam.rotation : _eyes.rotation,
+            //    false,
+            //    quiet);
         }
+
         private Vector3 GetEyesPosition()
         {
             if (_eyes == null)
             {
-                _eyes = _ActionScene.Player.chaCtrl.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
+                _eyes = actionScene.Player.chaCtrl.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
             }
-            return _eyes.TransformPoint(0f, _Settings.PositionOffsetY, _Settings.PositionOffsetZ);
+            return _eyes.TransformPoint(0f, _settings.PositionOffsetY, _settings.PositionOffsetZ);
         }
         public void MovePlayerToCamera(bool onlyRotation = false)
         {
-            var player = _ActionScene.Player;
+            var player = actionScene.Player;
             var head = VR.Camera.Head;
 
             var vec = player.position - GetEyesPosition();
-            if (!_Settings.UsingHeadPos)
+            if (!_settings.UsingHeadPos)
             {
                 var attachPoint = player.position;
-                attachPoint.y = _IsStanding ? _Settings.StandingCameraPos : _Settings.CrouchingCameraPos;
+                attachPoint.y = _standing ? _settings.StandingCameraPos : _settings.CrouchingCameraPos;
                 vec = player.position - attachPoint;
             }
             var rot = Quaternion.Euler(0f, head.eulerAngles.y, 0f);
             player.rotation = rot;
             player.position = head.position + vec;
-
-            //var player = _ActionScene.Player;
-            //var playerHead = player.chaCtrl.objHead.transform;
-            //var headCam = VR.Camera.transform;
-
-            //var pos = headCam.position;
-            //pos.y += player.position.y - playerHead.position.y;
-
-            //var delta_y = headCam.rotation.eulerAngles.y - player.rotation.eulerAngles.y;
-            //player.transform.Rotate(Vector3.up * delta_y);
-            //var cf = Vector3.Scale(player.transform.forward, new Vector3(1, 0, 1)).normalized;
-
-            //if (!onlyRotation) player.position = pos - cf * 0.1f;
         }
 
         public void Crouch()
         {
-            if (_IsStanding)
+            if (_standing)
             {
-                _IsStanding = false;
-                VR.Input.Keyboard.KeyDown(VirtualKeyCode.VK_Z);
+                _standing = false;
+                if (Manager.Config.xmlCtrl.datas[2] is Config.ActionSystem config
+                    && !config.CrouchCtrlKey)
+                {
+                    VR.Input.Keyboard.KeyDown(VirtualKeyCode.VK_Z);
+                }
+                else
+                {
+                    VR.Input.Keyboard.KeyDown(VirtualKeyCode.CONTROL);
+                }
             }
         }
 
         public void StandUp()
         {
-            if (!_IsStanding)
+            if (!_standing)
             {
-                _IsStanding = true;
-                VR.Input.Keyboard.KeyUp(VirtualKeyCode.VK_Z);
+                _standing = true;
+                if (Manager.Config.xmlCtrl.datas[2] is Config.ActionSystem config
+                    && !config.CrouchCtrlKey)
+                {
+                    VR.Input.Keyboard.KeyUp(VirtualKeyCode.VK_Z);
+                }
+                else
+                {
+                    VR.Input.Keyboard.KeyUp(VirtualKeyCode.CONTROL);
+                }
             }
         }
+
 
         public void StartWalking(bool dash = false)
         {
@@ -213,14 +427,13 @@ namespace KKS_VR.Interpreters
 
             if (!dash)
             {
-                VR.Input.Keyboard.KeyDown(VirtualKeyCode.SHIFT);
-                _Dashing = true;
+                VR.Input.Keyboard.KeyDown(VirtualKeyCode.LSHIFT);
+                _dashing = true;
             }
 
             VR.Input.Mouse.LeftButtonDown();
-            _Walking = true;
-            // Force hide the protagonist's head while walking, so that it
-            // remains hidden when the game lags.
+            _walking = true;
+
             HideMaleHead.ForceHideHead = true;
         }
 
@@ -228,13 +441,13 @@ namespace KKS_VR.Interpreters
         {
             VR.Input.Mouse.LeftButtonUp();
 
-            if (_Dashing)
+            if (_dashing)
             {
-                VR.Input.Keyboard.KeyUp(VirtualKeyCode.SHIFT);
-                _Dashing = false;
+                VR.Input.Keyboard.KeyUp(VirtualKeyCode.LSHIFT);
+                _dashing = false;
             }
 
-            _Walking = false;
+            _walking = false;
             HideMaleHead.ForceHideHead = false;
         }
     }

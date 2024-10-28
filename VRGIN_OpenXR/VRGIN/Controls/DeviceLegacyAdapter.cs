@@ -163,6 +163,7 @@ namespace VRGIN.Controls
             _ = SteamVR_Actions.legacy_emulate;
             var inputSource = _tracking.inputSource;
             var durationSeconds = (float)((int)durationMicroSec / 1000) / 1000f;
+            //var durationSeconds = 0.5f;
             var frequency = 100f;
             var amplitude = 1f;
             SteamVR_Actions.legacy_emulate.Huptic[inputSource].Execute(0f, durationSeconds, frequency, amplitude);

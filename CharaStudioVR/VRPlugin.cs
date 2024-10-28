@@ -109,7 +109,7 @@ namespace KKS_VR
             SaveLoadSceneHook.InstallHook();
             LoadFixHook.InstallHook();
 
-            TopmostToolIcons.Patch();
+            //TopmostToolIcons.Patch();
 
             VRManager.Create<KKSCharaStudioInterpreter>(new CharaStudioContext(settings));
             

@@ -66,7 +66,7 @@ namespace VRGIN.Controls.Tools
             base.OnStart();
         }
 
-        protected override void OnDestroy()
+        private void OnDestroy()
         {
             if (VR.Quitting)
             {

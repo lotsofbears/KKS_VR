@@ -1,127 +1,112 @@
-﻿using System;
-using System.Collections;
-using Funly.SkyStudio;
-using KKAPI.MainGame;
-using KKAPI.Maker;
-using KKS_VR.Camera;
-using KKS_VR.Features;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 using VRGIN.Core;
+using System.Collections;
+using UnityEngine.SceneManagement;
+using KKS_VR.Features;
+using KKS_VR.Camera;
+using Studio;
+using static KKS_VR.Interpreters.KoikatuInterpreter;
+using System.Runtime.Remoting;
+using RootMotion;
+using System.Collections.Generic;
+using KKS_VR.Handlers;
+using VRGIN.Controls;
+using KKS_VR.Settings;
 
 namespace KKS_VR.Interpreters
 {
-    internal class KoikatuInterpreter : GameInterpreter
+    class KoikatuInterpreter : GameInterpreter
     {
         public enum SceneType
         {
+            None,
             OtherScene,
             ActionScene,
             TalkScene,
-            HScene,
-            NightMenuScene,
-            CustomScene
+            HScene
+            //NightMenuScene,
+            //CustomScene
         }
+        public static SceneType CurrentScene { get; private set; }
+        public static SceneInterpreter SceneInterpreter;
+        public static KoikatuSettings settings;
 
-        public SceneType CurrentScene { get; private set; }
-        public SceneInterpreter SceneInterpreter;
-
-        private Fixes.Mirror.Manager _mirrorManager;
+        private KKS_VR.Fixes.Mirror.Manager _mirrorManager;
         private int _kkapiCanvasHackWait;
         private Canvas _kkSubtitlesCaption;
-        private GameObject _sceneObjCache;
-
+        private bool _hands;
         protected override void OnAwake()
         {
-            base.OnAwake();
-
             CurrentScene = SceneType.OtherScene;
             SceneInterpreter = new OtherSceneInterpreter();
             SceneManager.sceneLoaded += OnSceneLoaded;
-            _mirrorManager = new Fixes.Mirror.Manager();
+            _mirrorManager = new KKS_VR.Fixes.Mirror.Manager();
             VR.Camera.gameObject.AddComponent<VREffector>();
+            //VR.Manager.ModeInitialized += AddModels;
+            settings = VR.Context.Settings as KoikatuSettings;
+            Features.LoadVoice.Init();
         }
-
         protected override void OnUpdate()
         {
-            base.OnUpdate();
-
             UpdateScene();
             SceneInterpreter.OnUpdate();
         }
-
         protected override void OnLateUpdate()
         {
-            base.OnLateUpdate();
-            if (_kkSubtitlesCaption != null) FixupKkSubtitles();
+            if (_kkSubtitlesCaption != null)
+            {
+                FixupKkSubtitles();
+            }
+            SceneInterpreter.OnLateUpdate();
         }
-
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            foreach (var reflection in FindObjectsOfType<MirrorReflection>()) _mirrorManager.Fix(reflection);
-
-            if (scene.name == "Title" || scene.name == "FreeH" || scene.name == "Uploader" || scene.name == "Downloader")
-                LoadTitleSkybox();
+            //VRLog.Info($"OnSceneLoaded {scene.name}");
+            if (!_hands && scene.name.Equals("Title"))
+            {
+                // Init too early will throw a wrench into VRGIN's init.
+                CreateHands();
+            }
+            CullColliders();
+            //foreach (var reflection in GameObject.FindObjectsOfType<MirrorReflection>())
+            //{
+            //    _mirrorManager.Fix(reflection);
+            //}
         }
-
-        private static void LoadTitleSkybox()
+        private void CullColliders()
         {
-            if (GameObject.FindObjectOfType<TimeOfDayController>()) return;
-
-            try
+            // Sky has gigantic collider on 11 layer, and for reasons unknown non kinematic rigidBodies at layer 10 collide with it.
+            var map = GameObject.Find("Map");
+            if (map != null)
             {
-                var stockSkyProfiles = new string[]
+                foreach (Transform child in map.transform)
                 {
-                    "_morning_stu",
-                    "_daytime_stu",
-                    "_evening_stu",
-                    "_night_stu",
-                };
-                // Use either day or night skybox depending on real world time to reduce eye abuse at night
-                // morning and evening skyboxes are not worth using for title screen
-                var timeNow = DateTime.Now;
-                var isNight = timeNow.Hour < 6 || timeNow.Hour > 20;
-                var skyType = isNight ? stockSkyProfiles[3] : stockSkyProfiles[1];
-                // var skyType = stockSkyProfiles[UnityEngine.Random.RandomRangeInt(0, stockSkyProfiles.Length)];
-
-                VRLog.Info($"Loading skybox {skyType}...");
-
-                var skyProfile = CommonLib.LoadAsset<SkyProfile>(@"studio\sky\01.unity3d", "SkyProfile" + skyType, true, null, true);
-                var skyMaterial = CommonLib.LoadAsset<Material>(@"studio\sky\01.unity3d", "SkyboxMaterial" + skyType, true, null, true);
-                if (skyProfile != null && skyMaterial != null)
-                {
-                    VRLog.Info($"SkyProfile: {skyProfile}   SkyboxMaterial: {skyMaterial}");
-
-                    var instanceGameObject = new GameObject("KKSVR_Skybox");
-                    var skyController = instanceGameObject.AddComponent<TimeOfDayController>();
-
-                    // Need to add dummy sun and mun objects or the controller will refuse to work
-                    var sun = new GameObject("Sun");
-                    sun.transform.parent = instanceGameObject.transform;
-                    new GameObject("Position", typeof(RotateBody)).transform.parent = sun.transform;
-                    skyController.sunOrbit = sun.AddComponent<OrbitingBody>();
-
-                    var mun = new GameObject("Moon");
-                    mun.transform.parent = instanceGameObject.transform;
-                    new GameObject("Position", typeof(RotateBody)).transform.parent = mun.transform;
-                    skyController.moonOrbit = mun.AddComponent<OrbitingBody>();
-
-                    // For some reason the profile doesn't come with the material, which is required
-                    skyProfile.skyboxMaterial = skyMaterial;
-                    // This applies the skybox right away
-                    skyController.skyProfile = skyProfile;
-                }
-                else
-                {
-                    VRLog.Warn("Skybox not found! Missing CharaStudio assets?");
+                    if (child.name.StartsWith("mo_koi_sky_", System.StringComparison.Ordinal))
+                    {
+                        if (child.GetComponent<Collider>() != null)
+                            Destroy(child.GetComponent<Collider>());
+                    }
                 }
             }
-            catch (Exception e)
-            {
-                VRLog.Error("Failed to load Skybox! Error: " + e);
-            }
+
         }
+        private void CreateHands()
+        {
+            _hands = true;
+            var left = new GameObject("LeftHandHolder")
+            {
+                layer = 10
+            };
+            var component = left.AddComponent<HandHolder>();
+            component.Init(0, left);
 
+            var right = new GameObject("RightHandHolder")
+            {
+                layer = 10
+            };
+            component = right.AddComponent<HandHolder>();
+            component.Init(1, right);
+        }
         /// <summary>
         /// Fix up scaling of subtitles added by KK_Subtitles. See
         /// https://github.com/IllusionMods/KK_Plugins/pull/91 for details.
@@ -129,11 +114,13 @@ namespace KKS_VR.Interpreters
         private void FixupKkSubtitles()
         {
             foreach (Transform child in _kkSubtitlesCaption.transform)
+            {
                 if (child.localScale != Vector3.one)
                 {
                     VRLog.Info($"Fixing up scale for {child}");
                     child.localScale = Vector3.one;
                 }
+            }
         }
 
         public override bool IsIgnoredCanvas(Canvas canvas)
@@ -185,85 +172,106 @@ namespace KKS_VR.Interpreters
 
             return false;
         }
+        public static bool StartScene(SceneType type, MonoBehaviour behaviour = null, params object[] args)
+        {
+            if (CurrentScene != type)
+            {
+                VRPlugin.Logger.LogDebug($"Interpreter:Start:{type}");
+                CurrentScene = type;
+                SceneInterpreter.OnDisable();
+                SceneInterpreter = CreateSceneInterpreter(type, behaviour, args);
+                SceneInterpreter.OnStart();
+                return true;
+            }
+            else
+            {
+                VRPlugin.Logger.LogDebug($"Interpreter:AlreadyExists:{type}");
+                return false;
+            }
+        }
+        public static void EndScene(SceneType type)
+        {
+            if (CurrentScene == type)
+            {
+                StartScene(SceneType.OtherScene);
+            }
+            else
+            {
+                VRPlugin.Logger.LogDebug($"Interpreter:End:WrongScene:Current - {CurrentScene} - {type}");
+            }
+        }
 
         // 前回とSceneが変わっていれば切り替え処理をする
         private void UpdateScene()
         {
-            var nextSceneType = DetectScene();
-
-            if (nextSceneType != CurrentScene)
+            if (CurrentScene < SceneType.TalkScene)
             {
-                VRLog.Info($"Load interpreter for new scene type: {nextSceneType}");
-                SceneInterpreter.OnDisable();
-
-                CurrentScene = nextSceneType;
-                SceneInterpreter = CreateSceneInterpreter(nextSceneType);
-                SceneInterpreter.OnStart();
+                var sceneType = DetectScene();
+                if (CurrentScene != sceneType)
+                {
+                    EndScene(CurrentScene);
+                    StartScene(sceneType);
+                }
             }
         }
 
         private SceneType DetectScene()
         {
-            if (GameAPI.InsideHScene) return SceneType.HScene;
-            if (MakerAPI.InsideMaker) return SceneType.CustomScene;
-            if (TalkScene.isPaly) return SceneType.TalkScene;
-
-            var stack = Manager.Scene.NowSceneNames;
-            foreach (var name in stack)
+            if (ActionScene.instance != null)
             {
-                //if (name == "H" && SceneObjPresent("HScene"))
-                //    return SceneType.HScene;
-                if (ActionScene.initialized && name == "Action")
-                    return SceneType.ActionScene;
-                //if (name == "Talk" && SceneObjPresent("TalkScene"))
-                //    return SceneType.TalkScene;
-                if (name == "NightMenu" && SceneObjPresent("NightMenuScene"))
-                    return SceneType.NightMenuScene;
-                //if (name == "CustomScene" && SceneObjPresent("CustomScene"))
-                //    return SceneType.CustomScene;
+                if (ActionScene.instance.AdvScene.isActiveAndEnabled)
+                {
+                    return SceneType.TalkScene;
+                }
+                //if (_scene.NowSceneNames.Contains("NightMenuScene"))
+                //{
+                //    return SceneType.NightMenuScene;
+                //}
+                return SceneType.ActionScene;
             }
-
             return SceneType.OtherScene;
         }
 
-        private bool SceneObjPresent(string name)
-        {
-            if (_sceneObjCache != null && _sceneObjCache.name == name) return true;
-            var obj = GameObject.Find(name);
-            if (obj != null)
-            {
-                _sceneObjCache = obj;
-                return true;
-            }
+        //private bool SceneObjPresent(string name)
+        //{
+        //    if (_sceneObjCache != null && _sceneObjCache.name == name)
+        //    {
+        //        return true;
+        //    }
+        //    var obj = GameObject.Find(name);
+        //    if (obj != null)
+        //    {
+        //        _sceneObjCache = obj;
+        //        return true;
+        //    }
+        //    return false;
+        //}
 
-            return false;
-        }
-
-        private static SceneInterpreter CreateSceneInterpreter(SceneType ty)
+        private static SceneInterpreter CreateSceneInterpreter(SceneType type, MonoBehaviour behaviour, params object[] args)
         {
-            switch (ty)
+            switch (type)
             {
-                case SceneType.OtherScene:
-                    return new OtherSceneInterpreter();
                 case SceneType.ActionScene:
                     return new ActionSceneInterpreter();
-                case SceneType.CustomScene:
-                    return new CustomSceneInterpreter();
-                case SceneType.NightMenuScene:
-                    return new NightMenuSceneInterpreter();
+                //case SceneType.CustomScene:
+                //    return new CustomSceneInterpreter();
+                //case SceneType.NightMenuScene:
+                //    return new NightMenuSceneInterpreter();
                 case SceneType.HScene:
-                    return new HSceneInterpreter();
+                    return new HSceneInterpreter(behaviour);
                 case SceneType.TalkScene:
-                    return new TalkSceneInterpreter();
+                    return new TalkSceneInterpreter(behaviour);
                 default:
-                    VRLog.Warn($"Unknown scene type: {ty}");
                     return new OtherSceneInterpreter();
             }
         }
 
         protected override CameraJudgement JudgeCameraInternal(UnityEngine.Camera camera)
         {
-            if (camera.CompareTag("MainCamera")) StartCoroutine(HandleMainCameraCo(camera));
+            if (camera.CompareTag("MainCamera"))
+            {
+                StartCoroutine(HandleMainCameraCo(camera));
+            }
             return base.JudgeCameraInternal(camera);
         }
 
@@ -281,15 +289,15 @@ namespace KKS_VR.Interpreters
             if (camera.name == "ActionCamera" || camera.name == "FrontCamera")
             {
                 VRLog.Info("Adding ActionCameraControl");
-                camera.gameObject.AddComponent<ActionCameraControl>();
+                camera.gameObject.AddComponent<Camera.ActionCameraControl>();
             }
             else if (camera.GetComponent<CameraControl_Ver2>() != null)
             {
                 VRLog.Info("New main camera detected: moving to {0} {1}", camera.transform.position, camera.transform.eulerAngles);
-                VRCameraMover.Instance.MoveTo(camera.transform.position, camera.transform.rotation, false);
+                Camera.VRCameraMover.Instance.MoveTo(camera.transform.position, camera.transform.rotation);
                 VRLog.Info("moved to {0} {1}", VR.Camera.Head.position, VR.Camera.Head.eulerAngles);
                 VRLog.Info("Adding CameraControlControl");
-                camera.gameObject.AddComponent<CameraControlControl>();
+                camera.gameObject.AddComponent<Camera.CameraControlControl>();
             }
             else
             {
@@ -298,5 +306,14 @@ namespace KKS_VR.Interpreters
         }
 
         //public override bool ApplicationIsQuitting => Manager.Scene.isGameEnd;
+
+
+        private static readonly float _targetFps = 1f / 45f;
+        // As my potater can't into 90fps, I limit it to half and use frame interpolation to compensate.
+        // Thus all calculations are done with 45fps in mind.
+        internal static int ScaleWithFps(int number)
+        {
+            return Mathf.FloorToInt(_targetFps / Time.deltaTime * number);
+        }
     }
 }

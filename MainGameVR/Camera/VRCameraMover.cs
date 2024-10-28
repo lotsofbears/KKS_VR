@@ -39,7 +39,7 @@ namespace KKS_VR.Camera
         /// <summary>
         /// Move the camera to the specified pose.
         /// </summary>
-        public void MoveTo(Vector3 position, Quaternion rotation, bool keepHeight, bool quiet = false)
+        public void MoveTo(Vector3 position, Quaternion rotation)
         {
             if (position.Equals(Vector3.zero))
             {
@@ -47,24 +47,29 @@ namespace KKS_VR.Camera
                 //Console.WriteLine();
                 return;
             }
-            if (!quiet)
-            {
-#if DEBUG
-                //VRLog.Debug("Moving camera to pos={0} rot={1} Trace:\n{2}", position, rotation.eulerAngles, new StackTrace(1));
-                VRLog.Debug("Moving camera to pos={0} rot={1}", position, rotation.eulerAngles);
-#else
-                VRLog.Debug("Moving camera to pos={0} rot={1}", position, rotation.eulerAngles);
-#endif
-            }
+//            if (!quiet)
+//            {
+//#if DEBUG
+//                //VRLog.Debug("Moving camera to pos={0} rot={1} Trace:\n{2}", position, rotation.eulerAngles, new StackTrace(1));
+//                VRLog.Debug("Moving camera to pos={0} rot={1}", position, rotation.eulerAngles);
+//#else
+//                VRLog.Debug("Moving camera to pos={0} rot={1}", position, rotation.eulerAngles);
+//#endif
+//            }
 
 
             _lastPosition = position;
             _lastRotation = rotation;
 
 
-            // Trim out X (pitch) and Z (roll) to prevent player from being upside down and such
-            var trimmedRotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
-            VR.Mode.MoveToPosition(position, trimmedRotation, keepHeight);
+            // We don't want to respect head rotations when we deal with text.
+            VR.Camera.Origin.rotation = Quaternion.Euler(0f, rotation.eulerAngles.y, 0f);
+            VR.Camera.Origin.position += position - VR.Camera.Head.position;
+
+
+            //// Trim out X (pitch) and Z (roll) to prevent player from being upside down and such
+            //var trimmedRotation = Quaternion.Euler(0, rotation.eulerAngles.y, 0);
+            //VR.Mode.MoveToPosition(position, trimmedRotation, keepHeight);
 
             //VR.Mode.MoveToPosition(position, rotation, ignoreHeight: keepHeight);
             OnMove?.Invoke();
@@ -114,7 +119,7 @@ namespace KKS_VR.Camera
 
                 //if (Vector3.Angle(positionNoY, averageNoY) < 90)
                 {
-                    var closerPosition = Vector3.MoveTowards(positionNoY, averageNoY, Vector3.Distance(positionNoY, averageNoY) - TalkSceneInterpreter.TalkDistance);
+                    var closerPosition = Vector3.MoveTowards(positionNoY, averageNoY, Vector3.Distance(positionNoY, averageNoY) - TalkSceneInterpreter.talkDistance);
 
                     closerPosition.y = averageV.y + ActionCameraControl.GetPlayerHeight();
 
@@ -146,7 +151,7 @@ namespace KKS_VR.Camera
             }
             else if (ShouldApproachCharacter(textScenario, out var character))
             {
-                var distance = InCafe() ? 0.75f : TalkSceneInterpreter.TalkDistance;
+                var distance = InCafe() ? 0.75f : TalkSceneInterpreter.talkDistance;
                 float height;
                 Quaternion rotation;
                 if (Manager.Scene.NowSceneNames[0] == "H")
@@ -220,6 +225,13 @@ namespace KKS_VR.Camera
                 isFadingOut);
         }
 
+        public void Impersonate(ChaControl chara)
+        {
+            var eyes = chara.objHeadBone.transform
+                .Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
+            var position = eyes.TransformPoint(0f, _settings.PositionOffsetY, _settings.PositionOffsetZ);
+            MoveTo(position, eyes.rotation);
+        }
         private void MoveWithHeuristics(Vector3 position, Quaternion rotation, bool keepHeight, bool pretendFading)
         {
             var fade = Manager.Scene.sceneFadeCanvas;
@@ -229,7 +241,7 @@ namespace KKS_VR.Camera
 
             //var fadeOk = fade.isEnd; //(fade._Fade == SimpleFade.Fade.Out) ^ fade.IsEnd;
             if (pretendFading || IsDestinationFar(position, rotation))
-                MoveTo(position, rotation, keepHeight);
+                MoveTo(position, rotation);
             else
                 VRLog.Debug("Not moving because heuristic conditions are not met");
         }

@@ -45,24 +45,22 @@ namespace VRGIN.Controls.Tools
             VRLog.Info(Neighbor ? "Got my neighbor!" : "No neighbor");
         }
 
-        protected abstract void OnDestroy();
-
         protected virtual void OnEnable()
         {
-            VRLog.Info("On Enable: {0}", GetType().Name);
+            //VRLog.Info("On Enable: {0}", GetType().Name);
             if ((bool)Icon)
                 Icon.SetActive(true);
-            else
-                VRLog.Info("But no icon...");
+            //else
+            //    VRLog.Info("But no icon...");
         }
 
         protected virtual void OnDisable()
         {
-            VRLog.Info("On Disable: {0}", GetType().Name);
+            //VRLog.Info("On Disable: {0}", GetType().Name);
             if ((bool)Icon)
                 Icon.SetActive(false);
-            else
-                VRLog.Info("But no icon...");
+            //else
+                //VRLog.Info("But no icon...");
         }
 
         public virtual List<HelpText> GetHelpTexts()

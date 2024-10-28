@@ -1,28 +1,86 @@
-﻿using UnityEngine;
-using VRGIN.Core;
+﻿using VRGIN.Core;
+using UnityEngine;
+using VRGIN.Controls;
+using Valve.VR;
+using KKS_VR.Settings;
 
 namespace KKS_VR.Interpreters
 {
-    internal abstract class SceneInterpreter
+    abstract class SceneInterpreter
     {
-        public abstract void OnStart();
-        public abstract void OnDisable();
-        public abstract void OnUpdate();
-
-        protected void AddControllerComponent<T>()
-            where T : Component
+        protected KoikatuSettings _settings = VR.Context.Settings as KoikatuSettings;
+        public virtual void OnStart()
         {
-            VR.Mode.Left.gameObject.AddComponent<T>();
-            VR.Mode.Right.gameObject.AddComponent<T>();
+
+        }
+        public virtual void OnDisable()
+        {
+
+        }
+        public virtual void OnUpdate()
+        {
+
+        }
+        public virtual void OnLateUpdate()
+        {
+
         }
 
-        protected void DestroyControllerComponent<T>()
-            where T : Component
+        public virtual bool OnDirectionDown(int index, Controller.TrackpadDirection direction)
         {
-            var left = VR.Mode.Left.GetComponent<T>();
-            if (left != null) Object.Destroy(left);
-            var right = VR.Mode.Right.GetComponent<T>();
-            if (right != null) Object.Destroy(right);
+            return true;
+        }
+
+        public virtual void OnDirectionUp(int index, Controller.TrackpadDirection direction)
+        {
+
+        }
+
+        public virtual bool OnButtonDown(int index, EVRButtonId buttonId, Controller.TrackpadDirection direction)
+        {
+            return true;
+        }
+
+        public virtual void OnButtonUp(int index, EVRButtonId buttonId, Controller.TrackpadDirection direction)
+        {
+
+        }
+        public enum Timing
+        {
+            Fraction,
+            Half,
+            Full
+        }
+        public virtual void OnGripMove(int index, bool active)
+        {
+
+        }
+        //protected static void DestroyControllerComponent<T>()
+        //    where T: Component
+        //{
+        //    var left = VR.Mode.Left.GetComponent<T>();
+        //    if (left != null)
+        //    {
+        //        GameObject.Destroy(left);
+        //    }
+        //    var right = VR.Mode.Right.GetComponent<T>();
+        //    if (right != null)
+        //    {
+        //        GameObject.Destroy(right);
+        //    }
+        //}
+
+        public virtual bool IsTouchpadPress(int index)
+        {
+            return false;
+        }
+        public virtual bool IsGripPress(int index)
+        {
+            return false;
+        }
+        public virtual bool IsTriggerPress(int index)
+        {
+            return false;
         }
     }
 }

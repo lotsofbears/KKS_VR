@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using KKS_VR.Handlers;
 using UnityEngine;
 
 namespace KKS_VR.Caress
@@ -226,22 +227,19 @@ namespace KKS_VR.Caress
             [HarmonyPostfix, HarmonyPatch(typeof(HandCtrl), nameof(HandCtrl.ForceFinish))]
             public static void ForceFinishPostfix()
             {
-                var helper = CaressHelper.Instance;
-                if (helper != null && !helper.IsEndKissCo)
-                {
-                    helper.Halt(disengage: false);
-                }
+                if (MouthGuide.Instance != null)
+                    MouthGuide.Instance.Halt(disengage: false);
             }
 
-            [HarmonyPostfix, HarmonyPatch(typeof(HAibu), nameof(HAibu.GotoDislikes))]
-            public static void GotoDislikesPostfix()
-            {
-                var helper = CaressHelper.Instance;
-                if (helper != null && !helper.IsEndKissCo)
-                {
-                    helper.Halt(disengage: true);
-                }
-            }
+            //[HarmonyPostfix, HarmonyPatch(typeof(HAibu), nameof(HAibu.GotoDislikes))]
+            //public static void GotoDislikesPostfix()
+            //{
+            //    var helper = CaressHelper.Instance;
+            //    if (helper != null && !helper.IsEndKissCo)
+            //    {
+            //        helper.Halt(disengage: true);
+            //    }
+            //}
 
         }
     }

@@ -5,6 +5,8 @@ using HarmonyLib;
 using IllusionUtility.SetUtility;
 using KKS_VR.Caress;
 using KKS_VR.Features;
+using KKS_VR.Interactors;
+using KKS_VR.Interpreters;
 using UnityEngine;
 using VRGIN.Core;
 
@@ -95,37 +97,29 @@ namespace KKS_VR.Camera
         [HarmonyPostfix]
         public static void PostChangeAnimator(HSceneProc.AnimationListInfo _nextAinmInfo, bool _isForceCameraReset, HSceneProc __instance, List<ChaControl> ___lstFemale)
         {
-            if (VRMouth.Instance != null)
-            {
-                VRMouth.Instance.OnPositionChange(_nextAinmInfo);
-            }
-            //else if (VRMoverH.Instance != null && VRMoverH.Instance._settings.FlyInH)
-            //{
-            //if (_isForceCameraReset)
-            {
-                UpdateVRCamera(__instance, ___lstFemale, null);
-            }
+            UpdateVRCamera(__instance, ___lstFemale, null);
+            if (KoikatuInterpreter.SceneInterpreter is HSceneInterpreter hScene)
+                hScene.OnPoseChange(_nextAinmInfo);
+
             Fixes.ObiCtrlFix.SetFluidsState(false);
         }
 
-        //[HarmonyPatch("ChangeCategory")]
-        //[HarmonyPrefix]
-        //public static void PreChangeCategory(List<ChaControl> ___lstFemale, out float __state)
-        //{
-        //    __state = ___lstFemale[0].objTop.transform.position.y;
-        //}
+
+        [HarmonyPatch("ChangeCategory")]
+        [HarmonyPrefix]
+        public static void PreChangeCategory()
+        {
+            GraspHelper.Instance?.OnSpotChangePre();
+        }
 
         [HarmonyPatch("ChangeCategory")]
         [HarmonyPostfix]
         public static void PostChangeCategory(HSceneProc __instance, List<ChaControl> ___lstFemale)//, float __state)
         {
-            if (PoV.Instance != null)
-            {
-                PoV.Instance.OnSpotChange();
-            }
-
+            if (KoikatuInterpreter.SceneInterpreter is HSceneInterpreter hScene)
+                hScene.OnSpotChangePost();
             UpdateVRCamera(__instance, ___lstFemale, null);// __state);
-            
+
             Fixes.ObiCtrlFix.SetFluidsState(false);
         }
         [HarmonyPatch(nameof(HSceneProc.GotoPointMoveScene))]
@@ -190,7 +184,7 @@ namespace KKS_VR.Camera
                 {
                     var cameraHeight = lstFemale[0].transform.position.y + VR.Camera.transform.localPosition.y;
                     var destination = new Vector3(cameraPosition.x, cameraHeight, cameraPosition.z);
-                    VRCameraMover.Instance.MoveTo(destination, cameraRotation, false);
+                    VRCameraMover.Instance.MoveTo(destination, cameraRotation);
                 }
 
                 

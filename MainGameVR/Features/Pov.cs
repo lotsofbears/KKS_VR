@@ -15,23 +15,26 @@ using static Valve.VR.EVRButtonId;
 using KKAPI;
 using UniRx;
 using Manager;
-using KKS_VR.Settings;
 using KKS_VR.Caress;
-using Obi;
+using KKS_VR.Features;
+using KKS_VR.Settings;
+using KKS_VR.Interpreters;
+using KKS_VR.Handlers;
+using KKS_VR.Trackers;
 
 
 
 namespace KKS_VR.Features
 {
-    public class PoV : ProtectedBehaviour
+    public class PoV : MonoBehaviour
     {
-
         public static PoV Instance;
         /// <summary>
         /// girlPOV is NOT set proactively, use "active" to monitor state.
         /// </summary>
-        public bool GirlPOV;
-        public bool Active;
+        public static bool GirlPoV;
+        public static bool Active => _active;
+        public static ChaControl Target => _target;
         private struct PoIPatternInfo
         {
             public string teleportTo;
@@ -46,93 +49,82 @@ namespace KKS_VR.Features
         private enum POV_Mode
         {
             Eyes,
-
-            // Okay even if there are outliers that would use this, we simply don't have a hotkey for it. Keyboard for VR? Big fat NO.
-            // Fine we may add grip or trigger as modifiers for long press of touchpad(joystick). Still shady hotkey though.
-            // Scroll through all modes? That's even worse then keyboard.
-            Head,     
-            Disable 
+            Head,
+            Disable
         }
-        private ChaControl _target;
+        private static bool _active;
+        private static ChaControl _target;
         private Transform _targetEyes;
         private POV_Mode povMode;
         private KoikatuSettings settings;
-        private bool buttonA;
         private bool _wasAway;
-        private List<ChaControl> _chaControls;
-        private Controller _device;
-        private Controller _device1;
         private float _moveSpeed;
-        private Scene _scene;
         private bool _newAttachPoint;
-        private Vector3 _offsetPosition;
-        private Quaternion _offsetRotation;
+        private Vector3 _offsetVecNewAttach;
+        private Quaternion _offsetRotNewAttach;
         private bool _rotationFull;
         private bool _rotationZero;
         private bool _rotationRequired;
         private float _rotIntensity;
-        private float _rotFootprint;
+        private float _rotAdaptSpeed;
+        private float _rotStartThreshold;
         private bool _precisionPoint;
+        private Vector3 _offsetVecEyes;
+        private MouthGuide _mouth = MouthGuide.Instance;
+        private bool _gripMove;
 
-        private HFlag _hFlag;
-        private bool IsClimax => _hFlag.nowAnimStateName.EndsWith("_Loop", System.StringComparison.Ordinal);
-        public void Initialize(HSceneProc proc)
+        private Vector3 GetEyesPosition => _targetEyes.TransformPoint(_offsetVecEyes);
+        private bool IsClimax => HSceneInterpreter.hFlag.nowAnimStateName.EndsWith("_Loop", System.StringComparison.Ordinal);
+        public void Initialize()
         {
             Instance = this;
             settings = VR.Context.Settings as KoikatuSettings;
-            //_hand = Traverse.Create(proc).Field("hand").GetValue<HandCtrl>(); 
-            _hFlag = Traverse.Create(proc).Field("flags").GetValue<HFlag>();
-            CrossFader.HSceneHooks.SetFlag(_hFlag);
-            _chaControls = Traverse.Create(proc).Field("lstFemale").GetValue<List<ChaControl>>();
-            _device = FindObjectOfType<Controller>();
-            _device1 = _device.Other;
         }
+
         private void UpdateSettings()
         {
-            _rotFootprint = (int)(10f * Mathf.Lerp(0f, 30f, settings.RotationFootprint)) * 0.1f;
-            VRPlugin.Logger.LogDebug($"PoV:UpdateSettings[{_rotFootprint}]");
+            _rotAdaptSpeed = Mathf.Max(10f, (int)(10f * (settings.RotAdaptSpeed * 100f)) * 0.1f);
+            _rotStartThreshold = (int)(10f * Mathf.Lerp(0f, 30f, settings.RotationStartThreshold)) * 0.1f;
+            _offsetVecEyes = new Vector3(0f, settings.PositionOffsetY, settings.PositionOffsetZ);
+            VRPlugin.Logger.LogDebug($"PoV:UpdateSettings:{_rotStartThreshold}:{_rotAdaptSpeed}");
         }
         private void SetVisibility()
         {
-            if (_target != null)
-            {
-                _target.fileStatus.visibleHeadAlways = true;
-            }
+            if (_target != null) _target.fileStatus.visibleHeadAlways = true;
         }
-        private void IncreaseRotation()
+        private void IncreaseRotationFootprint()
         {
             if (!_rotationFull)
             {
-                _rotIntensity += Time.deltaTime * 10f;
+                _rotIntensity += Time.deltaTime * _rotAdaptSpeed;
                 if (_rotIntensity > 60f)
                 {
                     _rotationFull = true;
                     _rotIntensity = 60f;
                 }
                 _rotationZero = false;
-                //VRPlugin.Logger.LogDebug($"PoV:IncreaseRotation:[{_rotIntensity}]");
             }
         }
-        private void DecreaseRotation()
+
+        private void DecreaseRotationFootprint()
         {
             if (!_rotationZero)
             {
-                _rotIntensity -= Time.deltaTime * 10f;
+                _rotIntensity -= Time.deltaTime * _rotAdaptSpeed;
                 if (_rotIntensity < 1f)
                 {
                     _rotationZero = true;
                     _rotIntensity = 1f;
                 }
                 _rotationFull = false;
-                //VRPlugin.Logger.LogDebug($"PoV:DecreaseRotation:[{_rotIntensity}]");
             }
         }
+
         private void StopRotation()
         {
             _rotIntensity = 1f;
             _rotationZero = true;
             _rotationFull = false;
-            //VRPlugin.Logger.LogDebug($"PoV:StopRotation[{_rotIntensity}]");
         }
         private void MoveToPos()
         {
@@ -141,8 +133,8 @@ namespace KKS_VR.Features
             {
                 if (!IsClimax)
                 {
-                    origin.rotation = _offsetRotation;
-                    origin.position += GetEyesPosition() + _offsetPosition - VR.Camera.Head.position;
+                    origin.rotation = _offsetRotNewAttach;
+                    origin.position += _targetEyes.position + _offsetVecNewAttach - VR.Camera.Head.position;
                 }
             }
             else
@@ -160,22 +152,19 @@ namespace KKS_VR.Features
                     var angle = Quaternion.Angle(origin.rotation, _targetEyes.rotation);
                     if (!_rotationRequired)
                     {
-                        if (angle > _rotFootprint)
+                        if (angle > _rotStartThreshold)
                         {
                             _rotationRequired = true;
                         }
-                        DecreaseRotation();
-                        //VRPlugin.Logger.LogDebug($"PoV:MoveToPos:NotRequired[{angle}]");
-                        
+                        DecreaseRotationFootprint();
                     }
                     else
                     {
-                        if (angle < _rotFootprint)
+                        if (angle < _rotStartThreshold)
                         {
                             // Camera is close enough to the target rotation. 
                             if (!_precisionPoint)
                             {
-                                //VRPlugin.Logger.LogDebug($"PoV:MoveToPos:Required:Close:NotPrecise[{angle}]");
                                 if (angle < 0.25f)
                                 {
                                     _precisionPoint = true;
@@ -183,30 +172,38 @@ namespace KKS_VR.Features
                             }
                             else
                             {
-                                //VRPlugin.Logger.LogDebug($"PoV:MoveToPos:Required:Close:Precise[{angle}]");
                                 _rotationRequired = false;
                                 _precisionPoint = false;
                             }
                         }
                         else
                         {
-                            IncreaseRotation();
-                            //VRPlugin.Logger.LogDebug($"PoV:MoveToPos:Required:Far[{angle}]");
+                            IncreaseRotationFootprint();
                         }
                     }
                     if (_rotationRequired)
                     {
                         origin.rotation = Quaternion.RotateTowards(origin.rotation, _targetEyes.rotation, Time.deltaTime * _rotIntensity);
                     }
-                    origin.position += GetEyesPosition() - VR.Camera.Head.position;
+                    origin.position += GetEyesPosition - VR.Camera.Head.position;
                 }
             }
         }
         public void StartPov()
         {
             VRPlugin.Logger.LogDebug($"PoV:StartPov");
-            Active = true;
+            _active = true;
             NextChara(keepChara: true);
+            if (settings.FlyInPov == KoikatuSettings.MovementTypeH.Upright)
+            {
+                SetCustomRotation();
+            }
+        }
+        public void SetCustomRotation()
+        {
+            // Used for different camera rotation when flying to position.. i think.
+            _newAttachPoint = true;
+            _offsetRotNewAttach = Quaternion.Euler(0f, _targetEyes.rotation.eulerAngles.y, 0f);
         }
         public void CameraIsFar()
         {
@@ -217,7 +214,7 @@ namespace KKS_VR.Features
         public void CameraIsFarAndBusy()
         {
             CameraIsFar();
-            VRMouth.NoActionAllowed = true;
+            _mouth.PauseInteractions = true;
         }
         public void CameraIsNear()
         {
@@ -226,27 +223,29 @@ namespace KKS_VR.Features
             //StopRotation();
             if (_target.sex == 1)
             {
-                GirlPOV = true;
-                VRMouth.NoActionAllowed = true;
+                GirlPoV = true;
+                _mouth.PauseInteractions = true;
             }
             else
             {
-                GirlPOV = false;
-                VRMouth.NoActionAllowed = false;
+                GirlPoV = false;
+                _mouth.PauseInteractions = false;
             }
         }
         private void MoveToHead()
         {
-            if (!settings.FlyInPov)
+            if (settings.FlyInPov == KoikatuSettings.MovementTypeH.Disabled)
             {
                 CameraIsNear();
+                _newAttachPoint = false;
                 return;
             }
             var head = VR.Camera.Head;
             var origin = VR.Camera.Origin;
-            var curTarget = GetEyesPosition();
-            var distance = Vector3.Distance(head.position, curTarget);
-            var angleDelta = Quaternion.Angle(origin.rotation, _targetEyes.rotation);
+            var targetPos = GetEyesPosition;
+            var targetRot = _newAttachPoint ? _offsetRotNewAttach : _targetEyes.rotation;
+            var distance = Vector3.Distance(head.position, targetPos);
+            var angleDelta = Quaternion.Angle(origin.rotation, targetRot);
             if (_moveSpeed == 0f)
             {
                 _moveSpeed = 0.5f + distance * 0.5f * settings.FlightSpeed;// 3f;
@@ -254,40 +253,32 @@ namespace KKS_VR.Features
             var step = Time.deltaTime * _moveSpeed;
             if (distance < step)// && angleDelta < 1f)
             {
-                CameraIsNear(); 
+                CameraIsNear();
+                _newAttachPoint = false;
             }
+            // Does quaternion lerp perform better? looks clean sure, but how it works no clue. 
+            // Whatever, as they say "not broken don't fix it".
             var rotSpeed = angleDelta / (distance / step);
-            var moveToward = Vector3.MoveTowards(head.position, curTarget, step);
-            origin.rotation = Quaternion.RotateTowards(origin.rotation, _targetEyes.rotation, 1f * rotSpeed);
+            var moveToward = Vector3.MoveTowards(head.position, targetPos, step);
+            origin.rotation = Quaternion.RotateTowards(origin.rotation, targetRot, rotSpeed);
             origin.position += moveToward - head.position;
         }
+
         public void OnSpotChange()
         {
             _newAttachPoint = false;
         }
-        public void OnPoseChange()
-        {
-            // VRMoverH does it.
-            StartPov();
-        }
+        //public void OnPoseChange()
+        //{
+        //    // VRMoverH does it.
+        //    StartPov();
+        //}
         private void ResetRotation()
         {
+            var oldPos = VR.Camera.Head.position;
             VR.Camera.Origin.rotation = Quaternion.Euler(0f, VR.Camera.Origin.rotation.eulerAngles.y, 0f);
+            VR.Camera.Origin.position = oldPos - VR.Camera.Head.position;
         }
-        public Vector3 GetDestination()
-        {
-            if (_targetEyes != null)
-            {
-                return GetEyesPosition();
-            }
-            else
-            {
-                return Vector3.zero;
-            }
-        }
-        public void SetMoveSpeed(float speed) => _moveSpeed = speed;
-        public Quaternion GetRotation() => _targetEyes.rotation;
-        private Vector3 GetEyesPosition() => _targetEyes.TransformPoint(new Vector3(0f, settings.PositionOffsetY, settings.PositionOffsetZ));
         /// <summary>
         /// Stub.
         /// </summary>
@@ -298,10 +289,8 @@ namespace KKS_VR.Features
             var chaControl = _target;
             var extraForBoobs = new Vector3();
 
-            VRLog.Debug($"NewLookAtPoI:[{chaControl}]");
             string poiIndex = poiDic.ElementAt(Random.Range(0, poiDic.Count)).Key;
 
-            VRLog.Debug($"poiIndex:[{poiIndex}]");
 
             if (chaControl.sex != 1)
             {
@@ -327,7 +316,6 @@ namespace KKS_VR.Features
             Transform teleportToPosition = chaControl.transform.Descendants()
                 .Where(t => t.name.Contains(teleportTo))
                 .FirstOrDefault();
-            VRLog.Debug($"teleportPosition:[{teleportToPosition.name}]");
 
             // Pick the object we will be looking at.
             string lookAtPoI = poiDic[poiIndex].lookAt.ElementAt(Random.Range(0, poiDic[poiIndex].lookAt.Count));
@@ -335,12 +323,10 @@ namespace KKS_VR.Features
                 .Where(t => t.name.Contains(lookAtPoI))
                 .Select(t => t.position)
                 .FirstOrDefault();
-            VRLog.Debug($"lookAtPosition:[{lookAtPoI}]");
 
             var forward = Random.Range(poiDic[poiIndex].forwardMin, poiDic[poiIndex].forwardMax);
             var up = Random.Range(poiDic[poiIndex].upMin, poiDic[poiIndex].upMax);
             var right = Random.Range(poiDic[poiIndex].rightMin, poiDic[poiIndex].rightMax);
-            VRLog.Debug($"forward:[{forward}], up:[{up}], right:[{right}]");
 
             Vector3 teleportVector = teleportTo.Contains("cf_j_spine03") ? extraForBoobs : teleportToPosition.position;
             teleportVector +=
@@ -359,6 +345,7 @@ namespace KKS_VR.Features
         //{
         //    return Quaternion.Euler(_rotation.eulerAngles.x, _rotation.eulerAngles.y, 0f);
         //}
+
         private int GetCurrentCharaIndex(List<ChaControl> _chaControls)
         {
             if (_target != null)
@@ -373,76 +360,104 @@ namespace KKS_VR.Features
             }
             return 0;
         }
-
+        private void DirectImpersonation(ChaControl chara)
+        {
+            _active = true;
+            _target = chara;
+            _targetEyes = _target.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz");
+            CameraIsFarAndBusy();
+            UpdateSettings();
+        }
         private void NextChara(bool keepChara = false)
         {
             // As some may add extra characters with kPlug, we look them all up.
-            var chaControls = FindObjectsOfType<ChaControl>()
+            var charas = FindObjectsOfType<ChaControl>()
                     .Where(c => c.objTop.activeSelf && c.visibleAll)
                     .ToList();
 
-            if (chaControls.Count == 0)
+            if (charas.Count == 0)
             {
-                Active = false;
+                DisablePov(teleport: false);
                 VRLog.Warn("[PoV] Can't impersonate, everyone is dead and it's all your fault.");
                 return;
             }
-            var currentCharaIndex = GetCurrentCharaIndex(chaControls);
+            var currentCharaIndex = GetCurrentCharaIndex(charas);
 
             // Previous target becomes visible.
             if (settings.HideHeadInPOV && !keepChara && _target != null)
                 SetVisibility();
 
-            if (keepChara && chaControls[currentCharaIndex])
-                _target = chaControls[currentCharaIndex];
-            else if (currentCharaIndex == chaControls.Count - 1)
+            if (keepChara)
             {
-                if (currentCharaIndex == 0)
-                {
-                    // No point in switching with only one active character, disable instead.
-                    povMode = POV_Mode.Disable;
-                    return;
-                }
+                _target = charas[currentCharaIndex];
+            }
+            else if (currentCharaIndex == charas.Count - 1)
+            {
+                //if (currentCharaIndex == 0)
+                //{
+                // No point in switching with only one active character, disable instead.
+
+
+                _target = charas[0];
+
+                povMode = POV_Mode.Disable;
+                return;
+                //}
                 // End of the list, back to zero index.
-                _target = chaControls[0];
+                //_target = charas[0];
             }
             else
             {
-                _target = chaControls[currentCharaIndex + 1];
+                _target = charas[currentCharaIndex + 1];
             }
+            _mouth.OnImpersonation(_target);
             _targetEyes = _target.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz");
             CameraIsFarAndBusy();
             UpdateSettings();
         }
+
         private void NewPosition()
         {
             // Most likely a bad idea to kiss/lick when detached from the head but still inheriting all movements.
             CameraIsNear();
-            _offsetPosition = VR.Camera.Head.position - GetEyesPosition();
-            _offsetRotation = VR.Camera.Origin.rotation;
+            _offsetVecNewAttach = VR.Camera.Head.position - _targetEyes.position;
+            _offsetRotNewAttach = VR.Camera.Origin.rotation;
         }
-
-        private void SetPOV()
+        internal void OnGripMove(bool active)
         {
-            if (VRMouth.Instance.IsAction || Scene.IsOverlap)//!Scene.AddSceneName.Equals("HProc"))
+            _gripMove = active;
+            if (active)
             {
-                // We don't want pov while kissing/licking or if config/pointmove scene pops up.
                 CameraIsFar();
-                
             }
-            else if (_newAttachPoint && (_device.Input.GetPressUp(k_EButton_Grip) || _device1.Input.GetPressUp(k_EButton_Grip)))
+            else if (_newAttachPoint)
             {
                 NewPosition();
             }
-            else if (_device.Input.GetPress(k_EButton_Grip) || _device1.Input.GetPress(k_EButton_Grip))
+        }
+        internal bool OnTouchpad(bool press)
+        {
+            // We call it only in gripMove state.
+            if (press)
             {
-                CameraIsFar();
-
-                if (_device.Input.GetPressDown(k_EButton_SteamVR_Touchpad) || _device1.Input.GetPressDown(k_EButton_SteamVR_Touchpad))
+                if (_active && !_newAttachPoint)
                 {
                     _newAttachPoint = true;
+                    return true;
                 }
+            }
+            else
+            {
 
+            }
+            return false;
+        }
+        private void SetPoV()
+        {
+            if (_gripMove || _mouth.IsActive || !Scene.AddSceneName.Equals("HProc")) // SceneApi.GetIsOverlap()) KKS option KK has it broken.
+            {
+                // We don't want pov while kissing/licking or if config/pointmove scene pops up.
+                CameraIsFar();
             }
             else if (_wasAway)
             {
@@ -456,7 +471,7 @@ namespace KKS_VR.Features
                         MoveToPos();
                         break;
                     case POV_Mode.Head:
-                        VRManager.Instance.Mode.MoveToPosition(GetEyesPosition(), false);
+                        VRManager.Instance.Mode.MoveToPosition(GetEyesPosition, false);
                         break;
                     case POV_Mode.Disable:
                         DisablePov();
@@ -464,53 +479,45 @@ namespace KKS_VR.Features
                 }
             }
         }
-
         public void DisablePov(bool teleport = true)
         {
-            Active = false;
+            _active = false;
             SetVisibility();
             povMode = POV_Mode.Eyes;
-            if (teleport)
-            {
-                NewLookAtPoI();
-            }
+            if (teleport) NewLookAtPoI();
             _newAttachPoint = false;
-            VRMouth.NoActionAllowed = false;
+            _mouth.PauseInteractions = false;
+            _mouth.OnUnImpersonation();
         }
-        protected override void OnUpdate()
+        internal bool TryDisable(Tracker.Body part, ChaControl chara)
         {
-            if (!settings.EnablePOV)
+            if (_active && _target == chara && part == Tracker.Body.Head)
             {
-                return;
+                DisablePov();
+                return true;
             }
-            if (!buttonA && ((_device.Input.GetPressDown(k_EButton_SteamVR_Touchpad) && !_device.Input.GetPress(k_EButton_Grip))
-                || (_device1.Input.GetPressDown(k_EButton_SteamVR_Touchpad) && !_device1.Input.GetPress(k_EButton_Grip))))
-            {
-                StartCoroutine(GetButtonA());
-            }
-            if (Active) //!_scene.AddSceneName.StartsWith("Con", System.StringComparison.Ordinal) && !_scene.AddSceneName.StartsWith("HPo", System.StringComparison.Ordinal))
-            {
-                SetPOV();
-            }
+            return false;
         }
-        protected override void OnLateUpdate()
+
+        private void Update()
         {
-            if (settings.HideHeadInPOV && Active && _target != null)
-            {
-                HideHead();
-            }
+            if (_active) SetPoV();
         }
+
+        private void LateUpdate()
+        {
+            if (_active && settings.HideHeadInPOV && _target != null) HideHead();
+        }
+
         private void HideHead()
         {
-            // We hide it lazily by default, and start proper check if we use custom position or currently moving to impersonate.
-            // Every so often a shadow of a headless body during the kiss disturbs me deeply. So we don't hide it during kiss.
             if (_newAttachPoint || _wasAway)
             {
                 var head = _target.objHead.transform;
                 var wasVisible = _target.fileStatus.visibleHeadAlways;
                 var headCenter = head.TransformPoint(0, 0.12f, -0.04f);
                 var sqrDistance = (VR.Camera.transform.position - headCenter).sqrMagnitude;
-                bool visible = 0.0361f < sqrDistance; // 19 centimeters
+                var visible = 0.0361f < sqrDistance; // 19 centimeters
                 //bool visible = !ForceHideHead && 0.0361f < sqrDistance; // 19 centimeters 0.0451f
                 _target.fileStatus.visibleHeadAlways = visible;
                 if (wasVisible && !visible)
@@ -520,64 +527,109 @@ namespace KKS_VR.Features
             }
             else
             {
-                _target.fileStatus.visibleHeadAlways = VRMouth.Instance.IsKiss;
+                _target.fileStatus.visibleHeadAlways = _mouth.IsActive;
             }
         }
-        private IEnumerator GetButtonA(float timer = 1f)
+        internal void HandleEnable()
         {
-            buttonA = true;
-            var clicks = 0;
-            while (timer > 0f)
+            if (!settings.EnablePOV) return;
+            if (_newAttachPoint)
             {
-                if (_device.Input.GetPressUp(k_EButton_SteamVR_Touchpad) || _device1.Input.GetPressUp(k_EButton_SteamVR_Touchpad))
-                {
-                    clicks += 1;
-                    if (clicks == 2)
-                        break;
-                    timer = 0.4f;
-                }
-                timer -= Time.deltaTime;
-                yield return new WaitForEndOfFrame();
+                _newAttachPoint = false;
+                CameraIsFarAndBusy();
             }
-            if (Active && clicks == 2)
-            {
-                // Adding double click for non-Active state creates problems with undresser.
-                if (_newAttachPoint)
-                {
-                    _newAttachPoint = false;
-                    CameraIsFarAndBusy();
-                }
-                else
-                {
-                    if (povMode == POV_Mode.Eyes)
-                        ResetRotation();
-                    povMode = POV_Mode.Disable;
-                    //povMode = (POV_Mode)(((int)povMode + 1) % 3);
-                }
-            }
-            else if (clicks == 0)
-            {
-                if (_newAttachPoint)
-                {
-                    _newAttachPoint = false;
-                    CameraIsFarAndBusy();
-                }
-                else if (Active)
-                {
-                    NextChara();
-                }
-                else
-                {
-                    StartPov();
-                }
-
-            }
-            //else //click = 0
-            //{
-            //    povMode = (POV_Mode)(((int)povMode + 1) % 3);
-            //}
-            buttonA = false;
+            else if (_active)
+                NextChara();
+            else
+                StartPov();
         }
+        internal void HandleScroll()
+        {
+            povMode = (POV_Mode)(((int)povMode + 1) % 3);
+        }
+        internal bool HandleDirect(ChaControl chara)
+        {
+            if (settings.EnablePOV && settings.DirectImpersonation)
+            {
+                if (!_active || _target != chara)
+                {
+                    VRPlugin.Logger.LogDebug($"PoV:HandleDirect:{chara}");
+                    DirectImpersonation(chara);
+                    return true;
+                }
+            }
+            // We are ready to sync limb.
+            return false;
+        }
+        internal void Disable()
+        {
+            if (!_active) return;
+            if (_newAttachPoint)
+            {
+                _newAttachPoint = false;
+                CameraIsFarAndBusy();
+            }
+            else
+            {
+                if (povMode == POV_Mode.Eyes) ResetRotation();
+                povMode = POV_Mode.Disable;
+            }
+        }
+        //private IEnumerator GetButtonA(float timer = 1f)
+        //{
+        //    buttonA = true;
+        //    var clicks = 0;
+        //    while (timer > 0f)
+        //    {
+        //        if (IsTouchpadPressUp())
+        //        {
+        //            clicks += 1;
+        //            if (clicks == 2)
+        //                break;
+        //            timer = 0.4f;
+        //        }
+        //        timer -= Time.deltaTime;
+        //        yield return new WaitForEndOfFrame();
+        //    }
+        //    if (Active && clicks == 2)
+        //    {
+        //        // Adding double click for non-Active state creates problems with undresser.
+        //        if (_newAttachPoint)
+        //        {
+        //            _newAttachPoint = false;
+        //            CameraIsFarAndBusy();
+        //        }
+        //        else
+        //        {
+        //            if (povMode == POV_Mode.Eyes)
+        //                ResetRotation();
+        //            povMode = POV_Mode.Disable;
+        //            //povMode = (POV_Mode)(((int)povMode + 1) % 3);
+        //        }
+        //    }
+        //    else if (clicks == 0)
+        //    {
+        //        if (_newAttachPoint)
+        //        {
+        //            _newAttachPoint = false;
+        //            CameraIsFarAndBusy();
+        //        }
+        //        else if (Active)
+        //        {
+        //            NextChara();
+        //        }
+        //        else
+        //        {
+        //            StartPov();
+        //        }
+
+        //    }
+        //    //else //click = 0
+        //    //{
+        //    //    povMode = (POV_Mode)(((int)povMode + 1) % 3);
+        //    //}
+        //    buttonA = false;
+        //}
         private Dictionary<string, PoIPatternInfo> poiDicDev = new Dictionary<string, PoIPatternInfo>()
         {
 

@@ -5,8 +5,10 @@ using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using KKAPI;
+using KKAPI.MainGame;
 using KKS_VR.Features;
 using KKS_VR.Fixes;
+using KKS_VR.Interpreters;
 using KKS_VR.Settings;
 using Unity.XR.OpenVR;
 using UnityEngine;
@@ -33,14 +35,16 @@ namespace KKS_VR
             Logger = base.Logger;
 
             VRPlugin.Logger.LogDebug($"VRPlugin:Awake");
+
             var vrActivated = Environment.CommandLine.Contains("--vr");
-            //bool vrDeactivated = Environment.CommandLine.Contains("--novr");
+            bool vrDeactivated = Environment.CommandLine.Contains("--novr");
+
             bool enabled = vrActivated || SteamVRDetector.IsRunning;
             var settings = SettingsManager.Create(Config);
             if (enabled)
             {
                 BepInExVrLogBackend.ApplyYourself();
-                OpenVRHelperTempfixHook.Patch();
+                //OpenVRHelperTempfixHook.Patch();
 
                 StartCoroutine(LoadDevice(settings));
             }
@@ -50,7 +54,7 @@ namespace KKS_VR
 
         private IEnumerator LoadDevice(KoikatuSettings settings)
         {
-            yield return new WaitUntil(() => Manager.Scene.initialized && Manager.Scene.LoadSceneName == "Title");
+            yield return new WaitUntil(() => Manager.Scene.initialized); // && Manager.Scene.LoadSceneName == "Title");
 
             Logger.LogInfo("Loading OpenVR...");
 
@@ -136,6 +140,8 @@ namespace KKS_VR
             VR.Mode.MoveToPosition(Vector3.zero, Quaternion.Euler(Vector3.zero), true);
 
             Logger.LogInfo("Finished loading into VR mode!");
+
+            GameAPI.RegisterExtraBehaviour<InterpreterHooks>(GUID);
         }
 
         private void UpdateNearClipPlane(KoikatuSettings settings)

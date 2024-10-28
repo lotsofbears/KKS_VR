@@ -1,8 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using BepInEx.Configuration;
-using KKAPI.Utilities;
+using System.ComponentModel;
 using VRGIN.Core;
+using UnityEngine;
+using KKAPI.Utilities;
+using ADV.Commands.Object;
+using KKS_VR.Settings;
 
 namespace KKS_VR.Settings
 {
@@ -25,17 +31,19 @@ namespace KKS_VR.Settings
     {
         public const string SectionGeneral = "0. General";
         public const string SectionRoaming = "1. Roaming";
-        public const string SectionCaress = "1. Caress";
+        public const string SectionH = "1. H";
         public const string SectionEventScenes = "1. Event scenes";
         public const string SectionPov = "4. Pov";
+        public const string SectionIK = "5. IK";
+
 
         public static ConfigEntry<bool> EnableBoop { get; private set; }
-
         /// <summary>
         /// Create config entries under the given ConfigFile. Also create a fresh
         /// KoikatuSettings object and arrange that it be synced with the config
         /// entries.
         /// </summary>
+        /// <param name="config"></param>
         /// <returns>The new KoikatuSettings object.</returns>
         public static KoikatuSettings Create(ConfigFile config)
         {
@@ -58,12 +66,11 @@ namespace KKS_VR.Settings
                     new ConfigurationManagerAttributes { Order = -1 }));
             Tie(rotationMultiplier, v => settings.RotationMultiplier = v);
 
-            //todo missing
-            //var touchpadThreshold = config.Bind(sectionGeneral, "Touchpad direction threshold", 0.8f,
-            //    new ConfigDescription(
-            //        "Touchpad presses within this radius are considered center clicks rather than directional ones.",
-            //        new AcceptableValueRange<float>(0f, 1f)));
-            //Tie(touchpadThreshold, v => settings.TouchpadThreshold = v);
+            var touchpadThreshold = config.Bind(SectionGeneral, "Touchpad direction threshold", 0.8f,
+                new ConfigDescription(
+                    "Touchpad presses within this radius are considered center clicks rather than directional ones.",
+                    new AcceptableValueRange<float>(0f, 1f)));
+            Tie(touchpadThreshold, v => settings.TouchpadThreshold = v);
 
             var logLevel = config.Bind(SectionGeneral, "Log level", VRLog.LogMode.Info,
                 new ConfigDescription(
@@ -88,7 +95,14 @@ namespace KKS_VR.Settings
                     new AcceptableValueRange<float>(0.001f, 0.2f)));
             Tie(nearClipPlane, v => settings.NearClipPlane = v);
 
-            var usingHeadPos = config.Bind(SectionRoaming, "Use head position", true,
+            var useLegacyInputSimulator = config.Bind(SectionGeneral, "Use legacy input simulator", false,
+                new ConfigDescription(
+                    "Simulate mouse and keyboard input by generating system-wide fake events",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true }));
+            Tie(useLegacyInputSimulator, v => settings.UseLegacyInputSimulator = v);
+
+            var usingHeadPos = config.Bind(SectionRoaming, "Use head position", false,
                 new ConfigDescription(
                     "Place the camera exactly at the protagonist's head (may cause motion sickness). If disabled, use a fixed height from the floor.",
                     null,
@@ -138,25 +152,29 @@ namespace KKS_VR.Settings
                 "Improve framerate and reduce stutter in H and Talk scenes inside Roaming. May cause visual glitches.");
             Tie(optimizeHInsideRoaming, v => settings.OptimizeHInsideRoaming = v);
 
-            var automaticTouching = config.Bind(SectionCaress, "Automatic touching", false,
+            var automaticTouching = config.Bind(SectionH, "Automatic touching", KoikatuSettings.SceneType.TalkScene,
                 "Touching the female's body with controllers triggers reaction");
             Tie(automaticTouching, v => settings.AutomaticTouching = v);
 
-            var automaticKissing = config.Bind(SectionCaress, "Automatic kissing", true,
+            var automaticKissing = config.Bind(SectionH, "Automatic kissing", true,
                 "Initiate kissing by moving your head");
             Tie(automaticKissing, v => settings.AutomaticKissing = v);
 
-            var automaticLicking = config.Bind(SectionCaress, "Automatic licking", true,
+            var automaticLicking = config.Bind(SectionH, "Automatic licking", true,
                 "Initiate licking by moving your head");
             Tie(automaticLicking, v => settings.AutomaticLicking = v);
 
-            var automaticTouchingByHmd = config.Bind(SectionCaress, "Kiss body", true,
+            var automaticTouchingByHmd = config.Bind(SectionH, "Kiss body", true,
                 "Touch the female's body by moving your head");
-            Tie(automaticTouchingByHmd, v => settings.AutomaticTouchingByHmd = v);
+            Tie(automaticTouchingByHmd, v => settings.AutomaticTouchingByHeadset = v);
 
             var firstPersonADV = config.Bind(SectionEventScenes, "First person", true,
                 "Prefer first person view in event scenes");
             Tie(firstPersonADV, v => settings.FirstPersonADV = v);
+
+            var showMaleHeadInAdv = config.Bind(SectionEventScenes, "Show head in first person", true,
+                "Prefer first person view in event scenes");
+            Tie(showMaleHeadInAdv, v => settings.ForceShowMaleHeadInAdv = v);
 
             var headsetType = config.Bind(SectionGeneral, "Controller adjustments", KoikatuSettings.HeadsetType.None,
                 "Placeholder.\nEnables controller adjustments made for particular headset model.");
@@ -165,74 +183,103 @@ namespace KKS_VR.Settings
             EnableBoop = config.Bind(SectionGeneral, "Enable Boop", true,
                 "Adds colliders to the controllers so you can boop things.\nGame restart required for change to take effect.");
 
-            var enablePOV = config.Bind(SectionPov, "EnablePOV", true,
-                "Enable the ability to impersonate characters.");
+
+            var enablePOV = config.Bind(SectionPov, "Enable", true,
+                new ConfigDescription("Enable the ability to impersonate characters.", null,
+                new ConfigurationManagerAttributes { Order = 10 }));
             Tie(enablePOV, v => settings.EnablePOV = v);
 
-            var HeadPosPoVY = config.Bind(SectionGeneral, "Camera offset Y", 0.05f,
+            var HeadPosPoVY = config.Bind(SectionGeneral, "Camera offset-Y", 0.05f,
                 new ConfigDescription(
                     "Camera offset from attachment point. Applies in Roaming and H PoV mode.",
                     new AcceptableValueRange<float>(-1f, 1f)));
             Tie(HeadPosPoVY, v => settings.PositionOffsetY = v);
 
-            var HeadPosPoVZ = config.Bind(SectionGeneral, "Camera offset Z", 0.05f,
+            var HeadPosPoVZ = config.Bind(SectionGeneral, "Camera offset-Z", 0.05f,
                 new ConfigDescription(
                     "Camera offset from attachment point. Applies in Roaming and H PoV mode.",
                     new AcceptableValueRange<float>(-1f, 1f)));
             Tie(HeadPosPoVZ, v => settings.PositionOffsetZ = v);
 
-            var hideHeadInPOV = config.Bind(SectionPov, "Hide Head", true,
-                "Hide the corresponding head when the camera is in it. Can be used in combination with camera offset to have simultaneously visible head and PoV mode.");
+            var hideHeadInPOV = config.Bind(SectionPov, "Hide head", true,
+                "Hide the corresponding head when the camera is in it. Can be used in combination with camera offset to have simultaneously visible head and PoV mode.(~0.11 Z-offset for that)");
             Tie(hideHeadInPOV, v => settings.HideHeadInPOV = v);
 
-            var flyInPov = config.Bind(SectionPov, "Smooth transition", true,
-                "On position (or location) change, instead of teleportation, transition smoothly to the new location.");
+            var flyInPov = config.Bind(SectionPov, "Transition PoV", KoikatuSettings.MovementTypeH.Upright,
+                "When in PoV mode, on position (or location) change, instead of teleportation, transition smoothly to the new location.");
             Tie(flyInPov, v => settings.FlyInPov = v);
 
-            var autoEnter = config.Bind(SectionPov, "Auto enter PoV", true,
-                "If PoV mode disabled, on position change PoV mode will be automatically activated if there is a dude.");
+            var autoEnter = config.Bind(SectionPov, "Auto enter", true,
+                "If not in PoV mode, on position change PoV mode will be automatically activated if there is a male.");
             Tie(autoEnter, v => settings.AutoEnterPov = v);
 
-            var RotationFootprint = config.Bind(SectionPov, "Loose rotation", 0.1f,
+            var rotationStartThreshold = config.Bind(SectionPov, "Lazy rotation", 0.1f,
                 new ConfigDescription(
                     "Introduces lazy rotation when above 0. The higher the number, the lazier camera rotates in PoV mode.\n" +
                     "Changes take place after new impersonation.",
                     new AcceptableValueRange<float>(0f, 1f)));
-            Tie(RotationFootprint, v => settings.RotationFootprint = v);
+            Tie(rotationStartThreshold, v => settings.RotationStartThreshold = v);
 
-            var flyInH = config.Bind(SectionCaress, "Camera in H", true,
-                "Instead of teleporting to the new position, progressively moves camera to it.");
+            var flyInH = config.Bind(SectionH, "Transition H", true,
+                "On position (or location) change, instead of teleportation, transition smoothly to the new location.");
             Tie(flyInH, v => settings.FlyInH = v);
 
-            var flightSpeed = config.Bind(SectionCaress, "Camera in H speed", 1f,
+            var flightSpeed = config.Bind(SectionH, "Transition H speed", 1f,
                 new ConfigDescription(
                     "Speed of progressive movement of the camera.",
                     new AcceptableValueRange<float>(0.1f, 2f)));
             Tie(flightSpeed, v => settings.FlightSpeed = v);
 
+            var rotAdaptSpeed = config.Bind(SectionPov, "RotAdaptSpeed", 0.1f,
+                new ConfigDescription(
+                    "If lazy rotation is enabled, defines how fast rotation comes back in full swing after sleep.",
+                    new AcceptableValueRange<float>(0f, 1f)));
+            Tie(rotAdaptSpeed, v => settings.RotAdaptSpeed = v);
+
             var contRot = config.Bind(SectionRoaming, "Continuous rotation", false,
-                    "Enable continuous turn in roaming mod instead of snap turn.");
+                    "Enable continuous rotation of camera in roaming mode instead of snap turn. Influenced by setting 'Rotation angle'.");
             Tie(contRot, v => settings.ContinuousRotation = v);
 
-            
-            var proximityKiss = config.Bind(SectionCaress, "Kiss proximity", 0.1f,
+            var directImpersonation = config.Bind(SectionPov, "DirectImpersonation", false, "");
+            Tie(directImpersonation, v => settings.DirectImpersonation = v);
+
+            var showGuideObjects = config.Bind(SectionIK, "ShowGuideObjects", true, "");
+            Tie(showGuideObjects, v => settings.ShowGuideObjects = v);
+
+            var showDebugIK = config.Bind(SectionIK, "Debug", false,
                 new ConfigDescription(
-                    "Distance between camera and partner's head.",
+                    "Blue - animPose\n" +
+                    "Yellow - IK",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true }
+                    )
+                );
+            Tie(showDebugIK, v => settings.DebugShowIK = v);
+
+            var followRotationDuringKiss = config.Bind(SectionH, "FollowRotationDuringKiss", false, "");
+            Tie(followRotationDuringKiss, v => settings.FollowRotationDuringKiss = v);
+
+            var hideAibuHandOnUserInput = config.Bind(SectionH, "HideAibuHandOnUserInput", KoikatuSettings.HandType.Both,
+                    "");
+            Tie(hideAibuHandOnUserInput, v => settings.HideHandOnUserInput = v);
+
+            var proximityKiss = config.Bind(SectionH, "Kiss proximity", 0.1f,
+                new ConfigDescription(
+                    "Distance between camera and partner's head during initial phase of assisted kiss.",
                     new AcceptableValueRange<float>(0.05f, 0.15f)));
             Tie(proximityKiss, v => settings.ProximityDuringKiss = v);
 
-            KeySetsConfig keySetsConfig = null;
+            //KeySetsConfig keySetsConfig = null;
 
+            //void updateKeySets()
+            //{
+            //    keySetsConfig.CurrentKeySets(out var keySets, out var hKeySets);
+            //    settings.KeySets = keySets;
+            //    settings.HKeySets = hKeySets;
+            //}
 
-            void updateKeySets()
-            {
-                keySetsConfig.CurrentKeySets(out var keySets, out var hKeySets);
-                settings.KeySets = keySets;
-                settings.HKeySets = hKeySets;
-            }
-
-            keySetsConfig = new KeySetsConfig(config, updateKeySets);
-            updateKeySets();
+            //keySetsConfig = new KeySetsConfig(config, updateKeySets);
+            //updateKeySets();
 
             // Fixed settings
             settings.ApplyEffects = false; // We manage effects ourselves.
@@ -247,104 +294,108 @@ namespace KKS_VR.Settings
         }
     }
 
-    internal class KeySetsConfig
-    {
-        private readonly KeySetConfig _main;
-        private readonly KeySetConfig _main1;
-        private readonly KeySetConfig _h;
-        private readonly KeySetConfig _h1;
+    //class KeySetsConfig
+    //{
+    //    private readonly KeySetConfig _main;
+    //    private readonly KeySetConfig _main1;
+    //    private readonly KeySetConfig _h;
+    //    private readonly KeySetConfig _h1;
 
-        private readonly ConfigEntry<bool> _useMain1;
-        private readonly ConfigEntry<bool> _useH1;
+    //    private readonly ConfigEntry<bool> _useMain1;
+    //    private readonly ConfigEntry<bool> _useH1;
 
-        public KeySetsConfig(ConfigFile config, Action onUpdate)
-        {
-            const string sectionP = "2. Non-H button assignments (primary)";
-            const string sectionS = "2. Non-H button assignments (secondary)";
-            const string sectionHP = "3. H button assignments (primary)";
-            const string sectionHS = "3. H button assignments (secondary)";
+    //    public KeySetsConfig(ConfigFile config, Action onUpdate)
+    //    {
+    //        const string sectionP = "2. Non-H button assignments (primary)";
+    //        const string sectionS = "2. Non-H button assignments (secondary)";
+    //        const string sectionHP = "3. H button assignments (primary)";
+    //        const string sectionHS = "3. H button assignments (secondary)";
 
-            _main = new KeySetConfig(config, onUpdate, sectionP, false, false);
-            _main1 = new KeySetConfig(config, onUpdate, sectionS, false, true);
-            _h = new KeySetConfig(config, onUpdate, sectionHP, true, false);
-            _h1 = new KeySetConfig(config, onUpdate, sectionHS, true, true);
+    //        _main = new KeySetConfig(config, onUpdate, sectionP, isH: false, advanced: false);
+    //        _main1 = new KeySetConfig(config, onUpdate, sectionS, isH: false, advanced: true);
+    //        _h = new KeySetConfig(config, onUpdate, sectionHP, isH: true, advanced: false);
+    //        _h1 = new KeySetConfig(config, onUpdate, sectionHS, isH: true, advanced: true);
 
-            _useMain1 = config.Bind(sectionS, "Use secondary assignments", false,
-                new ConfigDescription("", null, new ConfigurationManagerAttributes { IsAdvanced = true }));
-            _useMain1.SettingChanged += (_, _1) => onUpdate();
-            _useH1 = config.Bind(sectionHS, "Use secondary assignments", false,
-                new ConfigDescription("", null, new ConfigurationManagerAttributes { IsAdvanced = true }));
-            _useH1.SettingChanged += (_, _1) => onUpdate();
-        }
+    //        _useMain1 = config.Bind(sectionS, "Use secondary assignments", false,
+    //            new ConfigDescription("", null, new ConfigurationManagerAttributes { IsAdvanced = true }));
+    //        _useMain1.SettingChanged += (_, _1) => onUpdate();
+    //        _useH1 = config.Bind(sectionHS, "Use secondary assignments", false,
+    //            new ConfigDescription("", null, new ConfigurationManagerAttributes { IsAdvanced = true }));
+    //        _useH1.SettingChanged += (_, _1) => onUpdate();
+    //    }
 
-        public void CurrentKeySets(out List<KeySet> keySets, out List<KeySet> hKeySets)
-        {
-            keySets = new List<KeySet>();
-            keySets.Add(_main.CurrentKeySet());
-            if (_useMain1.Value) keySets.Add(_main1.CurrentKeySet());
+    //    public void CurrentKeySets(out List<KeySet> keySets, out List<KeySet> hKeySets)
+    //    {
+    //        keySets = new List<KeySet>();
+    //        keySets.Add(_main.CurrentKeySet());
+    //        if (_useMain1.Value)
+    //        {
+    //            keySets.Add(_main1.CurrentKeySet());
+    //        }
 
-            hKeySets = new List<KeySet>();
-            hKeySets.Add(_h.CurrentKeySet());
-            if (_useH1.Value) hKeySets.Add(_h1.CurrentKeySet());
-        }
-    }
+    //        hKeySets = new List<KeySet>();
+    //        hKeySets.Add(_h.CurrentKeySet());
+    //        if (_useH1.Value)
+    //        {
+    //            hKeySets.Add(_h1.CurrentKeySet());
+    //        }
+    //    }
+    //}
 
-    internal class KeySetConfig
-    {
-        private readonly ConfigEntry<AssignableFunction> _trigger;
-        private readonly ConfigEntry<AssignableFunction> _grip;
-        private readonly ConfigEntry<AssignableFunction> _up;
-        private readonly ConfigEntry<AssignableFunction> _down;
-        private readonly ConfigEntry<AssignableFunction> _right;
-        private readonly ConfigEntry<AssignableFunction> _left;
-        private readonly ConfigEntry<AssignableFunction> _center;
-        private readonly ConfigEntry<AssignableFunction> _buttonAX;
+    //class KeySetConfig
+    //{
+    //    private readonly ConfigEntry<AssignableFunction> _trigger;
+    //    private readonly ConfigEntry<AssignableFunction> _grip;
+    //    private readonly ConfigEntry<AssignableFunction> _up;
+    //    private readonly ConfigEntry<AssignableFunction> _down;
+    //    private readonly ConfigEntry<AssignableFunction> _right;
+    //    private readonly ConfigEntry<AssignableFunction> _left;
+    //    private readonly ConfigEntry<AssignableFunction> _center;
 
-        public KeySetConfig(ConfigFile config, Action onUpdate, string section, bool isH, bool advanced)
-        {
-            var order = -1;
+    //    public KeySetConfig(ConfigFile config, Action onUpdate, string section, bool isH, bool advanced)
+    //    {
+    //        int order = -1;
+    //        ConfigEntry<AssignableFunction> create(string name, AssignableFunction def)
+    //        {
+    //            var entry = config.Bind(section, name, def, new ConfigDescription("", null,
+    //                new ConfigurationManagerAttributes { Order = order, IsAdvanced = advanced }));
+    //            entry.SettingChanged += (_, _1) => onUpdate();
+    //            order -= 1;
+    //            return entry;
+    //        }
+    //        if (isH)
+    //        {
+    //            _trigger = create("Trigger", AssignableFunction.LBUTTON);
+    //            _grip = create("Grip", AssignableFunction.GRAB);
+    //            _up = create("Up", AssignableFunction.SCROLLUP);
+    //            _down = create("Down", AssignableFunction.SCROLLDOWN);
+    //            _left = create("Left", AssignableFunction.NONE);
+    //            _right = create("Right", AssignableFunction.RBUTTON);
+    //            _center = create("Center", AssignableFunction.MBUTTON);
+    //        }
+    //        else
+    //        {
+    //            _trigger = create("Trigger", AssignableFunction.WALK);
+    //            _grip = create("Grip", AssignableFunction.GRAB);
+    //            _up = create("Up", AssignableFunction.F3);
+    //            _down = create("Down", AssignableFunction.F1);
+    //            _left = create("Left", AssignableFunction.LROTATION);
+    //            _right = create("Right", AssignableFunction.RROTATION);
+    //            _center = create("Center", AssignableFunction.RBUTTON);
+    //        }
+    //    }
 
-            ConfigEntry<AssignableFunction> create(string name, AssignableFunction def)
-            {
-                var entry = config.Bind(section, name, def, new ConfigDescription("", null,
-                    new ConfigurationManagerAttributes { Order = order, IsAdvanced = advanced }));
-                entry.SettingChanged += (_, _1) => onUpdate();
-                order -= 1;
-                return entry;
-            }
+    //    public KeySet CurrentKeySet()
+    //    {
+    //        return new KeySet(
+    //            trigger: _trigger.Value,
+    //            grip: _grip.Value,
+    //            Up: _up.Value,
+    //            Down: _down.Value,
+    //            Right: _right.Value,
+    //            Left: _left.Value,
+    //            Center: _center.Value);
+    //    }
 
-            if (isH)
-            {
-                _trigger = create("Trigger", AssignableFunction.LBUTTON);
-                _grip = create("Grip", AssignableFunction.GRAB);
-                _up = create("Up", AssignableFunction.SCROLLUP);
-                _down = create("Down", AssignableFunction.SCROLLDOWN);
-                _left = create("Left", AssignableFunction.NONE);
-                _right = create("Right", AssignableFunction.RBUTTON);
-                _center = create("Center", AssignableFunction.MBUTTON);
-            }
-            else
-            {
-                _trigger = create("Trigger", AssignableFunction.WALK);
-                _grip = create("Grip", AssignableFunction.GRAB);
-                _up = create("Up", AssignableFunction.F3);
-                _down = create("Down", AssignableFunction.F1);
-                _left = create("Left", AssignableFunction.LROTATION);
-                _right = create("Right", AssignableFunction.RROTATION);
-                _center = create("Center", AssignableFunction.RBUTTON);
-            }
-        }
-
-        public KeySet CurrentKeySet()
-        {
-            return new KeySet(
-                _trigger.Value,
-                _grip.Value,
-                _up.Value,
-                _down.Value,
-                _right.Value,
-                _left.Value,
-                _center.Value);
-        }
-    }
+    //}
 }

@@ -25,7 +25,7 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>8</LangVersion>
+    <LangVersion>Preview</LangVersion>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -37,7 +37,7 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>8</LangVersion>
+    <LangVersion>Preview</LangVersion>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup>
@@ -48,24 +48,18 @@
       <HintPath>..\packages\IllusionLibs.BepInEx.Harmony.2.9.0\lib\net35\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.Assembly-CSharp.2021.9.17\lib\net46\Assembly-CSharp.dll</HintPath>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\KKS_TestPlugin\packages\IllusionLibs.KoikatsuSunshine.Assembly-CSharp.2021.9.17\lib\net46\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\KKS_TestPlugin\packages\IllusionLibs.KoikatsuSunshine.Assembly-CSharp-firstpass.2021.9.17\lib\net46\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx, Version=5.4.22.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IllusionLibs.BepInEx.5.4.22\lib\net35\BepInEx.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.Assembly-CSharp-firstpass.2021.9.17\lib\net46\Assembly-CSharp-firstpass.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="BepInEx, Version=5.4.20.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionLibs.BepInEx.5.4.20\lib\net35\BepInEx.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Cinemachine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.Cinemachine.2019.4.9\lib\net46\Cinemachine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="KKSAPI, Version=1.35.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionModdingAPI.KKSAPI.1.35.0\lib\net46\KKSAPI.dll</HintPath>
+    <Reference Include="KKSAPI, Version=1.42.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IllusionModdingAPI.KKSAPI.1.42.1\lib\net46\KKSAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="KKS_ExtensibleSaveFormat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -174,6 +168,17 @@
       <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.2019.4.9\lib\net46\UnityEngine.UIModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+      <HintPath>F:\Illusion\KKTSUS\KoikatsuSunshine_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.2019.4.9\lib\net46\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.2019.4.9\lib\net46\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.VRModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.VRModule.2019.4.9\lib\net46\UnityEngine.VRModule.dll</HintPath>
       <Private>False</Private>
@@ -202,23 +207,50 @@
   <ItemGroup>
     <Compile Include="Camera\ActionCameraControl.cs" />
     <Compile Include="Camera\BackgroundDisplayer.cs" />
+    <Compile Include="Controls\GripMove.cs" />
+    <Compile Include="Controls\GripMoveLag.cs" />
+    <Compile Include="Controls\KoikatuMenuTool.cs" />
+    <Compile Include="Features\VoiceBundles.cs" />
     <Compile Include="Features\CrossFader.cs" />
     <Compile Include="Camera\VREffector.cs" />
     <Compile Include="Camera\VRMoverH.cs" />
-    <Compile Include="Caress\CaressHelper.cs" />
-    <Compile Include="Caress\Undresser.cs" />
+    <Compile Include="Features\LoadVoice.cs" />
     <Compile Include="Features\Pov.cs" />
+    <Compile Include="Features\VRBoop.cs" />
     <Compile Include="Fixes\ObiControlFix.cs" />
     <Compile Include="Fixes\ReduceAssetUnloads.cs" />
-    <Compile Include="Controls\ButtonsSubtool.cs" />
     <Compile Include="Camera\CameraControlControl.cs" />
-    <Compile Include="Caress\AibuColliderTracker.cs" />
-    <Compile Include="Caress\CaressController.cs" />
     <Compile Include="Caress\CaressUtil.cs" />
     <Compile Include="Caress\HandCtrlHooks.cs" />
-    <Compile Include="Caress\LongDistanceKissMachine.cs" />
-    <Compile Include="Caress\VRMouth.cs" />
     <Compile Include="Fixes\Util.cs" />
+    <Compile Include="Handlers\BodyPartGuide.cs" />
+    <Compile Include="Handlers\CameraLag.cs" />
+    <Compile Include="Handlers\ForScenes\ActionSceneHandler.cs" />
+    <Compile Include="Handlers\ForScenes\HSceneHandler.cs" />
+    <Compile Include="Handlers\ForScenes\TalkSceneHandler.cs" />
+    <Compile Include="Handlers\HandHolder.cs" />
+    <Compile Include="Handlers\Handler.cs" />
+    <Compile Include="Handlers\HandNoise.cs" />
+    <Compile Include="Handlers\Holder.cs" />
+    <Compile Include="Handlers\ItemHandler.cs" />
+    <Compile Include="Handlers\ItemLag.cs" />
+    <Compile Include="Handlers\KissHelper.cs" />
+    <Compile Include="Handlers\MouthGuide.cs" />
+    <Compile Include="Interactors\GraspController.cs" />
+    <Compile Include="Interactors\GraspHelper.cs" />
+    <Compile Include="Interactors\HandScroll.cs" />
+    <Compile Include="Interactors\HitReaction.cs" />
+    <Compile Include="Interactors\Undresser.cs" />
+    <Compile Include="Interactors\VisualObject.cs" />
+    <Compile Include="Interpreters\Extras\TalkSceneExtras.cs" />
+    <Compile Include="Interpreters\HSceneHelper.cs" />
+    <Compile Include="Interpreters\InterpreterHooks.cs" />
+    <Compile Include="Interpreters\Patches\ActionScenePatches.cs" />
+    <Compile Include="Interpreters\Patches\GraspPatches.cs" />
+    <Compile Include="Interpreters\Patches\HScenePatches.cs" />
+    <Compile Include="Interpreters\Patches\TalkScenePatches.cs" />
+    <Compile Include="Trackers\ControllerTracker.cs" />
+    <Compile Include="Trackers\Tracker.cs" />
     <Compile Include="Utils\DebugHooks.cs" />
     <Compile Include="Fixes\GameFixes.cs" />
     <Compile Include="Features\PrivacyScreen.cs" />
@@ -232,8 +264,6 @@
     <Compile Include="Fixes\Mirror\VRReflection.cs" />
     <Compile Include="Camera\CameraMoveHooks.cs" />
     <Compile Include="Settings\SettingsManager.cs" />
-    <Compile Include="Controls\TalkSceneHandler.cs" />
-    <Compile Include="Controls\KoikatuWarpTool.cs" />
     <Compile Include="Fixes\UnityPatches.cs" />
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Interpreters\HSceneInterpreter.cs" />
@@ -256,6 +286,9 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\packages\Microsoft.Unity.Analyzers.1.18.0\analyzers\dotnet\cs\Microsoft.Unity.Analyzers.dll" />
+  </ItemGroup>
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
@@ -274,7 +307,6 @@
     <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.InputLegacyModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.InputLegacyModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.InputLegacyModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.InputLegacyModule.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.targets'))" />
-    <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.Cinemachine.2019.4.9\build\IllusionLibs.KoikatsuSunshine.Cinemachine.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.Cinemachine.2019.4.9\build\IllusionLibs.KoikatsuSunshine.Cinemachine.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.PhysicsModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.PhysicsModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.PhysicsModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.PhysicsModule.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.AnimationModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.AnimationModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.AnimationModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.AnimationModule.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.XRModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.XRModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.XRModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.XRModule.targets'))" />
@@ -284,6 +316,8 @@
     <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.TextRenderingModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.TextRenderingModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.TextRenderingModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.TextRenderingModule.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.ImageConversionModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.ImageConversionModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.ImageConversionModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.ImageConversionModule.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.BepInEx.Harmony.2.9.0\build\IllusionLibs.BepInEx.Harmony.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.BepInEx.Harmony.2.9.0\build\IllusionLibs.BepInEx.Harmony.targets'))" />
+    <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.targets'))" />
+    <Error Condition="!Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.targets'))" />
   </Target>
   <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.Assembly-CSharp-firstpass.2021.9.17\build\IllusionLibs.KoikatsuSunshine.Assembly-CSharp-firstpass.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.Assembly-CSharp-firstpass.2021.9.17\build\IllusionLibs.KoikatsuSunshine.Assembly-CSharp-firstpass.targets')" />
   <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UniRx.2021.9.17\build\IllusionLibs.KoikatsuSunshine.UniRx.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UniRx.2021.9.17\build\IllusionLibs.KoikatsuSunshine.UniRx.targets')" />
@@ -294,7 +328,6 @@
   <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.InputLegacyModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.InputLegacyModule.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.InputLegacyModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.InputLegacyModule.targets')" />
   <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UI.targets')" />
   <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UIModule.targets')" />
-  <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.Cinemachine.2019.4.9\build\IllusionLibs.KoikatsuSunshine.Cinemachine.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.Cinemachine.2019.4.9\build\IllusionLibs.KoikatsuSunshine.Cinemachine.targets')" />
   <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.PhysicsModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.PhysicsModule.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.PhysicsModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.PhysicsModule.targets')" />
   <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.AnimationModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.AnimationModule.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.AnimationModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.AnimationModule.targets')" />
   <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.XRModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.XRModule.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.XRModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.XRModule.targets')" />
@@ -311,4 +344,6 @@
     <PostBuildEvent>IF EXIST "$(SolutionDir)PostBuild.bat" CALL "$(SolutionDir)PostBuild.bat" "$(TargetDir)\KKS_MainGameVR.dll" KKS</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\IllusionLibs.BepInEx.Harmony.2.9.0\build\IllusionLibs.BepInEx.Harmony.targets" Condition="Exists('..\packages\IllusionLibs.BepInEx.Harmony.2.9.0\build\IllusionLibs.BepInEx.Harmony.targets')" />
+  <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestModule.targets')" />
+  <Import Project="..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.targets" Condition="Exists('..\packages\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.2019.4.9\build\IllusionLibs.KoikatsuSunshine.UnityEngine.UnityWebRequestWWWModule.targets')" />
 </Project>

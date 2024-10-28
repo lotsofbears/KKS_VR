@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Xml.Serialization;
 using UnityEngine;
+using VRGIN.Controls.Speech;
 using VRGIN.Core;
+using VRGIN.Helpers;
 using VRGIN.Visuals;
 
 namespace KKS_VR.Settings

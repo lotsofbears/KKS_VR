@@ -3,6 +3,7 @@ using HarmonyLib;
 using KKS_VR.Caress;
 using KKS_VR.Features;
 using KKS_VR.Settings;
+using KKS_VR;
 using NodeCanvas.Tasks.Actions;
 using System;
 using System.Collections;
@@ -14,6 +15,8 @@ using UnityEngine;
 using VRGIN.Core;
 using static RootMotion.FinalIK.InteractionTrigger;
 using static UnityEngine.UI.Image;
+using KKS_VR.Interpreters;
+using KKS_VR.Handlers;
 
 namespace KKS_VR.Camera
 {
@@ -27,16 +30,14 @@ namespace KKS_VR.Camera
         private Transform _eyes;
         private Transform _torso;
         private Transform _kokan;
-        private PoV _pov;
         //private List<Coroutine> _activeCoroutines = new List<Coroutine>();
         internal KoikatuSettings _settings;
 
-        public void Initialize(HSceneProc proc)
+        public void Initialize()
         {
             Instance = this;
-            _pov = PoV.Instance;
-            var chara = Traverse.Create(proc).Field("lstFemale").GetValue<List<ChaControl>>().FirstOrDefault();
-            _chara = chara.objTop.transform;
+            var chara = HSceneInterpreter.lstFemale[0];
+            _chara = chara.transform;
             _eyes = chara.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
             _torso = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_spine01/cf_j_spine02/cf_j_spine03");
             _kokan = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_waist01/cf_j_waist02/cf_d_kokan/cf_j_kokan");
@@ -44,11 +45,11 @@ namespace KKS_VR.Camera
         }
         public void MoveToInH(Vector3 position, Quaternion rotation, bool actionChange, HFlag.EMode mode)
         {
-            VRPlugin.Logger.LogDebug("VRMoverH:MoveToInH");
+            //VRPlugin.Logger.LogDebug("VRMoverH:MoveToInH");
             StopAllCoroutines();
-            if (_pov != null && (_pov.Active || (_settings.AutoEnterPov && actionChange)))
+            if (PoV.Active || (_settings.AutoEnterPov && actionChange))
             {
-                _pov.DisablePov(teleport: false);
+                PoV.Instance.DisablePov(teleport: false);
                 if (mode != HFlag.EMode.aibu)
                 {
                     StartCoroutine(FlyToPov());
@@ -59,7 +60,7 @@ namespace KKS_VR.Camera
         }
         //private void HaltMovements()
         //{
-            
+
         //    //foreach (var coroutine in _activeCoroutines)
         //    //{
         //    //    StopCoroutine(coroutine);
@@ -71,11 +72,11 @@ namespace KKS_VR.Camera
         {
             VRPlugin.Logger.LogDebug($"VRMoverH:MakeUpright");
             StartCoroutine(RotateToUpright(method, args));
-            
-
         }
+
         private IEnumerator RotateToUpright(Action method = null, params object[] args)
         {
+            // Wait for lag.
             yield return null;
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
             yield return new WaitForEndOfFrame();
@@ -85,7 +86,7 @@ namespace KKS_VR.Camera
             {
                 var uprightRot = Quaternion.Euler(0f, origin.eulerAngles.y, 0f);
                 Vector3 oldPos;
-                while ((int)origin.eulerAngles.x != 0 || (int)origin.eulerAngles.z != 0)
+                while (Mathf.Abs(origin.eulerAngles.x) > 0.1f || Mathf.Abs(origin.eulerAngles.x) > 0.1f)
                 {
                     oldPos = head.position;
                     origin.rotation = Quaternion.RotateTowards(origin.rotation, uprightRot, Time.deltaTime * 120f);
@@ -155,28 +156,28 @@ namespace KKS_VR.Camera
             //    }
             //}
             //VRPlugin.Logger.LogDebug($"VRMoverH:FlyToPov:Done");
-            _pov.StartPov();
+            PoV.Instance.StartPov();
         }
         private IEnumerator FlyToPosition(Vector3 position, Quaternion rotation)
         {
             yield return null;
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
             yield return new WaitForEndOfFrame();
-            VRLog.Debug($"VRMoverH:FlyToPosition[{VR.Camera.transform.position}]");
+            VRLog.Debug($"VRMoverH:FlyToPosition:{position}:{rotation.eulerAngles}");
             var origin = VR.Camera.Origin;
             var head = VR.Camera.Head;
-            VRMouth.NoActionAllowed = true;
-            var height = _eyes.transform.position.y;
+            MouthGuide.Instance.PauseInteractions = true;
+            var eyeLevel = _eyes.transform.position.y;
 
-            if (height - _chara.transform.position.y > 1f)
+            if (eyeLevel - _chara.transform.position.y > 1f)
             {
                 VRLog.Debug($"VRMoverH:FlyToPosition[height is high, resetting rotation]");
                 // Upright (probably) position, some of them have weird rotations.
                 rotation = Quaternion.Euler(0f, rotation.eulerAngles.y, 0f);
-                if (position.y < height)
+                if (position.y < eyeLevel)
                 {
                     VRLog.Debug($"VRMoverH:FlyToPosition[height is low, meeting eye level]");
-                    position.y = height;
+                    position.y = eyeLevel;
                 }
 
             }
@@ -185,11 +186,11 @@ namespace KKS_VR.Camera
                 position.y += 0.2f;
                 VRLog.Debug($"VRMoverH:FlyToPosition[height is low, increasing a bit]");
             }
-            
+
             //else
             //{
             //    
-                
+
             //}
             //var dic = new Dictionary<float, Vector3>()
             //{
@@ -208,7 +209,7 @@ namespace KKS_VR.Camera
 
                 VRLog.Debug($"VRMoverH:FlyToPosition[not close enough, moving forward for {proximity - 0.4f}]");
                 position += rotation * Vector3.forward * (proximity - 0.4f);
-                
+
             }
             var moveSpeed = 0.5f + Vector3.Distance(head.position, position) * _settings.FlightSpeed;
             //var halfDistance = Vector3.Distance(head.position, position) * 0.5f;
@@ -230,7 +231,7 @@ namespace KKS_VR.Camera
                 var step = Time.deltaTime * moveSpeed;
                 var rotSpeed = angleDelta / (distance / step);
                 var moveTowards = Vector3.MoveTowards(head.position, position, step);
-                origin.rotation = Quaternion.RotateTowards(origin.rotation, rotation, 1f * rotSpeed);
+                origin.rotation = Quaternion.RotateTowards(origin.rotation, rotation, rotSpeed);
                 origin.position += moveTowards - head.position;
                 if (distance < step && angleDelta < 1f)
                 {
@@ -238,7 +239,7 @@ namespace KKS_VR.Camera
                 }
                 yield return new WaitForEndOfFrame();
             }
-            VRMouth.NoActionAllowed = false;
+            MouthGuide.Instance.PauseInteractions = false;
             VRLog.Debug($"EndOfFlight");
         }
     }

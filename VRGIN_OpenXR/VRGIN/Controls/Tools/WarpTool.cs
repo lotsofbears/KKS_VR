@@ -61,7 +61,7 @@ namespace VRGIN.Controls.Tools
 
         //private float _InitialControllerDistance;
 
-       // private float _InitialIPD;
+        // private float _InitialIPD;
 
         //private Vector3 _PrevFromTo;
 
@@ -89,7 +89,7 @@ namespace VRGIN.Controls.Tools
             SetVisibility(false);
         }
 
-        protected override void OnDestroy()
+        private void OnDestroy()
         {
             if (VR.Quitting)
             {
@@ -204,7 +204,7 @@ namespace VRGIN.Controls.Tools
                 }
 
                 if (Owner.Input.GetPressDown(EVRButtonId.k_EButton_Grip))
-                { 
+                {
                     EnterState(WarpState.Grabbing);
                 }
             }

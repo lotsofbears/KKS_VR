@@ -33,7 +33,7 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <OutputPath>..\..\..\..\Desktop\vrgin\</OutputPath>
+    <OutputPath>..\..\..\..\Desktop\test\</OutputPath>
     <DebugType>none</DebugType>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
