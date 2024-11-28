@@ -55,8 +55,9 @@ namespace KK_VR.Settings
                     new AcceptableValueRange<float>(0.25f, 4f)));
             Tie(ipdScale, v => settings.IPDScale = v);
 
-            var rumble = config.Bind(SectionGeneral, "Rumble", true,
-                "Whether or not rumble is activated.");
+            // KKS SteamVR also has it built-in on trigger/grip press/release.
+            var rumble = config.Bind(SectionGeneral, "Haptic Feedback", true,
+                "Whether or not haptic feedback is activated.");
             Tie(rumble, v => settings.Rumble = v);
 
             var rotationMultiplier = config.Bind(SectionGeneral, "Rotation multiplier", 1f,
@@ -102,7 +103,7 @@ namespace KK_VR.Settings
                     new ConfigurationManagerAttributes { IsAdvanced = true }));
             Tie(useLegacyInputSimulator, v => settings.UseLegacyInputSimulator = v);
 
-            var usingHeadPos = config.Bind(SectionRoaming, "Use head position", false,
+            var usingHeadPos = config.Bind(SectionRoaming, "Use head position", true,
                 new ConfigDescription(
                     "Place the camera exactly at the protagonist's head (may cause motion sickness). If disabled, use a fixed height from the floor.",
                     null,
@@ -154,7 +155,7 @@ namespace KK_VR.Settings
             Tie(optimizeHInsideRoaming, v => settings.OptimizeHInsideRoaming = v);
 
             var automaticTouching = config.Bind(SectionH, "Automatic touching", KoikatuSettings.SceneType.TalkScene,
-                "Touching the female's body with controllers triggers reaction");
+                "Touching body with controller triggers reaction");
             Tie(automaticTouching, v => settings.AutomaticTouching = v);
 
             var automaticKissing = config.Bind(SectionH, "Automatic kissing", true,
@@ -166,20 +167,20 @@ namespace KK_VR.Settings
             Tie(automaticLicking, v => settings.AutomaticLicking = v);
 
             var automaticTouchingByHmd = config.Bind(SectionH, "Kiss body", true,
-                "Touch the female's body by moving your head");
+                "Touch body by moving your head");
             Tie(automaticTouchingByHmd, v => settings.AutomaticTouchingByHeadset = v);
 
             var firstPersonADV = config.Bind(SectionEventScenes, "First person", true,
                 "Prefer first person view in event scenes");
             Tie(firstPersonADV, v => settings.FirstPersonADV = v);
 
-            var showMaleHeadInAdv = config.Bind(SectionEventScenes, "Show head in first person", true,
-                "Prefer first person view in event scenes");
+            var showMaleHeadInAdv = config.Bind(SectionEventScenes, "Show head in ADV", true,
+                "");
             Tie(showMaleHeadInAdv, v => settings.ForceShowMaleHeadInAdv = v);
 
-            var headsetType = config.Bind(SectionGeneral, "Controller adjustments", KoikatuSettings.HeadsetType.None,
-                "Placeholder.\nEnables controller adjustments made for particular headset model.");
-            Tie(headsetType, v => settings.HeadsetSpecifications = v);
+            //var headsetType = config.Bind(SectionGeneral, "Controller adjustments", KoikatuSettings.HeadsetType.None,
+            //    "Placeholder.\nEnables controller adjustments made for particular headset model.");
+            //Tie(headsetType, v => settings.HeadsetSpecifications = v);
 
             EnableBoop = config.Bind(SectionGeneral, "Enable Boop", true,
                 "Adds colliders to the controllers so you can boop things.\nGame restart required for change to take effect.");
@@ -206,9 +207,10 @@ namespace KK_VR.Settings
                 "Hide the corresponding head when the camera is in it. Can be used in combination with camera offset to have simultaneously visible head and PoV mode.(~0.11 Z-offset for that)");
             Tie(hideHeadInPOV, v => settings.HideHeadInPOV = v);
 
-            var flyInPov = config.Bind(SectionPov, "Transition PoV", KoikatuSettings.MovementTypeH.Upright,
-                "When in PoV mode, on position (or location) change, instead of teleportation, transition smoothly to the new location.");
-            Tie(flyInPov, v => settings.FlyInPov = v);
+            // Broken/removed currently.
+            //var flyInPov = config.Bind(SectionPov, "Transition PoV", KoikatuSettings.MovementTypeH.Upright,
+            //    " When in PoV mode, on position (or location) change, instead of teleportation, transition smoothly to the new location.");
+            //Tie(flyInPov, v => settings.FlyInPov = v);
 
             var autoEnter = config.Bind(SectionPov, "Auto enter", true,
                 "If not in PoV mode, on position change PoV mode will be automatically activated if there is a male.");
@@ -236,15 +238,17 @@ namespace KK_VR.Settings
             Tie(flightSpeed, v => settings.FlightSpeed = v);
 
 
-            var contRot = config.Bind(SectionRoaming, "Continuous rotation", false,
+            var contRot = config.Bind(SectionRoaming, "Continuous rotation", true,
                     "Enable continuous rotation of camera in roaming mode instead of snap turn. Influenced by setting 'Rotation angle'.");
             Tie(contRot, v => settings.ContinuousRotation = v);
 
-            var directImpersonation = config.Bind(SectionPov, "DirectImpersonation", false, "");
-            Tie(directImpersonation, v => settings.DirectImpersonation = v);
+            // Didn't meet expectations.
+            //var directImpersonation = config.Bind(SectionPov, "DirectImpersonation", false, "");
+            //Tie(directImpersonation, v => settings.DirectImpersonation = v);
 
             var showGuideObjects = config.Bind(SectionIK, "ShowGuideObjects", true, "");
             Tie(showGuideObjects, v => settings.ShowGuideObjects = v);
+
 
             var showDebugIK = config.Bind(SectionIK, "DebugIK", false,
                 new ConfigDescription(
@@ -290,8 +294,8 @@ namespace KK_VR.Settings
 
             var ikHeadEffector = config.Bind(SectionIK, "HeadEffector", KoikatuSettings.HeadEffector.Disabled,
                 "HeadEffector is VERY finicky even on highly tailored settings." +
-                "Will make it or break it, if latter can be fixed manually." +
-                "'WhenRequired' setting will disable effector on reset");
+                "Will make it or break it, if latter can be fixed manually (more often then not)." +
+                "'WhenRequired' setting will disable effector on soft/hard reset");
             Tie(ikHeadEffector, v => settings.IKHeadEffector = v);
 
             //void updateKeySets()

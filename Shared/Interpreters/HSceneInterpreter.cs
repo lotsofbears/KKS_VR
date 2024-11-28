@@ -263,6 +263,10 @@ namespace KK_VR.Interpreters
 #if KKS
             ObiCtrlFix.OnHSceneEnd();
 #endif
+            if (GraspHelper.Instance != null)
+            {
+                GraspHelper.Instance.DestroyComponents();
+            }
         }
         public override void OnUpdate()
         {

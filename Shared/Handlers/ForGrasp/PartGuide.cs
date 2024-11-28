@@ -42,7 +42,7 @@ namespace KK_VR.Handlers
                 _anchor.localPosition = Vector3.Lerp(_offsetPos, Vector3.zero, step);
                 _anchor.localRotation = Quaternion.Lerp(_offsetRot, Quaternion.identity, step);
                 if (_lerp >= 1f) _onFinish.Invoke();
-                VRPlugin.Logger.LogDebug($"Translate:{_lerp}:{_anchor.localPosition}:{_anchor.localRotation.eulerAngles}");
+                //VRPlugin.Logger.LogDebug($"Translate:{_lerp}:{_anchor.localPosition}:{_anchor.localRotation.eulerAngles}");
             }
         }
 

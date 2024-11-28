@@ -77,7 +77,7 @@ namespace KK_VR.Grasp
                 }
             }
         }
-        internal void StripComponents()
+        internal void DestroyComponents()
         {
             foreach (var list in _bodyPartsDic.Values)
             {
@@ -308,7 +308,7 @@ namespace KK_VR.Grasp
         internal static void SetWorkingState(ChaControl chara)
         {
             // By default only limbs are used, the rest is limited to offset play by hitReaction.
-            VRPlugin.Logger.LogDebug($"Helper:Grasp:SetWorkingState:{chara}");
+            //VRPlugin.Logger.LogDebug($"Helper:Grasp:SetWorkingState:{chara}");
             if (_bodyPartsDic != null && _bodyPartsDic.ContainsKey(chara))
             {
                 foreach (var bodyPart in _bodyPartsDic[chara])
@@ -334,7 +334,7 @@ namespace KK_VR.Grasp
         /// </summary>
         internal static void SetDefaultState(ChaControl chara, string stateName)
         {
-            VRPlugin.Logger.LogDebug($"Helper:Grasp:SetDefaultState:{chara}");
+            //VRPlugin.Logger.LogDebug($"Helper:Grasp:SetDefaultState:{chara}");
             if (_bodyPartsDic != null && _bodyPartsDic.ContainsKey(chara))
             {
                 if (stateName != null && chara.objTop.activeSelf && chara.visibleAll)

@@ -143,9 +143,9 @@ namespace KK_VR.Settings
         public int RotationDeviationThreshold { get; set; }
         public float ProximityDuringKiss { get; set; }
         public bool ContinuousRotation { get; set; }
-        public HeadsetType HeadsetSpecifications { get; set; }
+        //public HeadsetType HeadsetSpecifications { get; set; }
         public bool ForceShowMaleHeadInAdv { get; set; }
-        public bool DirectImpersonation { get; set; }
+        //public bool DirectImpersonation { get; set; }
         //public Color GuideObjectsColor { get; set; }
         public bool ShowGuideObjects { get; set; }
         public HandType HideHandOnUserInput { get; set; }
@@ -180,11 +180,11 @@ namespace KK_VR.Settings
             }
         }
         private float _pushParent;
-        public enum HeadsetType
-        {
-            None,
-            Pico4
-        }
+        //public enum HeadsetType
+        //{
+        //    None,
+        //    Pico4
+        //}
         public enum HeadEffector
         {
             Disabled,
