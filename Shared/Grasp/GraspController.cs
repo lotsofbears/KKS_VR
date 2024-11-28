@@ -183,6 +183,7 @@ namespace KK_VR.Grasp
             // Limbs/head are always On. The rest are conserving precious ticks.
             // They are very cheap.. Limit IK on hidden targets instead, that stuff is VERY expensive.
             internal bool GetDefaultState() => name > PartName.ThighR;
+            internal void Destroy() => GameObject.Destroy(guide.gameObject);
         }
         public enum PartName
         {

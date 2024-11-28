@@ -207,7 +207,8 @@ namespace KK_VR.Features
             var cycle = FindObjectOfType<Cycle>();
             if (cycle == null)
             {
-                return Color.white;
+                //return Color.white;
+                return new Color(0.44f, 0.78f, 1f);
             }
             return (cycle.nowType) switch
             {

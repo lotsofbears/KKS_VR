@@ -4,6 +4,7 @@ using VRGIN.Controls.Tools;
 using VRGIN.Core;
 using KK_VR.Interpreters;
 using Valve.VR;
+using KK_VR.Holders;
 //using EVRButtonId = Unity.XR.OpenVR.EVRButtonId;
 
 namespace KK_VR.Controls
@@ -11,10 +12,15 @@ namespace KK_VR.Controls
     public class GameplayTool : Tool
     {
         private int _index;
+
         private KoikatuMenuTool _menu;
 
         private Controller.TrackpadDirection _lastDirection;
-        private GripMove _grab;
+
+        private GripMove _grip;
+
+        internal bool IsGrip => _grip != null;
+
         public override Texture2D Image
         {
             get;
@@ -38,27 +44,26 @@ namespace KK_VR.Controls
         protected override void OnUpdate()
         {
             HandleInput();
-            _grab?.HandleGrabbing();
+            _grip?.HandleGrabbing();
         }
 
         internal void DestroyGrab()
         {
             KoikatuInterpreter.SceneInterpreter.OnGripMove(_index, active: false);
-            _grab?.Destroy();
-            _grab = null;
+            _grip = null;
         }
         internal void LazyGripMove(int avgFrame)
         {
             // In all honesty tho, the proper name would be retarded, not lazy as it does way more in this mode and lags behind.
-            _grab?.StartLag(avgFrame);
+            _grip?.StartLag(avgFrame);
         }
         internal void AttachGripMove(Transform attachPoint)
         {
-            _grab?.AttachGripMove(attachPoint);
+            _grip?.AttachGripMove(attachPoint);
         }
         internal void UnlazyGripMove()
         {
-            _grab?.StopLag();
+            _grip?.StopLag();
         }
 
         private void HandleInput()
@@ -76,13 +81,13 @@ namespace KK_VR.Controls
             {
                 if (!KoikatuInterpreter.SceneInterpreter.OnButtonDown(_index, EVRButtonId.k_EButton_SteamVR_Trigger, direction))
                 {
-                    _grab?.OnTrigger(true);
+                    _grip?.OnTrigger(true);
                 }
 
             }
             else if (Controller.GetPressUp(EVRButtonId.k_EButton_SteamVR_Trigger))
             {
-                _grab?.OnTrigger(false);
+                _grip?.OnTrigger(false);
                 KoikatuInterpreter.SceneInterpreter.OnButtonUp(_index, EVRButtonId.k_EButton_SteamVR_Trigger, direction);
             }
 
@@ -95,16 +100,16 @@ namespace KK_VR.Controls
                 }
                 else if (!KoikatuInterpreter.SceneInterpreter.OnButtonDown(_index, EVRButtonId.k_EButton_Grip, direction))
                 {
-                    _grab = new GripMove(Owner);
+                    _grip = new GripMove(HandHolder.GetHand(_index), HandHolder.GetHand(_index == 0 ? 1 : 0));
                     // Grab initial Trigger/Touchpad modifiers, if they were already pressed.
-                    if (Controller.GetPress(EVRButtonId.k_EButton_SteamVR_Trigger)) _grab.OnTrigger(true);
-                    if (Controller.GetPress(EVRButtonId.k_EButton_SteamVR_Touchpad)) _grab.OnTouchpad(true);
+                    if (Controller.GetPress(EVRButtonId.k_EButton_SteamVR_Trigger)) _grip.OnTrigger(true);
+                    if (Controller.GetPress(EVRButtonId.k_EButton_SteamVR_Touchpad)) _grip.OnTouchpad(true);
                     KoikatuInterpreter.SceneInterpreter.OnGripMove(_index, active: true);
                 }
             }
             else if (Controller.GetPressUp(EVRButtonId.k_EButton_Grip))
             {
-                if (_grab != null) DestroyGrab();
+                if (_grip != null) DestroyGrab();
                 else
                     KoikatuInterpreter.SceneInterpreter.OnButtonUp(_index, EVRButtonId.k_EButton_Grip, direction);
             }
@@ -112,12 +117,12 @@ namespace KK_VR.Controls
             {
                 if (!KoikatuInterpreter.SceneInterpreter.OnButtonDown(_index, EVRButtonId.k_EButton_SteamVR_Touchpad, direction))
                 {
-                    _grab?.OnTouchpad(true);
+                    _grip?.OnTouchpad(true);
                 }
             }
             else if (Controller.GetPressUp(EVRButtonId.k_EButton_SteamVR_Touchpad))
             {
-                _grab?.OnTouchpad(false);
+                _grip?.OnTouchpad(false);
                 KoikatuInterpreter.SceneInterpreter.OnButtonUp(_index, EVRButtonId.k_EButton_SteamVR_Touchpad, direction);
             }
 

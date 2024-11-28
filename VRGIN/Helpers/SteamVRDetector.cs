@@ -27,5 +27,6 @@ namespace VRGIN.Helpers
                 return Process.GetProcesses().Where(FilterInvalidProcesses).Any(process => process.ProcessName == "vrcompositor");
             }
         }
+        public static bool IsStudio => Process.GetProcesses().Where(FilterInvalidProcesses).Any(process => process.ProcessName == "CharaStudio");
     }
 }

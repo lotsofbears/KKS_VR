@@ -67,6 +67,7 @@ namespace KK_VR.Holders
         internal GameplayTool Tool { get; private set; }
         internal static List<HandHolder> GetHands() => _instances;
         private readonly int[] _itemIDs = [0, 2, 5, 7, 9, 11];
+        internal static HandHolder GetHand(int index) => _instances[index];
         internal void Init(int index)
         {
             _instances.Add(this);
@@ -160,7 +161,6 @@ namespace KK_VR.Holders
         }
         private void SetColliders(int index)
         {
-            VRPlugin.Logger.LogDebug($"SetColliders:{index}");
             /*
              * Material - static + dynamic friction = 1f
              * 
@@ -461,7 +461,7 @@ namespace KK_VR.Holders
             _activeOffsetPos = _activeItem.animParam.positionOffset;
             _activeOffsetRot = _activeItem.animParam.rotationOffset;
             _anchor.SetPositionAndRotation(_controller.TransformPoint(_activeOffsetPos), _controller.rotation);
-            _activeItem.rootPoint.localScale = Util.Divide(Vector3.Scale(Vector3.one, _activeItem.rootPoint.localScale), _activeItem.rootPoint.lossyScale);
+            _activeItem.rootPoint.localScale = Fixes.Util.Divide(Vector3.Scale(Vector3.one, _activeItem.rootPoint.localScale), _activeItem.rootPoint.lossyScale);
             _activeItem.rootPoint.gameObject.SetActive(true);
             SetStartLayer();
             SetColliders(_activeItem.animParam.index);

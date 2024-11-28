@@ -8,15 +8,16 @@ using VRGIN.Core;
 using VRGIN.Helpers;
 using UnityEngine;
 using KK_VR.Handlers;
+using KK_VR.Holders;
 
 namespace KK_VR.Controls
 {
     // Placed directly in KK part for comfy use, and easy new features.
-    public class GripMove
+    internal class GripMove
     {
-        private readonly Controller _owner;
-        private readonly Controller.Lock _ownerLock;
-        private readonly Controller _other;
+        private readonly GameplayTool _other;
+        private readonly Transform _controller;
+
         //private readonly TravelDistanceRumble _travelRumble;
 
 
@@ -30,8 +31,10 @@ namespace KK_VR.Controls
 
         private GripMoveLag _moveLag;
 
+        // Is current instance active or superseded by neighbor.
         private bool _main;
-        private bool _otherLock;
+
+        private bool _otherGrip;
         private bool _alterYaw;
         private bool _alterRotation;
 
@@ -39,16 +42,12 @@ namespace KK_VR.Controls
         private Vector3 _prevPos;
         private Quaternion _prevRot;
 
-        public GripMove(Controller owner)
+        internal GripMove(HandHolder hand, HandHolder otherHand)
         {
-            _owner = owner;
-            _owner.TryAcquireFocus(out _ownerLock, keepTool: true);
-            _other = owner.Other;
-
             _main = true;
-            _otherLock = !_other.CanAcquireFocus();
-
-
+            _controller = hand.Controller.transform;
+            _other = otherHand.Tool;
+            _otherGrip = _other.IsGrip;
             // Feels too much with those forced vibrations on trigger/grip - press/release.
             //_travelRumble = new TravelDistanceRumble(500, 0.1f, _owner.transform)
             //{
@@ -58,8 +57,8 @@ namespace KK_VR.Controls
             // _travelRumble.Reset();
             //_owner.StartRumble(_travelRumble);
 
-            _prevPos = _owner.transform.position;
-            _prevRot = _owner.transform.rotation;
+            _prevPos = _controller.position;
+            _prevRot = _controller.rotation;
         }
 
         /// <summary>
@@ -77,11 +76,6 @@ namespace KK_VR.Controls
             // With full trigger + touchpad.
             //_prevAttachRot = _attachPoint.rotation;
         }
-        public void Destroy()
-        {
-            //_owner.StopRumble(_travelRumble);
-            _ownerLock?.Release();
-        }
 
         public void HandleGrabbing()
         {
@@ -89,11 +83,11 @@ namespace KK_VR.Controls
             // Then we use deltas of orientation to setup origin orientation directly, or through evaluation of multiple frames and "averaging it out" if current action requests it.
             if (_main)
             {
-                if (_otherLock && _other.CanAcquireFocus())
+                if (_otherGrip && !_other.IsGrip)
                 {
-                    _otherLock = false;
+                    _otherGrip = false;
                 }
-                if (!_otherLock && !_other.CanAcquireFocus())
+                if (!_otherGrip && _other.IsGrip)
                 {
                     _main = false;
                 }
@@ -102,7 +96,7 @@ namespace KK_VR.Controls
                     var origin = VR.Camera.SteamCam.origin;
                     if (_alterYaw)
                     {
-                        var deltaRot = _prevRot * Quaternion.Inverse(_owner.transform.rotation);
+                        var deltaRot = _prevRot * Quaternion.Inverse(_controller.rotation);
                         //var invRot = Quaternion.Inverse(_prevRot) * _owner.transform.rotation;
                         if (_moveLag == null)
                         {
@@ -112,9 +106,9 @@ namespace KK_VR.Controls
                             }
                             else
                             {
-                                origin.RotateAround(_owner.transform.position, Vector3.up, deltaRot.eulerAngles.y);
+                                origin.RotateAround(_controller.position, Vector3.up, deltaRot.eulerAngles.y);
                             }
-                            origin.position += _prevPos - _owner.transform.position;
+                            origin.position += _prevPos - _controller.position;
                         }
                         else
                         {
@@ -140,15 +134,15 @@ namespace KK_VR.Controls
                                 {
                                     var deltaRotY = Quaternion.Euler(0f, deltaRot.eulerAngles.y, 0f);
                                     _moveLag.SetPositionAndRotation(
-                                        _owner.transform.position +
-                                        deltaRotY * (origin.position - new Vector3(_owner.transform.position.x, origin.position.y, _owner.transform.position.z)),
+                                        _controller.transform.position +
+                                        deltaRotY * (origin.position - new Vector3(_controller.position.x, origin.position.y, _controller.position.z)),
                                         deltaRotY);
                                 }
                                 else
                                 {
                                     var newAttachVec = deltaRot * _prevAttachVec;
                                     _moveLag.SetDeltaPositionAndRotation(
-                                        (newAttachVec - _prevAttachVec) + (_prevPos - _owner.transform.position) + (_attachPoint.position - _prevAttachPos),
+                                        (newAttachVec - _prevAttachVec) + (_prevPos - _controller.position) + (_attachPoint.position - _prevAttachPos),
                                         deltaRot
                                         );
                                     _prevAttachVec = newAttachVec;
@@ -163,7 +157,7 @@ namespace KK_VR.Controls
                     {
                         if (_moveLag == null)
                         {
-                            origin.position += _prevPos - _owner.transform.position;
+                            origin.position += _prevPos - _controller.position;
                         }
                         else
                         {
@@ -173,29 +167,30 @@ namespace KK_VR.Controls
                             }
                             else
                             {
-                                _moveLag.SetDeltaPosition(_attachPoint.position - _prevAttachPos + (_prevPos - _owner.transform.position));
+                                _moveLag.SetDeltaPosition(_attachPoint.position - _prevAttachPos + (_prevPos - _controller.position));
                                 _prevAttachPos = _attachPoint.position;
                             }
                         }
                     }
                 }
-                _prevPos = _owner.transform.position;
-                _prevRot = _owner.transform.rotation;
+                _prevPos = _controller.position;
+                _prevRot = _controller.rotation;
             }
             else
             {
-                if (_other.CanAcquireFocus())
+                if (!_other.IsGrip)
                 {
                     _main = true;
-                    _prevPos = _owner.transform.position;
-                    _prevRot = _owner.transform.rotation;
+                    _otherGrip = false;
+                    _prevPos = _controller.position;
+                    _prevRot = _controller.rotation;
                 }
             }
         }
 
         internal void StartLag(int avgFrame)
         {
-            _moveLag = new GripMoveLag(_owner.transform, avgFrame);
+            _moveLag = new GripMoveLag(_controller, avgFrame);
         }
         internal void StopLag()
         {

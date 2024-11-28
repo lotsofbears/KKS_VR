@@ -77,7 +77,16 @@ namespace KK_VR.Grasp
                 }
             }
         }
-
+        internal void StripComponents()
+        {
+            foreach (var list in _bodyPartsDic.Values)
+            {
+                foreach (var bodyPart in list)
+                {
+                    bodyPart.Destroy();
+                }
+            }
+        }
         private void AddChara(ChaControl chara)
         {
             _auxDic.Add(chara, new IKStuff
@@ -181,7 +190,7 @@ namespace KK_VR.Grasp
 
                 if (KoikatuInterpreter.settings.IKShowDebug)
                 {
-                    Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.06f, 0.06f, 0.06f), bodyPart.anchor, Color.yellow, 0.5f);
+                    Fixes.Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.06f, 0.06f, 0.06f), bodyPart.anchor, Color.yellow, 0.5f);
                     //Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.12f, 0.12f, 0.12f), bodyPart.afterIK, Color.yellow, 0.4f);
                 }
                 if (bodyPart.name > PartName.ThighR && bodyPart.name != PartName.Head)

@@ -96,7 +96,9 @@ namespace KK_VR.Trackers
                 colliderInfo = null;
             }
             else
+            {
                 colliderInfo = _referenceTrackDic[_trackList.Last()];
+            }
 
         }
         internal virtual bool RemoveCollider(Collider other)
