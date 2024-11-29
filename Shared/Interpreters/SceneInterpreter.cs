@@ -28,7 +28,7 @@ namespace KK_VR.Interpreters
 
         public virtual bool OnDirectionDown(int index, Controller.TrackpadDirection direction)
         {
-            return true;
+            return false;
         }
 
         public virtual void OnDirectionUp(int index, Controller.TrackpadDirection direction)
@@ -38,7 +38,7 @@ namespace KK_VR.Interpreters
 
         public virtual bool OnButtonDown(int index, EVRButtonId buttonId, Controller.TrackpadDirection direction)
         {
-            return true;
+            return false;
         }
 
         public virtual void OnButtonUp(int index, EVRButtonId buttonId, Controller.TrackpadDirection direction)
