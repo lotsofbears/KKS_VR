@@ -38,7 +38,7 @@ namespace KK_VR.Camera
                 _sunShafts.mirror.sunColor = _sunShafts.source.sunColor;
                 _sunShafts.mirror.sunTransform = _sunShafts.source.sunTransform;
 
-                //TweakSunShaftSettings(_sunShafts.mirror);
+                TweakSunShaftSettings(_sunShafts.mirror);
             }
             _vignette.UpdateEnabled();
             _blur.UpdateEnabled();
