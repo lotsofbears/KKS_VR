@@ -28,9 +28,13 @@ namespace KK_VR.Interpreters
             //NightMenuScene,
             //CustomScene
         }
-        public static SceneType CurrentScene { get; private set; }
-        public static SceneInterpreter SceneInterpreter;
-        public static KoikatuSettings settings;
+        public static SceneType CurrentScene => _currentScene;
+        public static SceneInterpreter SceneInterpreter => _sceneInterpreter;
+        public static KoikatuSettings Settings => _settings;
+
+        private static SceneType _currentScene;
+        private static SceneInterpreter _sceneInterpreter;
+        private static KoikatuSettings _settings;
 
         private KK_VR.Fixes.Mirror.Manager _mirrorManager;
         private int _kkapiCanvasHackWait;
@@ -38,19 +42,19 @@ namespace KK_VR.Interpreters
         private bool _hands;
         protected override void OnAwake()
         {
-            CurrentScene = SceneType.OtherScene;
-            SceneInterpreter = new OtherSceneInterpreter();
+            _currentScene = SceneType.OtherScene;
+            _sceneInterpreter = new OtherSceneInterpreter();
             SceneManager.sceneLoaded += OnSceneLoaded;
             _mirrorManager = new KK_VR.Fixes.Mirror.Manager();
             VR.Camera.gameObject.AddComponent<VREffector>();
             //VR.Manager.ModeInitialized += AddModels;
-            settings = VR.Context.Settings as KoikatuSettings;
+            _settings = VR.Context.Settings as KoikatuSettings;
             Features.LoadVoice.Init();
         }
         protected override void OnUpdate()
         {
             UpdateScene();
-            SceneInterpreter.OnUpdate();
+            _sceneInterpreter.OnUpdate();
         }
         protected override void OnLateUpdate()
         {
@@ -58,7 +62,7 @@ namespace KK_VR.Interpreters
             //{
             //    FixupKkSubtitles();
             //}
-            SceneInterpreter.OnLateUpdate();
+            _sceneInterpreter.OnLateUpdate();
         }
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
@@ -90,7 +94,6 @@ namespace KK_VR.Interpreters
                 _mirrorManager.Fix(reflection);
             }
 #endif
-
         }
 
         private void CreateHands()
@@ -109,21 +112,22 @@ namespace KK_VR.Interpreters
             right.AddComponent<HandHolder>().Init(1);
         }
 
-        /// <summary>
-        /// Fix up scaling of subtitles added by KK_Subtitles. See
-        /// https://github.com/IllusionMods/KK_Plugins/pull/91 for details.
-        /// </summary>
-        private void FixupKkSubtitles()
-        {
-            foreach (Transform child in _kkSubtitlesCaption.transform)
-            {
-                if (child.localScale != Vector3.one)
-                {
-                    VRLog.Info($"Fixing up scale for {child}");
-                    child.localScale = Vector3.one;
-                }
-            }
-        }
+        // PR was merged long time ago in KK_Subtitles.
+        ///// <summary>
+        ///// Fix up scaling of subtitles added by KK_Subtitles. See
+        ///// https://github.com/IllusionMods/KK_Plugins/pull/91 for details.
+        ///// </summary>
+        //private void FixupKkSubtitles()
+        //{
+        //    foreach (Transform child in _kkSubtitlesCaption.transform)
+        //    {
+        //        if (child.localScale != Vector3.one)
+        //        {
+        //            VRLog.Info($"Fixing up scale for {child}");
+        //            child.localScale = Vector3.one;
+        //        }
+        //    }
+        //}
 
         public override bool IsIgnoredCanvas(Canvas canvas)
         {
@@ -176,13 +180,13 @@ namespace KK_VR.Interpreters
         }
         public static bool StartScene(SceneType type, MonoBehaviour behaviour = null)
         {
-            if (CurrentScene != type)
+            if (_currentScene != type)
             {
                 VRPlugin.Logger.LogDebug($"Interpreter:Start:{type}");
-                CurrentScene = type;
-                SceneInterpreter.OnDisable();
-                SceneInterpreter = CreateSceneInterpreter(type, behaviour);
-                SceneInterpreter.OnStart();
+                _currentScene = type;
+                _sceneInterpreter.OnDisable();
+                _sceneInterpreter = CreateSceneInterpreter(type, behaviour);
+                _sceneInterpreter.OnStart();
                 return true;
             }
             else
@@ -193,7 +197,7 @@ namespace KK_VR.Interpreters
         }
         public static void EndScene(SceneType type)
         {
-            if (CurrentScene == type)
+            if (_currentScene == type)
             {
                 VRPlugin.Logger.LogDebug($"Interpreter:EndScene:{type}");
                 StartScene(SceneType.OtherScene);
@@ -207,12 +211,12 @@ namespace KK_VR.Interpreters
         // 前回とSceneが変わっていれば切り替え処理をする
         private void UpdateScene()
         {
-            if (CurrentScene < SceneType.TalkScene)
+            if (_currentScene < SceneType.TalkScene)
             {
                 var sceneType = DetectScene();
-                if (CurrentScene != sceneType)
+                if (_currentScene != sceneType)
                 {
-                    EndScene(CurrentScene);
+                    EndScene(_currentScene);
                     StartScene(sceneType);
                 }
             }
@@ -225,7 +229,7 @@ namespace KK_VR.Interpreters
             {
                 if (Manager.Game.Instance.actScene.AdvScene.isActiveAndEnabled)
 #else
-                    if (ActionScene.instance != null)
+            if (ActionScene.instance != null)
             {
                 if (ActionScene.instance.AdvScene.isActiveAndEnabled)
 #endif

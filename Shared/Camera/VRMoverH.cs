@@ -33,7 +33,7 @@ namespace KK_VR.Camera
         {
             //VRPlugin.Logger.LogDebug("VRMoverH:MoveToInH");
             StopAllCoroutines();
-            if (PoV.Active || (KoikatuInterpreter.settings.AutoEnterPov && actionChange))
+            if (PoV.Active || (KoikatuInterpreter.Settings.AutoEnterPov && actionChange))
             {
                 PoV.Instance.TryDisable(moveTo: false);
                 if (mode != HFlag.EMode.aibu)
@@ -63,7 +63,7 @@ namespace KK_VR.Camera
             {
                 var head = VR.Camera.Head;
                 var uprightRot = Quaternion.Euler(0f, head.eulerAngles.y, 0f);
-                var lerpMultiplier = KoikatuInterpreter.settings.FlightSpeed * 90f / Quaternion.Angle(head.rotation, uprightRot);
+                var lerpMultiplier = KoikatuInterpreter.Settings.FlightSpeed * 90f / Quaternion.Angle(head.rotation, uprightRot);
                 var lerp = 0f;
                 var startRot = origin.rotation;
                 Vector3 oldPos;
@@ -186,7 +186,7 @@ namespace KK_VR.Camera
 
             }
             var lerp = 0f;
-            var lerpModifier = KoikatuInterpreter.settings.FlightSpeed / Vector3.Distance(head.position, position);
+            var lerpModifier = KoikatuInterpreter.Settings.FlightSpeed / Vector3.Distance(head.position, position);
             var startPos = head.position;
             var startRot = origin.rotation;
             while (lerp < 1f)

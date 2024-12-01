@@ -184,11 +184,11 @@ namespace KK_VR.Grasp
                 bodyPart.anchor.SetParent(bodyPart.beforeIK, false);
                 if (bodyPart.name == PartName.Head)
                 {
-                    ((BodyPartHead)bodyPart).headEffector.enabled = KoikatuInterpreter.settings.IKHeadEffector == KoikatuSettings.HeadEffector.Always;
+                    ((BodyPartHead)bodyPart).headEffector.enabled = KoikatuInterpreter.Settings.IKHeadEffector == KoikatuSettings.HeadEffector.Always;
                 }
                 bodyPart.guide.Init(bodyPart);
 
-                if (KoikatuInterpreter.settings.IKShowDebug)
+                if (KoikatuInterpreter.Settings.IKShowDebug)
                 {
                     Fixes.Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.06f, 0.06f, 0.06f), bodyPart.anchor, Color.yellow, 0.5f);
                     //Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.12f, 0.12f, 0.12f), bodyPart.afterIK, Color.yellow, 0.4f);
@@ -320,7 +320,7 @@ namespace KK_VR.Grasp
                         bodyPart.effector.target = bodyPart.anchor;
                         if (bodyPart.chain != null)
                         {
-                            bodyPart.chain.bendConstraint.weight = bodyPart.state == State.Default ? 1f : KoikatuInterpreter.settings.IKDefaultBendConstraint;
+                            bodyPart.chain.bendConstraint.weight = bodyPart.state == State.Default ? 1f : KoikatuInterpreter.Settings.IKDefaultBendConstraint;
                         }
                     }
                 }

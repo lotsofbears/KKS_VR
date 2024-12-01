@@ -61,7 +61,6 @@ namespace KK_VR.Features
         //private List<ChaControl> _charas;
         private Transform _targetEyes;
         private Mode _mode;
-        private readonly KoikatuSettings settings = KoikatuInterpreter.settings;
         private bool _newAttachPoint;
         private Vector3 _offsetVecNewAttach;
         private bool _rotationRequired;
@@ -92,10 +91,10 @@ namespace KK_VR.Features
             _sync = false;
             _syncTimestamp = 0f;
             _smoothDamp = new SmoothDamp();
-            _degPerSec = 30f * KoikatuInterpreter.settings.RotationMultiplier;
-            _rotDeviationThreshold = settings.RotationDeviationThreshold;
+            _degPerSec = 30f * KoikatuInterpreter.Settings.RotationMultiplier;
+            _rotDeviationThreshold = KoikatuInterpreter.Settings.RotationDeviationThreshold;
             _rotDeviationHalf = _rotDeviationThreshold / 2;
-            _offsetVecEyes = new Vector3(0f, settings.PositionOffsetY, settings.PositionOffsetZ);
+            _offsetVecEyes = new Vector3(0f, KoikatuInterpreter.Settings.PositionOffsetY, KoikatuInterpreter.Settings.PositionOffsetZ);
         }
         private void SetVisibility(ChaControl chara)
         {
@@ -247,7 +246,7 @@ namespace KK_VR.Features
         {
             if (_trip == null)
             {
-                if (settings.FlyInPov == KoikatuSettings.MovementTypeH.Disabled)
+                if (KoikatuInterpreter.Settings.FlyInPov == KoikatuSettings.MovementTypeH.Disabled)
                 {
                     CameraIsNear();
                     _newAttachPoint = false;
@@ -255,8 +254,8 @@ namespace KK_VR.Features
                 else
                 {
                     _trip = new OneWayTrip(Mathf.Min(
-                        settings.FlightSpeed / Vector3.Distance(VR.Camera.Head.position, GetEyesPosition()),
-                        settings.FlightSpeed * 60f / Quaternion.Angle(VR.Camera.Origin.rotation, _targetEyes.rotation)));
+                        KoikatuInterpreter.Settings.FlightSpeed / Vector3.Distance(VR.Camera.Head.position, GetEyesPosition()),
+                        KoikatuInterpreter.Settings.FlightSpeed * 60f / Quaternion.Angle(VR.Camera.Origin.rotation, _targetEyes.rotation)));
                 }
             }
             else if (_trip.Move(_targetEyes.rotation, GetEyesPosition()) >= 1f)
@@ -300,7 +299,7 @@ namespace KK_VR.Features
             // As some may add extra characters with kPlug, we look them all up.
             var charas = FindObjectsOfType<ChaControl>()
                     .Where(c => c.objTop.activeSelf && c.visibleAll
-                    && c.sex != (settings.PoV == KoikatuSettings.Impersonation.Girls ? 0 : settings.PoV == KoikatuSettings.Impersonation.Boys ? 1 : 2))
+                    && c.sex != (KoikatuInterpreter.Settings.PoV == KoikatuSettings.Impersonation.Girls ? 0 : KoikatuInterpreter.Settings.PoV == KoikatuSettings.Impersonation.Boys ? 1 : 2))
                     .ToList();
 
             if (charas.Count == 0)
@@ -475,7 +474,7 @@ namespace KK_VR.Features
 
         private void LateUpdate()
         {
-            if (_active && settings.HideHeadInPOV && _target != null)
+            if (_active && KoikatuInterpreter.Settings.HideHeadInPOV && _target != null)
             {
                 HideHead(_target);
                 if (_prevTarget != null)
@@ -508,7 +507,7 @@ namespace KK_VR.Features
         }
         internal void TryEnable()
         {
-            if (settings.PoV != KoikatuSettings.Impersonation.Disabled)
+            if (KoikatuInterpreter.Settings.PoV != KoikatuSettings.Impersonation.Disabled)
             {
                 if (_newAttachPoint)
                 {

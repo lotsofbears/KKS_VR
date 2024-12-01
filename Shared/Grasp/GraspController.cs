@@ -151,11 +151,11 @@ namespace KK_VR.Grasp
                     //offsetEffector = anchor.gameObject.AddComponent<KK_VR.IK.OffsetEffector>();
                     if (_name == PartName.HandL || _name == PartName.HandR)
                     {
-                        effector.maintainRelativePositionWeight = KoikatuInterpreter.settings.MaintainLimbOrientation ? 1f : 0f;
-                        if (KoikatuInterpreter.settings.PushParent != 0f)
+                        effector.maintainRelativePositionWeight = KoikatuInterpreter.Settings.MaintainLimbOrientation ? 1f : 0f;
+                        if (KoikatuInterpreter.Settings.PushParent != 0f)
                         {
                             chain.push = 1f;
-                            chain.pushParent = KoikatuInterpreter.settings.PushParent;
+                            chain.pushParent = KoikatuInterpreter.Settings.PushParent;
                         }
                         else
                         {
@@ -847,7 +847,7 @@ namespace KK_VR.Grasp
             bodyPart.visual.Hide();
             if (bodyPart.chain != null)
             {
-                bodyPart.chain.bendConstraint.weight = KoikatuInterpreter.settings.IKDefaultBendConstraint;
+                bodyPart.chain.bendConstraint.weight = KoikatuInterpreter.Settings.IKDefaultBendConstraint;
             }
             bodyPart.state = State.Attached;
             //if (chara == null)

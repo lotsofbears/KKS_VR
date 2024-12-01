@@ -219,7 +219,8 @@ namespace KK_VR.Interpreters
             var charas = new List<ChaControl>() { male };
             charas.AddRange(lstFemale);
 
-            //VRBoop.RefreshDynamicBones(charas);
+            VRBoop.RefreshDynamicBones(charas);
+
             TalkSceneExtras.AddTalkColliders(charas);
             TalkSceneExtras.AddHColliders(charas);
             _hands = HandHolder.GetHands();
@@ -239,8 +240,10 @@ namespace KK_VR.Interpreters
             _vrMoverH.Initialize();
             adjustDirLight = true;
             // Init after everything.
+//#if KKS
+//            MeshCollider.AddRascal(lstFemale[0]);
+//#endif
             HitReactionInitialize(charas);
-
             LocationPicker.AddComponents();
             // If disabled, camera won't know where to move.
 #if KK

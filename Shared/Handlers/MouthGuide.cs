@@ -95,7 +95,7 @@ namespace KK_VR.Handlers
 
         private bool HandleKissing()
         {
-            if (KoikatuInterpreter.settings.AutomaticKissing)
+            if (KoikatuInterpreter.Settings.AutomaticKissing)
             {
                 var head = VR.Camera.Head;
                 if (Vector3.Distance(_eyes.position, head.position) < _kissDistance
@@ -193,7 +193,7 @@ namespace KK_VR.Handlers
                 angleModRight = absModRight - (angleModRight - absModRight);
 
             var offsetRight = angleModRight / 15f; //  0.0667f; // /15f;
-            var offsetForward = KoikatuInterpreter.settings.ProximityDuringKiss;
+            var offsetForward = KoikatuInterpreter.Settings.ProximityDuringKiss;
             var offsetUp = -0.04f - (Math.Abs(offsetRight) * 0.5f);
             var startDistance = Vector3.Distance(_eyes.position, head.position) - offsetForward;
 
@@ -214,7 +214,7 @@ namespace KK_VR.Handlers
                 oldEyesPos = _eyes.position;
                 yield return new WaitForEndOfFrame();
             }
-            _followRotation = KoikatuInterpreter.settings.FollowRotationDuringKiss;
+            _followRotation = KoikatuInterpreter.Settings.FollowRotationDuringKiss;
             _followOffsetRot = Quaternion.Inverse(_followAfter.rotation) * VR.Camera.Origin.rotation;
 
             while (true)
@@ -248,7 +248,7 @@ namespace KK_VR.Handlers
         internal void UpdateOrientationOffsets()
         {
             var head = VR.Camera.Head;
-            _followRotation = KoikatuInterpreter.settings.FollowRotationDuringKiss;
+            _followRotation = KoikatuInterpreter.Settings.FollowRotationDuringKiss;
             _followOffsetRot = Quaternion.Inverse(_followAfter.rotation) * VR.Camera.Origin.rotation;
             _followOffsetPos = _followAfter.InverseTransformPoint(head.position);
             if (_lookAt != null)
@@ -505,7 +505,7 @@ namespace KK_VR.Handlers
                     {
                         if (lerp == 0f)
                         {
-                            if (KoikatuInterpreter.settings.ImperfectRotation)
+                            if (KoikatuInterpreter.Settings.ImperfectRotation)
                             {
                                 uprightRot = Quaternion.Euler(
                                     headPitch ? head.eulerAngles.x : 0f,
@@ -521,7 +521,7 @@ namespace KK_VR.Handlers
                                     origin.eulerAngles.y,
                                     headPitch ? origin.eulerAngles.z : 0f);
                             }
-                            lerpMultiplier = KoikatuInterpreter.settings.FlightSpeed * 30f / Quaternion.Angle(origin.rotation, uprightRot);
+                            lerpMultiplier = KoikatuInterpreter.Settings.FlightSpeed * 30f / Quaternion.Angle(origin.rotation, uprightRot);
                         }
                         var sStep = Mathf.SmoothStep(0f, 1f, lerp += Time.deltaTime * lerpMultiplier);
                         origin.rotation = Quaternion.Lerp(startRot, uprightRot, sStep);

@@ -24,7 +24,7 @@ namespace KK_VR.Handlers
         private BodyPartHead _bodyPart;
         internal override void Follow(Transform target, HandHolder hand)
         {
-            if (KoikatuInterpreter.settings.IKHeadEffector == Settings.KoikatuSettings.HeadEffector.Disabled)
+            if (KoikatuInterpreter.Settings.IKHeadEffector == Settings.KoikatuSettings.HeadEffector.Disabled)
             {
                 return;
             }
@@ -37,7 +37,7 @@ namespace KK_VR.Handlers
             _follow = true;
             _target = target;
 
-            //if (KoikatuInterpreter.settings.ShowGuideObjects) _bodyPart.visual.Show();
+            //if (KoikatuInterpreter.Settings.ShowGuideObjects) _bodyPart.visual.Show();
             _bodyPart.state = State.Grasped;
 
             _offsetRot = Quaternion.Inverse(target.rotation) * _anchor.rotation;
@@ -80,7 +80,7 @@ namespace KK_VR.Handlers
         protected override void Disable()
         {
             base.Disable();
-            if (KoikatuInterpreter.settings.IKHeadEffector != Settings.KoikatuSettings.HeadEffector.Always)
+            if (KoikatuInterpreter.Settings.IKHeadEffector != Settings.KoikatuSettings.HeadEffector.Always)
             {
                 _bodyPart.headEffector.enabled = false;
             }

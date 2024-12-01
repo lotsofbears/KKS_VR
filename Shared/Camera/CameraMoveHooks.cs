@@ -183,7 +183,7 @@ namespace KK_VR.Camera
                 // We are starting from scratch.
                 // TODO: the height calculation below assumes standing mode.
 
-                if (VRMoverH.Instance != null && KoikatuInterpreter.settings.FlyInH)
+                if (VRMoverH.Instance != null && KoikatuInterpreter.Settings.FlyInH)
                 {
                     VRMoverH.Instance.MoveToInH(cameraPosition, cameraRotation, previousFemaleY == null, instance.flags.mode);
                 }

@@ -60,6 +60,9 @@
     <Reference Include="KK_FinalIK">
       <HintPath>..\Libs\KK_FinalIK.dll</HintPath>
     </Reference>
+    <Reference Include="KK_SensibleH">
+      <HintPath>..\Libs\KK_SensibleH.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

@@ -73,9 +73,9 @@ namespace KK_VR.Handlers
             //_bodyPart.effector.target = _bodyPart.anchor;
             if (_bodyPart.chain != null)
             {
-                _bodyPart.chain.bendConstraint.weight = KoikatuInterpreter.settings.IKDefaultBendConstraint;
+                _bodyPart.chain.bendConstraint.weight = KoikatuInterpreter.Settings.IKDefaultBendConstraint;
             }
-            if (_bodyPart.effector.maintainRelativePositionWeight != 1f && KoikatuInterpreter.settings.MaintainLimbOrientation)
+            if (_bodyPart.effector.maintainRelativePositionWeight != 1f && KoikatuInterpreter.Settings.MaintainLimbOrientation)
             {
                 _translateEx = true;
                 //_translateOffset = _bodyPart.afterIK.position - transform.position;
@@ -92,7 +92,7 @@ namespace KK_VR.Handlers
 
             if (hand != null)
             {
-                if (KoikatuInterpreter.settings.ShowGuideObjects) _bodyPart.visual.Show();
+                if (KoikatuInterpreter.Settings.ShowGuideObjects) _bodyPart.visual.Show();
                 Tracker.SetBlacklistDic(hand.Grasp.GetBlacklistDic);
                 ClearBlacks();
                 _bodyPart.visual.SetColor(IsBusy);
@@ -166,7 +166,7 @@ namespace KK_VR.Handlers
                 {
                     if (_follow)
                     {
-                        if (KoikatuInterpreter.settings.MaintainLimbOrientation)
+                        if (KoikatuInterpreter.Settings.MaintainLimbOrientation)
                         {
                             TranslateOnFollow();
                         }

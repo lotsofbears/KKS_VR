@@ -46,8 +46,8 @@ namespace KK_VR.Camera
             _startRotation = VR.Camera.Origin.rotation;
             _startPosition = VR.Camera.Head.position;
             _lerpMultiplier = Mathf.Min(
-                KoikatuInterpreter.settings.FlightSpeed / Vector3.Distance(GetPosition(), _startPosition),
-                KoikatuInterpreter.settings.FlightSpeed * 60f / Quaternion.Angle(_startRotation, GetRotation(GetPosition())));
+                KoikatuInterpreter.Settings.FlightSpeed / Vector3.Distance(GetPosition(), _startPosition),
+                KoikatuInterpreter.Settings.FlightSpeed * 60f / Quaternion.Angle(_startRotation, GetRotation(GetPosition())));
 
         }
         private readonly Quaternion _startRotation;
