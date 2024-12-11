@@ -207,10 +207,9 @@ namespace KK_VR.Settings
                 "Hide the corresponding head when the camera is in it. Can be used in combination with camera offset to have simultaneously visible head and PoV mode.(~0.11 Z-offset for that)");
             Tie(hideHeadInPOV, v => settings.HideHeadInPOV = v);
 
-            // Broken/removed currently.
-            //var flyInPov = config.Bind(SectionPov, "Transition PoV", KoikatuSettings.MovementTypeH.Upright,
-            //    " When in PoV mode, on position (or location) change, instead of teleportation, transition smoothly to the new location.");
-            //Tie(flyInPov, v => settings.FlyInPov = v);
+            var flyInPov = config.Bind(SectionPov, "Transition PoV", KoikatuSettings.MovementTypeH.Upright,
+                "When in PoV mode, on position (or location) change, instead of teleportation, transition smoothly to the new location.");
+            Tie(flyInPov, v => settings.FlyInPov = v);
 
             var autoEnter = config.Bind(SectionPov, "Auto enter", true,
                 "If not in PoV mode, on position change PoV mode will be automatically activated if there is a male.");

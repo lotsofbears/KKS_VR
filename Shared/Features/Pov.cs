@@ -253,6 +253,7 @@ namespace KK_VR.Features
                 }
                 else
                 {
+                    // Only one mode is currently operational.
                     _trip = new OneWayTrip(Mathf.Min(
                         KoikatuInterpreter.Settings.FlightSpeed / Vector3.Distance(VR.Camera.Head.position, GetEyesPosition()),
                         KoikatuInterpreter.Settings.FlightSpeed * 60f / Quaternion.Angle(VR.Camera.Origin.rotation, _targetEyes.rotation)));
