@@ -15,23 +15,27 @@ namespace KK_VR.Features
     {
         private class OneWayTrip
         {
-            internal OneWayTrip(float lerpMultiplier)
+            internal OneWayTrip(float lerpMultiplier, Quaternion targetRotation)
             {
                 _lerpMultiplier = lerpMultiplier;
                 _startPosition = VR.Camera.Head.position;
                 _startRotation = VR.Camera.Origin.rotation;
+                _targetRotation = targetRotation;
             }
             private float _lerp;
             private readonly float _lerpMultiplier;
             private readonly Quaternion _startRotation;
             private readonly Vector3 _startPosition;
 
-            internal float Move(Quaternion rotation, Vector3 position)
+            // Quaternion (S)Lerp will go awry with constantly changing end point.
+            private readonly Quaternion _targetRotation;
+
+            internal float Move(Vector3 position)
             {
                 var smoothStep = Mathf.SmoothStep(0f, 1f, _lerp += Time.deltaTime * _lerpMultiplier);
                 position = Vector3.Lerp(_startPosition, position, smoothStep);
 
-                VR.Camera.Origin.rotation = Quaternion.Slerp(_startRotation, rotation, smoothStep);
+                VR.Camera.Origin.rotation = Quaternion.Slerp(_startRotation, _targetRotation, smoothStep);
                 VR.Camera.Origin.position += position - VR.Camera.Head.position;
                 return smoothStep;
             }
@@ -140,20 +144,33 @@ namespace KK_VR.Features
                         float sDamp;
                         if (angle < _rotDeviationHalf)
                         {
-                            sDamp = _smoothDamp.Decrease();
-                            if (angle < 1f && sDamp < 0.01f)
+                            sDamp = _smoothDamp.Current;
+                            if (angle < 1f) // && sDamp < 0.01f)
                             {
                                 if (_syncTimestamp == 0f)
                                 {
-                                    _syncTimestamp = Time.time + 1f;
+                                    if (Quaternion.Angle(VR.Camera.Head.rotation, _targetEyes.rotation) < 15f)
+                                    {
+                                        _syncTimestamp = Time.time + 2f;
+                                    }
                                 }
-                                else if (_syncTimestamp < Time.time)
+                                else
                                 {
-                                    _sync = true;
-                                    _syncTimestamp = 0f;
-                                    _smoothDamp = null;
-                                    _rotationRequired = false;
-                                    _prevFramePos = VR.Camera.Head.position;
+                                    if (_syncTimestamp < Time.time)
+                                    {
+                                        if (Quaternion.Angle(VR.Camera.Head.rotation, _targetEyes.rotation) < 15f)
+                                        {
+                                            _sync = true;
+                                            _syncTimestamp = 0f;
+                                            _smoothDamp = null;
+                                            _rotationRequired = false;
+                                            _prevFramePos = VR.Camera.Head.position;
+                                        }
+                                        else
+                                        {
+                                            _syncTimestamp = 0f;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -162,18 +179,19 @@ namespace KK_VR.Features
                             sDamp = _smoothDamp.Increase();
                         }
                         var moveTowards = Vector3.MoveTowards(VR.Camera.Head.position, GetEyesPosition(), 0.05f);
-                        origin.rotation = Quaternion.RotateTowards(origin.rotation, _targetEyes.rotation, Time.deltaTime  * _degPerSec * sDamp);
+                        origin.rotation = Quaternion.RotateTowards(origin.rotation, _targetEyes.rotation, Time.deltaTime * _degPerSec * sDamp);
                         origin.position += moveTowards - VR.Camera.Head.position;
                         return;
                     }
                     if (_sync)
                     {
                         var pos = GetEyesPosition();
-                        origin.position += pos - _prevFramePos;
+                        origin.position += (pos - _prevFramePos); // + (Vector3.MoveTowards(VR.Camera.Head.position, pos, 0.01f) - VR.Camera.Head.position);
                         _prevFramePos = pos;
                     }
                     else
                     {
+                        // We don't branch here anymore?
                         origin.position += GetEyesPosition() - VR.Camera.Head.position;
                     }
                 }
@@ -188,11 +206,15 @@ namespace KK_VR.Features
         public void OnSpotChange()
         {
             StartPov();
-            MoveToHeadEx(3f);
+            StartMoveToHead(3f);
         }
-        public void CameraIsFar()
+        public void CameraIsFar(float speed = 1f)
         {
             _mode = Mode.Move;
+            if (speed != 1f)
+            {
+                StartMoveToHead(speed);
+            }
         }
         public void CameraIsFarAndBusy()
         {
@@ -251,24 +273,29 @@ namespace KK_VR.Features
         //    origin.rotation = Quaternion.RotateTowards(origin.rotation, targetRot, rotSpeed);
         //    origin.position += moveToward - head.position;
         //}
-        private void MoveToHeadEx(float speed = 1f)
+        private void StartMoveToHead(float speed = 1f)
+        {
+            if (KoikatuInterpreter.Settings.FlyInPov == KoikatuSettings.MovementTypeH.Disabled)
+            {
+                _newAttachPoint = false;
+                CameraIsNear();
+            }
+            else
+            {
+                // Only one mode is currently operational.
+                _trip = new OneWayTrip(Mathf.Min(
+                    KoikatuInterpreter.Settings.FlightSpeed * speed / Vector3.Distance(VR.Camera.Head.position, GetEyesPosition()),
+                    KoikatuInterpreter.Settings.FlightSpeed * 60f / Quaternion.Angle(VR.Camera.Origin.rotation, _targetEyes.rotation)),
+                    _targetEyes.rotation);
+            }
+        }
+        private void MoveToHeadEx()
         {
             if (_trip == null)
             {
-                if (KoikatuInterpreter.Settings.FlyInPov == KoikatuSettings.MovementTypeH.Disabled)
-                {
-                    CameraIsNear();
-                    _newAttachPoint = false;
-                }
-                else
-                {
-                    // Only one mode is currently operational.
-                    _trip = new OneWayTrip(Mathf.Min(
-                        KoikatuInterpreter.Settings.FlightSpeed * speed / Vector3.Distance(VR.Camera.Head.position, GetEyesPosition()),
-                        KoikatuInterpreter.Settings.FlightSpeed * 60f / Quaternion.Angle(VR.Camera.Origin.rotation, _targetEyes.rotation)));
-                }
+                StartMoveToHead();
             }
-            else if (_trip.Move(_targetEyes.rotation, GetEyesPosition()) >= 1f)
+            else if (_trip.Move(GetEyesPosition()) >= 1f)
             {
                 CameraIsNear();
                 _newAttachPoint = false;
@@ -365,13 +392,16 @@ namespace KK_VR.Features
         internal void OnGripMove(bool press)
         {
             _gripMove = press;
-            if (press)
+            if (_active)
             {
-                CameraIsFar();
-            }
-            else if (_newAttachPoint)
-            {
-                NewPosition();
+                if (press)
+                {
+                    CameraIsFar();
+                }
+                else if (_newAttachPoint)
+                {
+                    NewPosition();
+                }
             }
         }
         internal bool OnTouchpad(bool press)
@@ -537,7 +567,7 @@ namespace KK_VR.Features
         //    {
         //        if (!_active || _target != chara)
         //        {
-        //            VRPlugin.Logger.LogDebug($"PoV:HandleDirect:{chara}");
+        //           //VRPlugin.Logger.LogDebug($"PoV:HandleDirect:{chara}");
         //            DirectImpersonation(chara);
         //            return true;
         //        }

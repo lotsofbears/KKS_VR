@@ -74,7 +74,7 @@ namespace KK_VR.IK
                             {
                                 baseData.bone = ik.transform.Find(cf_pv_bones_efTargets[i - 5]);
                             }
-                            VRPlugin.Logger.LogWarning($"FindMissingBones[{i}]");
+                            //VRPlugin.Logger.LogWarning($"FindMissingBones[{i}]");
                             //baseData.pos = ik.transform.InverseTransformDirection(ik.solver.effectors[i].bone.position - baseData.bone.position);
                             baseData.enabled = true;
                             ikBeforeProcess.enabled = true;

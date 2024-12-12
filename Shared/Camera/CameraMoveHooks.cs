@@ -145,7 +145,7 @@ namespace KK_VR.Camera
         private static void UpdateVRCamera(HSceneProc instance, List<ChaControl> lstFemale)
         {
             var spotChange = Vector3.Distance(VR.Camera.transform.position, lstFemale[0].transform.position) > 2f;
-            VRPlugin.Logger.LogDebug($"UpdateVRCamera:spotChange = {spotChange}");
+           //VRPlugin.Logger.LogDebug($"UpdateVRCamera:spotChange = {spotChange}");
             var baseTransform = lstFemale[0].objTop.transform;
             var camDat = instance.flags.ctrlCamera.CamDat;// new Traverse(instance.flags.ctrlCamera).Field<BaseCameraControl_Ver2.CameraData>("CamDat").Value;
             var cameraRotation = baseTransform.rotation * Quaternion.Euler(camDat.Rot);

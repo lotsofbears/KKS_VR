@@ -260,7 +260,7 @@ namespace KK_VR.Interpreters
         //                }
         //                //else
         //                //{
-        //                //    VRPlugin.Logger.LogDebug($"Extras:Colliders:H:Add:{colliderName}");
+        //                //   //VRPlugin.Logger.LogDebug($"Extras:Colliders:H:Add:{colliderName}");
         //                //}
         //                var collider = CommonLib.LoadAsset<GameObject>(assetName, colliderName, true, string.Empty);
         //                AssetBundleManager.UnloadAssetBundle(assetName, true, null, false);

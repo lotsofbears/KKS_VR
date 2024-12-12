@@ -18,6 +18,7 @@ namespace KK_VR.Handlers
         private float _currentVelocity;
         private readonly float _target;
         private readonly float _smoothTime;
+        internal float Current => _current;
         internal float Increase()
         {
             return _current = Mathf.SmoothDamp(_current, _target, ref _currentVelocity, _smoothTime);

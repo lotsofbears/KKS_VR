@@ -87,11 +87,11 @@ namespace KK_VR.Camera
                 //origin.position += oldPos - head.position;
             }
             method?.DynamicInvoke(args);
-            VRPlugin.Logger.LogDebug($"VRMoverH:MakeUpright:Done");
+           //VRPlugin.Logger.LogDebug($"VRMoverH:MakeUpright:Done");
         }
         private IEnumerator WaitForLag(Action action, params object[] args)
         {
-            VRPlugin.Logger.LogDebug($"VRMoverH:WaitForLag");
+           //VRPlugin.Logger.LogDebug($"VRMoverH:WaitForLag");
             // We wait for the lag of position change.
             yield return null;
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
@@ -108,7 +108,7 @@ namespace KK_VR.Camera
             //        var rotation = Quaternion.LookRotation(target - head.position);
             //        if (distance > 2f && Quaternion.Angle(origin.rotation, rotation) > 30f)
             //        {
-            //            VRPlugin.Logger.LogDebug($"VRMoverH:FlyToPov:MovementOverride");
+            //           //VRPlugin.Logger.LogDebug($"VRMoverH:FlyToPov:MovementOverride");
             //            var moveSpeed = 0.5f + distance * 0.5f * _settings.FlightSpeed;
             //            var halfDist = distance * 0.5f;
             //            while (true)

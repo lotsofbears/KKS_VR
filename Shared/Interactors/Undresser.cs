@@ -76,12 +76,12 @@ namespace KK_VR.Interactors
                     || (decrease && chara.fileStatus.clothesState[slot] > target.state)
                     || (!decrease && chara.fileStatus.clothesState[slot] <= target.state))
                 {
-                    VRPlugin.Logger.LogDebug($"Undress:Skip[{part}]");
+                   //VRPlugin.Logger.LogDebug($"Undress:Skip[{part}]");
                     continue;
                 }
                 else
                 {
-                    VRPlugin.Logger.LogDebug($"Undress:Valid:Part[{part}]:Slot[{slot}]:State[{target.state}]");
+                   //VRPlugin.Logger.LogDebug($"Undress:Valid:Part[{part}]:Slot[{slot}]:State[{target.state}]");
                 }
                 //if (slot > 6)
                 //{

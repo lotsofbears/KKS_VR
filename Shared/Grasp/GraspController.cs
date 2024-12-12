@@ -321,7 +321,7 @@ namespace KK_VR.Grasp
             var bodyPartList = new List<BodyPart>();
             if (target == PartName.Spine)
             {
-                VRPlugin.Logger.LogDebug($"GetTargetParts:Add:{target} -> {lstBodyPart[(int)target].name}");
+               //VRPlugin.Logger.LogDebug($"GetTargetParts:Add:{target} -> {lstBodyPart[(int)target].name}");
                 bodyPartList.Add(lstBodyPart[(int)target]);
                 target = FindJoints(lstBodyPart, pos);
             }
@@ -356,7 +356,7 @@ namespace KK_VR.Grasp
         }
         internal bool OnTriggerPress(bool temporarily)
         {
-            VRPlugin.Logger.LogDebug($"OnTriggerPress");
+           //VRPlugin.Logger.LogDebug($"OnTriggerPress");
 
             // We look for a BodyPart from which grasp has started (0 index in _heldBodyParts),
             // and attach it to the collider's gameObjects.
@@ -372,7 +372,7 @@ namespace KK_VR.Grasp
                 {
                     foreach (var bodyPart in bodyPartsLimbs)
                     {
-                        VRPlugin.Logger.LogDebug($"OnTrigger:Attach:Grasped:{bodyPart.name} -> {bodyPart.guide.GetTrackTransform.name}");
+                       //VRPlugin.Logger.LogDebug($"OnTrigger:Attach:Grasped:{bodyPart.name} -> {bodyPart.guide.GetTrackTransform.name}");
                         AttachBodyPart(bodyPart, bodyPart.guide.GetTrackTransform, bodyPart.guide.GetChara);
                     }
                     ReleaseBodyParts(heldBodyParts);
@@ -391,7 +391,7 @@ namespace KK_VR.Grasp
                 {
                     foreach (var bodyPart in bodyParts)
                     {
-                        VRPlugin.Logger.LogDebug($"OnTrigger:Attach:Synced:{bodyPart.name} -> {bodyPart.guide.GetTrackTransform.name}");
+                       //VRPlugin.Logger.LogDebug($"OnTrigger:Attach:Synced:{bodyPart.name} -> {bodyPart.guide.GetTrackTransform.name}");
                         AttachBodyPart(bodyPart, bodyPart.guide.GetTrackTransform, bodyPart.guide.GetChara);
                     }
                     ReleaseBodyParts(bodyParts);
@@ -408,7 +408,7 @@ namespace KK_VR.Grasp
         private bool ExtendGrasp(bool temporarily)
         {
             // Attempts to grasp BodyPart(s) higher in hierarchy or everything if already top.
-            VRPlugin.Logger.LogDebug($"OnTriggerExtendGrasp:{_heldBodyParts.Count}:{_heldChara}");
+           //VRPlugin.Logger.LogDebug($"OnTriggerExtendGrasp:{_heldBodyParts.Count}:{_heldChara}");
             var bodyPartList = _bodyPartsDic[_heldChara];
             var closestToCore = _heldBodyParts
                 .OrderBy(bodyPart => bodyPart.name)
@@ -418,7 +418,7 @@ namespace KK_VR.Grasp
             {
                 nearbyPart = GetParent(closestToCore);
             }
-            VRPlugin.Logger.LogDebug($"OnTriggerExtendGrasp:Temporarily[{temporarily}]:{closestToCore} -> {nearbyPart}");
+           //VRPlugin.Logger.LogDebug($"OnTriggerExtendGrasp:Temporarily[{temporarily}]:{closestToCore} -> {nearbyPart}");
 
             var attachPoint = bodyPartList[(int)closestToCore].anchor;
             if (nearbyPart != PartName.Everything)
@@ -439,7 +439,7 @@ namespace KK_VR.Grasp
                 //StopGrasp();
                 //UpdateBlackList();
             }
-            _hand.Handler.DebugShowActive();
+            //_hand.Handler.DebugShowActive();
             return true;
         }
         private void HoldChara()
@@ -453,8 +453,8 @@ namespace KK_VR.Grasp
                 ReleaseBodyParts(_tempHeldBodyParts);
                 StopTempGrasp();
                 UpdateBlackList();
-                VRPlugin.Logger.LogDebug($"OnTriggerRelease");
-                _hand.Handler.DebugShowActive();
+               //VRPlugin.Logger.LogDebug($"OnTriggerRelease");
+                //_hand.Handler.DebugShowActive();
             }
         }
 
@@ -462,7 +462,7 @@ namespace KK_VR.Grasp
         {
             if (_heldBodyParts.Count > 0)
             {
-                VRPlugin.Logger.LogDebug($"ResetHeldBodyPart[PressVersion]:[Temp]");
+               //VRPlugin.Logger.LogDebug($"ResetHeldBodyPart[PressVersion]:[Temp]");
                 ResetBodyParts(_heldBodyParts, true);
                 ResetBodyParts(_tempHeldBodyParts, true);
                 StopGrasp();
@@ -475,7 +475,7 @@ namespace KK_VR.Grasp
         {
             // We attempt to reset orientation if part was active.
             var baseName = ConvertTrackerToIK(trackerPart);
-            VRPlugin.Logger.LogDebug($"ResetActiveBodyPart:{trackerPart}:{chara.name}:{baseName}");
+           //VRPlugin.Logger.LogDebug($"ResetActiveBodyPart:{trackerPart}:{chara.name}:{baseName}");
             if (baseName != PartName.Spine)
             {
                 var bodyParts = GetTargetParts(_bodyPartsDic[chara], baseName, _hand.Anchor.position);
@@ -489,7 +489,7 @@ namespace KK_VR.Grasp
                     }
                 }
                 if (result)
-                    VRPlugin.Logger.LogDebug($"ResetActiveBodyPart[ReleaseVersion]");
+                   //VRPlugin.Logger.LogDebug($"ResetActiveBodyPart[ReleaseVersion]");
                 _hand.Handler.RemoveGuideObjects();
                 return result;
             }
@@ -530,7 +530,7 @@ namespace KK_VR.Grasp
             var bodyPartList = _bodyPartsDic[chara];
             var controller = _hand.OnGraspHold();
             var bodyParts = GetTargetParts(bodyPartList, ConvertTrackerToIK(trackerPart), controller.position);
-            VRPlugin.Logger.LogDebug($"OnGripPress:{trackerPart} -> {bodyParts[0].name}:totally held - {bodyParts.Count}");
+           //VRPlugin.Logger.LogDebug($"OnGripPress:{trackerPart} -> {bodyParts[0].name}:totally held - {bodyParts.Count}");
             UpdateGrasp(bodyParts, chara);
             UpdateBlackList();
             foreach (var bodyPart in bodyParts)
@@ -575,7 +575,7 @@ namespace KK_VR.Grasp
 
         internal bool OnBusyHorizontalScroll(bool increase)
         {
-            VRPlugin.Logger.LogDebug($"OnHorizontalScroll:Busy:");
+           //VRPlugin.Logger.LogDebug($"OnHorizontalScroll:Busy:");
             if (_helper.baseHold != null)
             {
                 _helper.baseHold.StartBaseHoldScroll(2, increase);
@@ -588,7 +588,7 @@ namespace KK_VR.Grasp
         }
         internal bool OnFreeHorizontalScroll(Tracker.Body trackerPart, ChaControl chara, bool increase)
         {
-            VRPlugin.Logger.LogDebug($"OnHorizontalScroll:Free:{trackerPart}");
+           //VRPlugin.Logger.LogDebug($"OnHorizontalScroll:Free:{trackerPart}");
             //animHelper.DoAnimChange(chara);
             //return true;
             if (trackerPart == Tracker.Body.HandL || trackerPart == Tracker.Body.HandR)
@@ -644,7 +644,7 @@ namespace KK_VR.Grasp
                     //    bodyPart.anchor.parent = bodyPart.beforeIK;
                     //}
                     bodyPart.visual.Hide();
-                    VRPlugin.Logger.LogDebug($"ReleaseBodyPart:{bodyPart.anchor.name} -> {bodyPart.beforeIK.name}");
+                   //VRPlugin.Logger.LogDebug($"ReleaseBodyPart:{bodyPart.anchor.name} -> {bodyPart.beforeIK.name}");
                 }
                 //if (bodyPart.effector == null)
                 //{
@@ -754,7 +754,7 @@ namespace KK_VR.Grasp
             bodyPart.anchor.SetParent(attachPoint, worldPositionStays: true);
             if (bodyPart.chain != null)
                 bodyPart.chain.bendConstraint.weight = 0f;
-            VRPlugin.Logger.LogDebug($"SyncBodyPart:{bodyPart.anchor.name} -> {bodyPart.anchor.parent.name}");
+           //VRPlugin.Logger.LogDebug($"SyncBodyPart:{bodyPart.anchor.name} -> {bodyPart.anchor.parent.name}");
         }
         // We attach bodyPart to a static object or to ik driven chara.
         // Later has 4 different states during single frame, so we can't parent but follow manually instead.
@@ -778,13 +778,13 @@ namespace KK_VR.Grasp
                 //_helper.AddAttach(bodyPart, attachPoint);
             }
             _hand.Handler.RemoveGuideObjects();
-            VRPlugin.Logger.LogDebug($"AttachBodyPart:{bodyPart.anchor.name} -> {attachPoint.name}");
+           //VRPlugin.Logger.LogDebug($"AttachBodyPart:{bodyPart.anchor.name} -> {attachPoint.name}");
         }
 
         private void GraspBodyPart(BodyPart bodyPart, Transform attachPoint)
         {
             bodyPart.guide.Follow(attachPoint, _hand);
-            VRPlugin.Logger.LogDebug($"GraspBodyPart:{bodyPart.name} -> {bodyPart.anchor.name} -> {bodyPart.anchor.parent.name}");
+           //VRPlugin.Logger.LogDebug($"GraspBodyPart:{bodyPart.name} -> {bodyPart.anchor.name} -> {bodyPart.anchor.parent.name}");
         }
         private bool IsLimb(PartName partName) => partName > PartName.ThighR && partName < PartName.UpperBody;
         internal bool OnTouchpadSyncStart(Tracker.Body trackerPart, ChaControl chara)
@@ -792,7 +792,7 @@ namespace KK_VR.Grasp
             var partName = ConvertTrackerToIK(trackerPart);
             if (IsLimb(partName))
             {
-                VRPlugin.Logger.LogDebug($"OnTouchpadSyncLimb:{trackerPart} -> {partName}");
+               //VRPlugin.Logger.LogDebug($"OnTouchpadSyncLimb:{trackerPart} -> {partName}");
                 var bodyPart = _bodyPartsDic[chara][(int)partName];
                 SyncBodyPart(bodyPart, _hand.GetEmptyAnchor());
                 var limbIndex = (int)partName - 5;

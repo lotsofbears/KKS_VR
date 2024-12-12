@@ -56,15 +56,16 @@ namespace VRGIN.Controls.Handlers
             {
                 if(!_Controller) 
                     _Controller = GetComponent<Controller>();
-                //var attachPosition = _Controller.FindAttachPosition("tip");
-                var attachPosition = _Controller.transform;
+                var attachPosition = _Controller.FindAttachPosition("tip");
+                //var attachPosition = _Controller.transform;
                 if (!attachPosition)
                 {
                     VRLog.Error("Attach position not found for laser!");
                     attachPosition = transform;
                 }
-                Laser = new GameObject("Laser pointer").AddComponent<LineRenderer>();
-                Laser.transform.SetParent(attachPosition, false);
+                Laser = new GameObject("Laser").AddComponent<LineRenderer>();
+                Laser.transform.parent = _Controller.transform; // (attachPosition, false);
+                Laser.transform.SetPositionAndRotation(_Controller.transform.position, _Controller.transform.rotation);
                 Laser.material = new Material(Shader.Find("Sprites/Default"));
                 Laser.material.renderQueue += 5000;
                 Laser.SetColors(Color.cyan, Color.cyan);

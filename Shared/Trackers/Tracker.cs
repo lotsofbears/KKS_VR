@@ -121,10 +121,10 @@ namespace KK_VR.Trackers
             var infoList = GetCollidersInfo();
             if (_blacklistDic.Count != 0)
             {
-                foreach (var kv in _blacklistDic)
-                {
-                    kv.Value.ForEach(b => VRPlugin.Logger.LogDebug($"Blacklist:{kv.Key.name} - {b}"));
-                }
+                //foreach (var kv in _blacklistDic)
+                //{
+                //    kv.Value.ForEach(b => VRPlugin.Logger.LogDebug($"Blacklist:{kv.Key.name} - {b}"));
+                //}
                 infoList = infoList
                     .Where(info => !_blacklistDic.ContainsKey(info.chara) || (!_blacklistDic[info.chara].Contains(Body.None) && !_blacklistDic[info.chara].Contains(info.behavior.part)));
                 if (infoList.Count() == 0)
@@ -182,10 +182,10 @@ namespace KK_VR.Trackers
 
         internal void DebugShowActive()
         {
-            VRPlugin.Logger.LogDebug($"ActiveTracks.");
+           //VRPlugin.Logger.LogDebug($"ActiveTracks.");
             foreach (var track in _trackList)
             {
-                VRPlugin.Logger.LogDebug($"* {track.name}");
+               //VRPlugin.Logger.LogDebug($"* {track.name}");
             }
         }
 

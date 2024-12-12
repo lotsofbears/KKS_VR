@@ -73,13 +73,13 @@ namespace KK_VR.Interpreters
 #if KK
             if (behaviour != null)
             {
-                VRPlugin.Logger.LogDebug($"TalkScene:Start:Talk");
+               //VRPlugin.Logger.LogDebug($"TalkScene:Start:Talk");
                 talkScene = (TalkScene)behaviour;
                 _talkSceneStart = true;
             }
             else
             {
-                VRPlugin.Logger.LogDebug($"TalkScene:Start:Adv");
+               //VRPlugin.Logger.LogDebug($"TalkScene:Start:Adv");
             }
             advScene = Game.Instance.actScene.advScene;
 #else
@@ -217,7 +217,7 @@ namespace KK_VR.Interpreters
 #endif
         private void AdjustAdvScene()
         {
-            VRPlugin.Logger.LogDebug($"AdjustAdvScene");
+           //VRPlugin.Logger.LogDebug($"AdjustAdvScene");
             //_advSceneStart = false;
             var chara = advScene.Scenario.currentChara.chaCtrl;
             //VRPlugin.Logger.LogDebug($"AdjustAdvScene:{chara.transform.position}:{chara.transform.eulerAngles}:{gazeVec}:{gazeVec * talkDistance}");
@@ -277,7 +277,7 @@ namespace KK_VR.Interpreters
         private TalkSceneHandler GetHandler(int index) => (TalkSceneHandler)_hands[index].Handler;
         public static void HitReactionPlay(AibuColliderKind aibuKind, ChaControl chara)
         {
-            VRPlugin.Logger.LogDebug($"TalkScene:Reaction:{aibuKind}:{chara}");
+           //VRPlugin.Logger.LogDebug($"TalkScene:Reaction:{aibuKind}:{chara}");
             var ik = chara.objAnim.GetComponent<FullBodyBipedIK>();
             if (_hitReaction.ik != ik)
             {
@@ -312,7 +312,7 @@ namespace KK_VR.Interpreters
         }
         public override bool OnButtonDown(int index, EVRButtonId buttonId, TrackpadDirection direction)
         {
-            VRPlugin.Logger.LogDebug($"Interpreter:ButtonDown[{buttonId}]:Index[{index}]");
+           //VRPlugin.Logger.LogDebug($"Interpreter:ButtonDown[{buttonId}]:Index[{index}]");
             var handler = GetHandler(index);
             switch (buttonId)
             {
@@ -350,7 +350,7 @@ namespace KK_VR.Interpreters
         }
         public override bool OnDirectionDown(int index, TrackpadDirection direction)
         {
-            VRPlugin.Logger.LogDebug($"Interpreter:DirDown[{direction}]:Index[{index}]");
+           //VRPlugin.Logger.LogDebug($"Interpreter:DirDown[{direction}]:Index[{index}]");
             var adv = IsADV;
             _lastDirection[index] = direction;
             var handler = GetHandler(index);
@@ -397,7 +397,7 @@ namespace KK_VR.Interpreters
         }
         public override void OnDirectionUp(int index, TrackpadDirection direction)
         {
-            VRPlugin.Logger.LogDebug($"Interpreter:DirUp[{direction}]:Index[{index}]");
+           //VRPlugin.Logger.LogDebug($"Interpreter:DirUp[{direction}]:Index[{index}]");
             _waitForAction[index] = false;
             var timing = _waitTimestamp[index] - Time.time;
 
@@ -482,7 +482,7 @@ namespace KK_VR.Interpreters
             // TalkScene(was it Action?), but i yet to figure out how to patch nested types, and that thingy has a fustercluck of them. On other hand the price is quite low,
             // we simply catch a glimpse of crossfading animation of all surrounding charas on fade end.
 
-            VRPlugin.Logger.LogDebug($"TalkScene:AdjustTalk");
+           //VRPlugin.Logger.LogDebug($"TalkScene:AdjustTalk");
             _talkSceneStart = false;
             talkScene.canvasBack.enabled = false;
 
@@ -574,7 +574,7 @@ namespace KK_VR.Interpreters
 #endif
             if (player.chaCtrl == null)
             {
-                VRPlugin.Logger.LogDebug($"No player's chara to place");
+               //VRPlugin.Logger.LogDebug($"No player's chara to place");
                 return true;
             }
             //if (talkScene == null)
@@ -583,7 +583,7 @@ namespace KK_VR.Interpreters
             //}
             if (player.chaCtrl.objTop.activeSelf)
             {
-                VRPlugin.Logger.LogDebug($"Player is already active");
+               //VRPlugin.Logger.LogDebug($"Player is already active");
                 return false;
             }
             player.SetActive(true);

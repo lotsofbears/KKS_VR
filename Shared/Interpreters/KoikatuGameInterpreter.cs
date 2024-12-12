@@ -183,7 +183,7 @@ namespace KK_VR.Interpreters
         {
             if (_currentScene != type)
             {
-                VRPlugin.Logger.LogDebug($"Interpreter:Start:{type}");
+               //VRPlugin.Logger.LogDebug($"Interpreter:Start:{type}");
                 _currentScene = type;
                 _sceneInterpreter.OnDisable();
                 _sceneInterpreter = CreateSceneInterpreter(type, behaviour);
@@ -192,7 +192,7 @@ namespace KK_VR.Interpreters
             }
             else
             {
-                VRPlugin.Logger.LogDebug($"Interpreter:AlreadyExists:{type}");
+               //VRPlugin.Logger.LogDebug($"Interpreter:AlreadyExists:{type}");
                 return false;
             }
         }
@@ -200,12 +200,12 @@ namespace KK_VR.Interpreters
         {
             if (_currentScene == type)
             {
-                VRPlugin.Logger.LogDebug($"Interpreter:EndScene:{type}");
+               //VRPlugin.Logger.LogDebug($"Interpreter:EndScene:{type}");
                 StartScene(SceneType.OtherScene);
             }
             else
             {
-                VRPlugin.Logger.LogDebug($"Interpreter:EndScene:WrongScene:Current = {CurrentScene}, required = {type}");
+               //VRPlugin.Logger.LogDebug($"Interpreter:EndScene:WrongScene:Current = {CurrentScene}, required = {type}");
             }
         }
 

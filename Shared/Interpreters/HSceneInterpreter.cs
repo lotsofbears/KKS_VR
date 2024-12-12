@@ -389,7 +389,7 @@ namespace KK_VR.Interpreters
 
         //private bool SetHand()
         //{
-        //    VRPlugin.Logger.LogDebug($"Interpreter:HScene:SetHand");
+        //   //VRPlugin.Logger.LogDebug($"Interpreter:HScene:SetHand");
         //    if (handCtrl.useItems[0] == null || handCtrl.useItems[1] == null)
         //    {
         //        var list = new List<int>();
@@ -404,7 +404,7 @@ namespace KK_VR.Interpreters
         //        var index = 0;
         //        foreach (var item in list)
         //        {
-        //            VRPlugin.Logger.LogDebug($"Interpreter:HScene:SetHand:Loop:{item}");
+        //           //VRPlugin.Logger.LogDebug($"Interpreter:HScene:SetHand:Loop:{item}");
         //            var clothState = handCtrl.GetClothState((AibuColliderKind)(item + 2));
         //            //var layerInfo = handCtrl.dicAreaLayerInfos[item][handCtrl.areaItem[item]];
         //            var layerInfo = handCtrl.dicAreaLayerInfos[item][0];
@@ -416,7 +416,7 @@ namespace KK_VR.Interpreters
         //            break;
 
         //        }
-        //        VRPlugin.Logger.LogDebug($"Interpreter:HScene:SetHand:Required:Choice - {index}");
+        //       //VRPlugin.Logger.LogDebug($"Interpreter:HScene:SetHand:Required:Choice - {index}");
 
         //        handCtrl.selectKindTouch = (AibuColliderKind)(index + 2);
         //        _pov.StartCoroutine(CaressUtil.ClickCo(() => handCtrl.selectKindTouch = AibuColliderKind.none));
@@ -424,7 +424,7 @@ namespace KK_VR.Interpreters
         //    }
         //    else
         //    {
-        //        VRPlugin.Logger.LogDebug($"Interpreter:HScene:SetHand:NotRequired");
+        //       //VRPlugin.Logger.LogDebug($"Interpreter:HScene:SetHand:NotRequired");
         //        PlayReaction();
         //        return true;
         //    }
@@ -856,7 +856,7 @@ namespace KK_VR.Interpreters
 
         private void PickButtonAction(InputWait wait, Timing timing)
         {
-            VRPlugin.Logger.LogDebug($"PickButtonAction:{wait.button}");
+           //VRPlugin.Logger.LogDebug($"PickButtonAction:{wait.button}");
             var handler = GetHandler(wait.index);
             var grasp = _hands[wait.index].Grasp;
             switch (wait.button)
@@ -866,7 +866,7 @@ namespace KK_VR.Interpreters
                     {
                         if (handler.IsBusy)
                         {
-                            VRPlugin.Logger.LogDebug($"PickButtonAction:Touchpad:Busy");
+                           //VRPlugin.Logger.LogDebug($"PickButtonAction:Touchpad:Busy");
                             //if (!_pov.TryDisable(handler.GetPartName(), handler.GetChara))
                             //{
                             handler.UpdateTracker(tryToAvoid: PoV.Active ? PoV.Target : null);
@@ -894,10 +894,10 @@ namespace KK_VR.Interpreters
                         }
                         else
                         {
-                            VRPlugin.Logger.LogDebug($"PickButtonAction:Touchpad:Sleep");
+                           //VRPlugin.Logger.LogDebug($"PickButtonAction:Touchpad:Sleep");
                             if (!_hands[wait.index].Grasp.OnTouchpadSyncEnd())
                             {
-                                VRPlugin.Logger.LogDebug($"PoV:Handle:Enable:");
+                               //VRPlugin.Logger.LogDebug($"PoV:Handle:Enable:");
                                 _pov.TryEnable();
                             }
                         }
@@ -913,7 +913,7 @@ namespace KK_VR.Interpreters
         }
         private void PickButtonActionGripMove(InputWait wait, Timing timing)
         {
-            VRPlugin.Logger.LogDebug($"PickButtonActionGripMove:{wait.button}:{IsTriggerPress(wait.index)}");
+           //VRPlugin.Logger.LogDebug($"PickButtonActionGripMove:{wait.button}:{IsTriggerPress(wait.index)}");
             switch (wait.button)
             {
                 case EVRButtonId.k_EButton_SteamVR_Touchpad:
@@ -1124,7 +1124,7 @@ namespace KK_VR.Interpreters
             var anim = _aibuAnims.Where(anim => anim.StartsWith(twoLetters, StringComparison.Ordinal)).FirstOrDefault();
             var index = _aibuAnims.IndexOf(anim);
             _backIdle = index == 4 ? 0 : index;
-            VRPlugin.Logger.LogDebug($"GetCurrentBackIdleIndex:{anim}:{_backIdle}");
+           //VRPlugin.Logger.LogDebug($"GetCurrentBackIdleIndex:{anim}:{_backIdle}");
             return index;
         }
         public static void LeanToKiss()
@@ -1262,10 +1262,10 @@ namespace KK_VR.Interpreters
             var nowAnim = hFlag.nowAnimStateName;
             if (mode == EMode.sonyu)
             {
-                VRPlugin.Logger.LogDebug($"InsertHelper[1]");
+               //VRPlugin.Logger.LogDebug($"InsertHelper[1]");
                 if (IsInsertIdle(nowAnim) || IsAfterClimaxInside(nowAnim))
                 {
-                    VRPlugin.Logger.LogDebug($"InsertHelper[1][1]");
+                   //VRPlugin.Logger.LogDebug($"InsertHelper[1][1]");
                     // Sonyu start auto.
                     hFlag.click = ClickKind.modeChange;
                     IntegrationSensibleH.OnUserInput();
@@ -1382,7 +1382,7 @@ namespace KK_VR.Interpreters
         {
             if (InsertHelper())
             {
-                VRPlugin.Logger.LogDebug($"Insert");
+               //VRPlugin.Logger.LogDebug($"Insert");
                 if (IntegrationSensibleH.active)
                 {
                     IntegrationSensibleH.ClickButton(GetButtonName(anal, hFlag.isDenialvoiceWait || noVoice));
@@ -1437,7 +1437,7 @@ namespace KK_VR.Interpreters
             // Clutch to skip frames while changeing speed.
             if (_frameWait != 0)
             {
-                VRPlugin.Logger.LogDebug($"FrameWait");
+               //VRPlugin.Logger.LogDebug($"FrameWait");
                 if (!CrossFader.InTransition)
                 {
                     _frameWait--;
@@ -1478,7 +1478,7 @@ namespace KK_VR.Interpreters
 
             // TODO voice is a placeHolder, in h we have a good dic lying around with the proper ones.
 
-            VRPlugin.Logger.LogDebug($"HScene:Reaction:{aibuKind}:{chara}");
+           //VRPlugin.Logger.LogDebug($"HScene:Reaction:{aibuKind}:{chara}");
             _hitReaction.ik = chara.objAnim.GetComponent<FullBodyBipedIK>();
 
             var dic = handCtrl.dicNowReaction;

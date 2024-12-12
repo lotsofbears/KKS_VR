@@ -110,7 +110,7 @@ namespace KK_VR.Interpreters
                         || actionScene.Player.isActionPointHit))
                     {
                         VR.Input.Mouse.RightButtonDown();
-                        VRPlugin.Logger.LogDebug($"InteractionAttempt");
+                       //VRPlugin.Logger.LogDebug($"InteractionAttempt");
                         _mouseState[1] = true;
                     }
                     break;
@@ -217,7 +217,7 @@ namespace KK_VR.Interpreters
                 FakeCamera = new GameObject("FakeCamera").transform;
                 FakeCamera.SetParent(MonoBehaviourSingleton<CameraSystem>.Instance.CurrentCamera.transform, worldPositionStays: false);
             }
-            VRPlugin.Logger.LogDebug($"Interpreter:Create:FakeCamera");
+           //VRPlugin.Logger.LogDebug($"Interpreter:Create:FakeCamera");
         }
         private void Rotation(float degrees)
         {

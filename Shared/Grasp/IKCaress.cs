@@ -54,7 +54,7 @@ namespace KK_VR.Grasp
             }
             //foreach (var test in _linkDic)
             //{
-            //    VRPlugin.Logger.LogInfo($"RoughCaress:{test.Key.name} - {test.Value.defaultWeight}");
+            //   //VRPlugin.Logger.LogInfo($"RoughCaress:{test.Key.name} - {test.Value.defaultWeight}");
             //}
             _poi = chara.objBodyBone.transform.Find(GetPoiName(colliderKind));
             _startDistance = Vector3.SqrMagnitude(_poi.position - anchor.position);

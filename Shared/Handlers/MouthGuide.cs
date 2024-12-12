@@ -158,7 +158,7 @@ namespace KK_VR.Handlers
         private IEnumerator KissCo()
         {
             // Init part.
-            VRPlugin.Logger.LogDebug($"KissCo:Start");
+            //VRPlugin.Logger.LogDebug($"KissCo:Start");
             var origin = VR.Camera.Origin;
             var head = VR.Camera.Head;
             var hand = HSceneInterpreter.handCtrl;
@@ -334,7 +334,7 @@ namespace KK_VR.Handlers
 
         private bool IsKissingAllowed()
         {
-            VRPlugin.Logger.LogDebug($"VRMouth:IsKissingAllowed");
+           //VRPlugin.Logger.LogDebug($"VRMouth:IsKissingAllowed");
             //if (!_disengage)
             //{
             if (!HSceneInterpreter.hFlag.isFreeH)
@@ -407,7 +407,7 @@ namespace KK_VR.Handlers
         private IEnumerator AttachCo(AibuColliderKind colliderKind)
         {
             _activeCo = true;
-            VRPlugin.Logger.LogDebug($"MouthGuide:AttachCo:Start");
+           //VRPlugin.Logger.LogDebug($"MouthGuide:AttachCo:Start");
             yield return CoroutineUtils.WaitForEndOfFrame;
             var origin = VR.Camera.Origin;
             var head = VR.Camera.Head;
@@ -486,7 +486,7 @@ namespace KK_VR.Handlers
 
         internal IEnumerator DisengageCo()
         {
-            VRPlugin.Logger.LogDebug($"Mouth:Disengage:Start");
+            //VRPlugin.Logger.LogDebug($"Mouth:Disengage:Start");
 
             _activeCo = true;
             _disengage = true;
@@ -548,8 +548,13 @@ namespace KK_VR.Handlers
                     yield return CoroutineUtils.WaitForEndOfFrame;
                 }
             }
+            else
+            {
+                PoV.Instance.CameraIsFar(0.25f);
+                PauseInteractions = true;
+            }
             
-            VRPlugin.Logger.LogDebug($"MouthGuide:Disengage:End");
+            //VRPlugin.Logger.LogDebug($"MouthGuide:Disengage:End");
             _activeCo = false;
             _disengage = false;
         }
@@ -559,7 +564,7 @@ namespace KK_VR.Handlers
         }
         internal void Halt(bool disengage = true)
         {
-            VRPlugin.Logger.LogDebug($"MouthGuide:Halt:Disengage = {disengage}");//\n{new StackTrace(0)}");
+            //VRPlugin.Logger.LogDebug($"MouthGuide:Halt:Disengage = {disengage}");//\n{new StackTrace(0)}");
 
             if (_activeCo)
             {

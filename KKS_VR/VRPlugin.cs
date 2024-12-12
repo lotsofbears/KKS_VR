@@ -45,7 +45,8 @@ namespace KK_VR
                 BepInExVrLogBackend.ApplyYourself();
 
 
-                // This thingy is single handedly responsible why KKS_VR was an absolute fuck. 
+                // This patch fixes crash(null refs?) on game exit and disables Haptic Feedback (atleast).
+                // No clue how to fix it otherwise, as most likely possible fix resides in unmanaged code.
                 //OpenVRHelperTempfixHook.Patch();
 
                 StartCoroutine(LoadDevice(settings));

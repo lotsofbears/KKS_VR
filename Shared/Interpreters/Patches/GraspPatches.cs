@@ -42,7 +42,7 @@ namespace KK_VR.Patches
         //    }
         //    foreach (var force in forces)
         //    {
-        //        VRPlugin.Logger.LogDebug($"{force}");
+        //       //VRPlugin.Logger.LogDebug($"{force}");
         //    }
         //}
 

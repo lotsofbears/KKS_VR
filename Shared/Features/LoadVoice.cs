@@ -68,7 +68,7 @@ namespace KK_VR.Features
         private static void Play(VoiceType type, ChaControl chara)//, bool setCooldown)
         {
             // Copy MaleBreath method here, prettier.
-            VRPlugin.Logger.LogDebug($"Voice:Play:{type}:{chara}");
+           //VRPlugin.Logger.LogDebug($"Voice:Play:{type}:{chara}");
 
             var voiceList = GetVoiceList(type);
             if (voiceList == null)
@@ -114,7 +114,7 @@ namespace KK_VR.Features
             var h = bundle.EndsWith("h/", StringComparison.OrdinalIgnoreCase);
             bundle += GetBundle(personalityId, hVoice: h);
 
-            VRPlugin.Logger.LogDebug($"{bundle} + {asset}");
+           //VRPlugin.Logger.LogDebug($"{bundle} + {asset}");
             var setting = new Utils.Voice.Setting
             {
                 no = personalityId,

@@ -35,10 +35,6 @@ namespace KK_VR.Handlers
             base.OnDisable();
             TriggerRelease();
         }
-        protected override void Update()
-        {
-            base.Update();
-        }
 
         internal void StartMovingAibuItem(AibuColliderKind touch)
         {
@@ -105,7 +101,7 @@ namespace KK_VR.Handlers
         {
             var touch = _tracker.colliderInfo.behavior.touch;
             var chara = _tracker.colliderInfo.chara;
-            VRPlugin.Logger.LogDebug($"HSceneHandler:[{touch}][{HSceneInterpreter.handCtrl.selectKindTouch}]");
+           //VRPlugin.Logger.LogDebug($"HSceneHandler:[{touch}][{HSceneInterpreter.handCtrl.selectKindTouch}]");
             if (touch > AibuColliderKind.mouth
                 && touch < AibuColliderKind.reac_head
                 && chara == HSceneInterpreter.lstFemale[0])
@@ -139,7 +135,7 @@ namespace KK_VR.Handlers
         }
         protected override void DoReaction(float velocity)
         {
-            VRPlugin.Logger.LogDebug($"DoReaction:{_tracker.colliderInfo.behavior.react}:{_tracker.colliderInfo.behavior.touch}:{_tracker.reactionType}:{velocity}");
+           //VRPlugin.Logger.LogDebug($"DoReaction:{_tracker.colliderInfo.behavior.react}:{_tracker.colliderInfo.behavior.touch}:{_tracker.reactionType}:{velocity}");
             if (_settings.AutomaticTouching > KoikatuSettings.SceneType.TalkScene)
             {
                 //if (GraspHelper.Instance != null)

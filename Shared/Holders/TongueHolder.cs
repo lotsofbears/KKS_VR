@@ -156,7 +156,7 @@ namespace KK_VR.Holders
         //    {
         //        KoikatuInterpreter.Instance.StartCoroutine(ChangeTongueCo(item, anm, oldLayer, newLayer));
         //    }
-        //    VRPlugin.Logger.LogDebug($"TestLayer:{newLayer}");
+        //   //VRPlugin.Logger.LogDebug($"TestLayer:{newLayer}");
 
         //}
         //private static IEnumerator ChangeTongueCo(ItemType item, Animator anm, int oldLayer, int newLayer)

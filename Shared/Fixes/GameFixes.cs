@@ -78,7 +78,7 @@ namespace KK_VR.Fixes
         [HarmonyPatch(nameof(CameraEffectorColorMask.Awake), MethodType.Normal)]
         private static bool SkipCameraSetup(CameraEffectorColorMask __instance)
         {
-            VRPlugin.Logger.LogDebug("Skipping CameraEffectorColorMask.Awake and destroying the component");
+           //VRPlugin.Logger.LogDebug("Skipping CameraEffectorColorMask.Awake and destroying the component");
             GameObject.Destroy(__instance);
             return false;
         }
@@ -145,18 +145,18 @@ namespace KK_VR.Fixes
     //     [HarmonyPatch(typeof(SunLightInfo), nameof(SunLightInfo.Set))]
     //     private static void SunLightInfoSet(SunLightInfo.Info.Type? type, ref UnityEngine.Camera cam)
     //     {
-    //         VRPlugin.Logger.LogDebug($"SunLightInfo.Set:{(int)type}:{cam.name}");
+    //        //VRPlugin.Logger.LogDebug($"SunLightInfo.Set:{(int)type}:{cam.name}");
     //         if (cam == VR.Camera.MainCamera && KoikatuInterpreter.mainCamera != null)
     //         {
     //             cam = KoikatuInterpreter.mainCamera;
-    //             VRPlugin.Logger.LogDebug($"Camera substitute:{cam.name}");
+    //            //VRPlugin.Logger.LogDebug($"Camera substitute:{cam.name}");
     //         }
     //     }
     //     //[HarmonyFinalizer]
     //     //[HarmonyPatch(nameof(SunLightInfo.Set))]
     //     //private static Exception PreLateUpdateForce(Exception __exception)
     //     //{
-    //     //    if (__exception != null) VRPlugin.Logger.LogDebug("SunLightInfo.Set:Caught expected crash: " + __exception);
+    //     //    if (__exception != null)//VRPlugin.Logger.LogDebug("SunLightInfo.Set:Caught expected crash: " + __exception);
     //     //    return null;
     //     //}
     // }
@@ -173,7 +173,7 @@ namespace KK_VR.Fixes
     //    [HarmonyPatch(nameof(ActionMap.UpdateCameraFog))]
     //    private static Exception PreLateUpdateForce(Exception __exception)
     //    {
-    //        if (__exception != null) VRPlugin.Logger.LogDebug("ActionMap.UpdateCameraFog:Caught expected crash: " + __exception);
+    //        if (__exception != null)//VRPlugin.Logger.LogDebug("ActionMap.UpdateCameraFog:Caught expected crash: " + __exception);
     //        return null;
     //    }
     //    //[HarmonyPrefix]
@@ -226,7 +226,7 @@ namespace KK_VR.Fixes
     //            instr =>
     //            {
     //                instr.operand = replacement;
-    //                VRPlugin.Logger.LogDebug("Patched Camera.main in " + __originalMethod.GetNiceName());
+    //               //VRPlugin.Logger.LogDebug("Patched Camera.main in " + __originalMethod.GetNiceName());
     //            });
     //    }
     //}
@@ -259,7 +259,7 @@ namespace KK_VR.Fixes
     //            instr =>
     //            {
     //                instr.operand = replacement;
-    //                VRPlugin.Logger.LogDebug("Patched Camera.main in " + __originalMethod.GetNiceName());
+    //               //VRPlugin.Logger.LogDebug("Patched Camera.main in " + __originalMethod.GetNiceName());
     //            });
     //    }
 
@@ -344,7 +344,7 @@ namespace KK_VR.Fixes
     //            {
     //                instr.opcode = OpCodes.Call;
     //                instr.operand = replacement;
-    //                VRPlugin.Logger.LogDebug("Patched CrossFade.isProcess in " + __originalMethod.GetFullName());
+    //               //VRPlugin.Logger.LogDebug("Patched CrossFade.isProcess in " + __originalMethod.GetFullName());
     //            });
     //    }
     //}
@@ -372,7 +372,7 @@ namespace KK_VR.Fixes
     //    {
     //        var targert = AccessTools.PropertyGetter(typeof(UnityEngine.Camera), nameof(UnityEngine.Camera.main));
 
-    //        VRPlugin.Logger.LogDebug("Patching Camera.main -> null in " + __originalMethod.GetNiceName());
+    //       //VRPlugin.Logger.LogDebug("Patching Camera.main -> null in " + __originalMethod.GetNiceName());
 
     //        // Change Camera.main property get to return null instead to skip code that messes with player camera.
     //        // Only last instance needs to be patched or HScene.ResultTalk will break.
@@ -393,7 +393,7 @@ namespace KK_VR.Fixes
     //    [HarmonyPatch(nameof(HScene.HResultADVCameraSetting), MethodType.Normal)]
     //    private static bool SkipCameraSetup()
     //    {
-    //        VRPlugin.Logger.LogDebug("Skipping HScene.HResultADVCameraSetting");
+    //       //VRPlugin.Logger.LogDebug("Skipping HScene.HResultADVCameraSetting");
     //        return false;
     //    }
     //}

@@ -74,7 +74,7 @@ namespace KK_VR.Features
             {
                 if (!_inDeepFade)
                 {
-                    _alpha = Mathf.Clamp01(Scene.IsFadeNow ? _alpha + Mathf.Min(Time.deltaTime, 0.02f) : _alpha - Mathf.Min(Time.deltaTime, 0.02f));
+                    _alpha = Mathf.Clamp01(Scene.IsFadeNow ? _alpha + Mathf.Min(Time.deltaTime, 0.05f) : _alpha - Mathf.Min(Time.deltaTime, 0.05f));
                     _fadeColor.a = Mathf.Clamp01(_alpha);
                     DrawQuad();
                     if (_alpha == 1f)

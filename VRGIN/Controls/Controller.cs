@@ -485,7 +485,9 @@ namespace VRGIN.Controls
 
         public Transform FindAttachPosition(params string[] names)
         {
-            var node = transform.GetComponentsInChildren<Transform>().Where(t => names.Contains(t.name)).FirstOrDefault();
+            var node = transform.GetComponentsInChildren<Transform>(includeInactive: true)
+                .Where(t => names.Contains(t.name))
+                .FirstOrDefault();
             if (node == null) return null;
             return node.Find("attach");
         }

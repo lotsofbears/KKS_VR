@@ -182,28 +182,28 @@ namespace KK_VR.Controls
             _controller.TryAcquireFocus(out _lock);
         }
 
-        // This method is called by VRGIN via SendMessage.
         private void AddLaser()
         {
-            //var attachPosition = _controller.FindAttachPosition("tip"); 
-            var attachPosition = _controller.transform;
-
+            var attachPosition = _controller.transform.Find("Laser");
             if (!attachPosition)
             {
-                VRLog.Warn("LocationPicker: Attach position not found for laser!");
+                VRPlugin.Logger.LogWarning("Attach position not found for laser!");
                 attachPosition = transform;
             }
 
-            _laser = new GameObject("LocationPicker laser").AddComponent<LineRenderer>();
-            _laser.transform.SetParent(attachPosition, false);
-            _laser.material = new Material(Shader.Find("Sprites/Default"));
-            _laser.startColor = _laser.endColor = new Color(0.21f, 0.96f, 1.00f);
+            _laser = new GameObject("LocationPicker").AddComponent<LineRenderer>();
 
+            _laser.transform.parent = _controller.transform;
+            _laser.transform.SetPositionAndRotation(attachPosition.position, attachPosition.rotation);
+
+            _laser.material = new Material(Shader.Find("Sprites/Default"));
+            _laser.startColor = Color.cyan;
+            _laser.endColor = new Color(1f, 1f, 1f, 0f);
             _laser.positionCount = 2;
             _laser.useWorldSpace = false;
             _laser.startWidth = _laser.endWidth = 0.002f;
             _laser.SetPosition(0, Vector3.zero);
-            _laser.SetPosition(1, Vector3.forward * 20);
+            _laser.SetPosition(1, Vector3.forward * 5);
             _laser.gameObject.SetActive(false);
         }
     }
