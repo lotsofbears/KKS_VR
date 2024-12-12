@@ -110,10 +110,10 @@ namespace KK_VR.Handlers
                 && touch < AibuColliderKind.reac_head
                 && chara == HSceneInterpreter.lstFemale[0])
             {
-                if (!MouthGuide.Instance.IsActive && HSceneInterpreter.handCtrl.GetUseAreaItemActive() != -1)
+                if (IntegrationSensibleH.active && !MouthGuide.Instance.IsActive && HSceneInterpreter.handCtrl.GetUseAreaItemActive() != -1)
                 {
                     // If VRMouth isn't active but automatic caress is going. Disable it.
-                    HSceneInterpreter.MoMiOnKissEnd();
+                    IntegrationSensibleH.OnKissEnd();
                 }
                 else
                 {

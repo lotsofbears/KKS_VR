@@ -4,6 +4,7 @@ using KK_VR.Holders;
 using KK_VR.Interpreters;
 using KK_VR.Settings;
 using KK_VR.Trackers;
+using KKAPI.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -168,7 +169,10 @@ namespace KK_VR.Handlers
             _mousePress = true;
             _followAfter = _eyes;
             _lookAt = _eyes;
-            HSceneInterpreter.MoMiOnKissStart(AibuColliderKind.none);
+            if (IntegrationSensibleH.active)
+            {
+                IntegrationSensibleH.OnKissStart(AibuColliderKind.none);
+            }
 
             while (!messageDelivered)
             {
@@ -176,8 +180,11 @@ namespace KK_VR.Handlers
                 yield return null;
             }
             DestroyGrab();
-            yield return new WaitForEndOfFrame();
-            HSceneInterpreter.MoMiOnKissStart(AibuColliderKind.mouth);
+            yield return CoroutineUtils.WaitForEndOfFrame;
+            if (IntegrationSensibleH.active)
+            {
+                IntegrationSensibleH.OnKissStart(AibuColliderKind.mouth);
+            }
 
             // Movement part.
             // In retrospect, it's amazing that all those vec offsets work out.
@@ -212,7 +219,7 @@ namespace KK_VR.Handlers
                 origin.rotation = Quaternion.RotateTowards(origin.rotation, lookRotation, Time.deltaTime * 60f);
                 origin.position += moveTowards + (_eyes.position - oldEyesPos) - head.position;
                 oldEyesPos = _eyes.position;
-                yield return new WaitForEndOfFrame();
+                yield return CoroutineUtils.WaitForEndOfFrame;
             }
             _followRotation = KoikatuInterpreter.Settings.FollowRotationDuringKiss;
             _followOffsetRot = Quaternion.Inverse(_followAfter.rotation) * VR.Camera.Origin.rotation;
@@ -236,7 +243,7 @@ namespace KK_VR.Handlers
                     origin.position += moveTowards + (_eyes.position - oldEyesPos) - head.position;
                 }
                 oldEyesPos = _eyes.position;
-                yield return new WaitForEndOfFrame();
+                yield return CoroutineUtils.WaitForEndOfFrame;
             }
         }
         internal static void OnPoseChange(HFlag.EMode mode)
@@ -271,7 +278,10 @@ namespace KK_VR.Handlers
                 DestroyGrab();
                 _lastChara = HSceneInterpreter.lstFemale[0];
                 _activeCo = true;
-                HSceneInterpreter.MoMiOnLickStart(AibuColliderKind.none);
+                if (IntegrationSensibleH.active)
+                {
+                    IntegrationSensibleH.OnLickStart(AibuColliderKind.none);
+                }
                 StartCoroutine(AttachCoEx(colliderKind, layerNum));
                 StartCoroutine(AttachCo(colliderKind));
             }
@@ -387,7 +397,10 @@ namespace KK_VR.Handlers
                 }
                 yield return null;
             }
-            HSceneInterpreter.MoMiOnLickStart(colliderKind);
+            if (IntegrationSensibleH.active)
+            {
+                IntegrationSensibleH.OnLickStart(colliderKind);
+            }
             HSceneInterpreter.EnableNip(colliderKind);
         }
 
@@ -395,7 +408,7 @@ namespace KK_VR.Handlers
         {
             _activeCo = true;
             VRPlugin.Logger.LogDebug($"MouthGuide:AttachCo:Start");
-            yield return new WaitForEndOfFrame();
+            yield return CoroutineUtils.WaitForEndOfFrame;
             var origin = VR.Camera.Origin;
             var head = VR.Camera.Head;
 
@@ -411,7 +424,7 @@ namespace KK_VR.Handlers
                 // We move together with the point of interest during "Touch" animation.
                 origin.position += lookAt.position - prevLookAt;// * 1.5f;
                 prevLookAt = lookAt.position;
-                yield return new WaitForEndOfFrame();
+                yield return CoroutineUtils.WaitForEndOfFrame;
                 if (HSceneInterpreter.hFlag.isDenialvoiceWait)
                 {
                     // There is a proper kill switch for bad states now, this shouldn't be necessary.
@@ -451,7 +464,7 @@ namespace KK_VR.Handlers
                     break;
                 }
                 oldTonguePos = tongue.position;
-                yield return new WaitForEndOfFrame();
+                yield return CoroutineUtils.WaitForEndOfFrame;
             }
             while (true)
             {
@@ -467,7 +480,7 @@ namespace KK_VR.Handlers
                     origin.rotation = Quaternion.RotateTowards(origin.rotation, Quaternion.LookRotation(lookAt.TransformPoint(_lookOffsetPos) - moveTo), Time.deltaTime * 15f);
                     origin.position += (moveTo - head.position);
                 }
-                yield return new WaitForEndOfFrame();
+                yield return CoroutineUtils.WaitForEndOfFrame;
             }
         }
 
@@ -480,7 +493,7 @@ namespace KK_VR.Handlers
             var origin = VR.Camera.Origin;
             var head = VR.Camera.Head;
             yield return new WaitUntil(() => !_gripMove);
-            yield return new WaitForEndOfFrame();
+            yield return CoroutineUtils.WaitForEndOfFrame;
 
             // One of kill-switch-postfixes can bring this.
             var lookAt = (_lookAt == null ? head : _lookAt).position;
@@ -532,7 +545,7 @@ namespace KK_VR.Handlers
                     }
                     //   //Quaternion.RotateTowards(origin.rotation, Quaternion.Euler(origin.eulerAngles.x, origin.eulerAngles.y, 0f), step * 45f);
                     origin.position += pos - head.position;
-                    yield return new WaitForEndOfFrame();
+                    yield return CoroutineUtils.WaitForEndOfFrame;
                 }
             }
             
@@ -551,7 +564,10 @@ namespace KK_VR.Handlers
             if (_activeCo)
             {
                 StopAllCoroutines();
-                HSceneInterpreter.MoMiOnKissEnd();
+                if (IntegrationSensibleH.active)
+                {
+                    IntegrationSensibleH.OnKissEnd();
+                }
                 _activeCo = false;
                 _disengage = false;
                 _followRotation = false;

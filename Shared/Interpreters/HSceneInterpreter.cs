@@ -32,38 +32,9 @@ namespace KK_VR.Interpreters
 {
     class HSceneInterpreter : SceneInterpreter
     {
-        internal class InputWait
-        {
-            internal InputWait(int _index, TrackpadDirection _direction, bool _manipulateSpeed, float _duration)
-            {
-                index = _index;
-                direction = _direction;
-                manipulateSpeed = _manipulateSpeed;
-                SetDuration(_duration);
-            }
-            internal InputWait(int _index, EVRButtonId _button, float _duration)
-            {
-                index = _index;
-                button = _button;
-                SetDuration(_duration);
-            }
-            private void SetDuration(float _duration)
-            {
-                duration = _duration;
-                timestamp = Time.time;
-                finish = Time.time + _duration;
-            }
-            internal int index;
-            internal TrackpadDirection direction;
-            internal EVRButtonId button;
-            internal bool manipulateSpeed;
-            internal float timestamp;
-            internal float duration;
-            internal float finish;
-        }
+        
         private readonly PoV _pov;
         private readonly VRMoverH _vrMoverH;
-        private readonly bool _sensibleH;
         private readonly List<InputWait> _waitList = [];
         private TrackpadDirection _lastDirection;
         private HPointMove _hPointMove;
@@ -87,6 +58,7 @@ namespace KK_VR.Interpreters
         private readonly MouthGuide _mouth;
         private static HitReaction _hitReaction;
         private Grip _grip;
+        private bool _manipulateSpeed;
 
         // For the manual manipulation of an aibu item, so we don't lose it.
         enum Grip
@@ -160,28 +132,6 @@ namespace KK_VR.Interpreters
             }
         }
 
-        // I really hate the amount of delegates around,
-        // especially given that this is basically hard dependency at this point,
-        // but hey why fix something, right..
-        private readonly Action<AibuColliderKind> ReleaseItem;
-        // Way too much illegitimate stuff is going on in auto caress, so we can't use normal one,
-        // this one among other things will refuse to do it if we are about to break the game.
-        private readonly Action<AibuColliderKind> MoMiJudgeProc;
-        /// <summary>
-        /// Uses StartsWith to find the button, or picks any if not specified (in this case ignores fast/slow in houshi).
-        /// </summary>
-        private readonly Action<string> ClickButton;
-        private readonly Action<int> ChangeLoop;
-        /// <summary>
-        /// -1 for all, otherwise (HFlag.EMode) 0...2 for specific, or anything higher(e.g. 3) for current EMode.
-        /// </summary>
-        private readonly Action<int> ChangeAnimation;
-
-        internal static Action<AibuColliderKind> MoMiOnLickStart;
-        internal static Action<AibuColliderKind> MoMiOnKissStart;
-        internal static Action MoMiOnKissEnd;
-
-        private bool _manipulateSpeed;
 
         public HSceneInterpreter(MonoBehaviour proc)
         {
@@ -199,23 +149,7 @@ namespace KK_VR.Interpreters
 
             CrossFader.HSceneHooks.SetFlag(hFlag);
 
-            var type = AccessTools.TypeByName("KK_SensibleH.AutoMode.LoopController");
-            _sensibleH = type != null;
-
-            if (_sensibleH)
-            {
-                ClickButton = AccessTools.MethodDelegate<Action<string>>(AccessTools.FirstMethod(type, m => m.Name.Equals("ClickButton")));
-                ChangeLoop = AccessTools.MethodDelegate<Action<int>>(AccessTools.FirstMethod(type, m => m.Name.Equals("AlterLoop")));
-                ChangeAnimation = AccessTools.MethodDelegate<Action<int>>(AccessTools.FirstMethod(type, m => m.Name.Equals("PickAnimation")));
-
-                type = AccessTools.TypeByName("KK_SensibleH.Caress.MoMiController");
-                ReleaseItem = AccessTools.MethodDelegate<Action<AibuColliderKind>>(AccessTools.FirstMethod(type, m => m.Name.Equals("ReleaseItem")));
-                MoMiJudgeProc = AccessTools.MethodDelegate<Action<AibuColliderKind>>(AccessTools.FirstMethod(type, m => m.Name.Equals("MoMiJudgeProc")));
-
-                MoMiOnLickStart = AccessTools.MethodDelegate<Action<AibuColliderKind>>(AccessTools.FirstMethod(type, m => m.Name.Equals("OnLickStart")));
-                MoMiOnKissStart = AccessTools.MethodDelegate<Action<AibuColliderKind>>(AccessTools.FirstMethod(type, m => m.Name.Equals("OnKissStart")));
-                MoMiOnKissEnd = AccessTools.MethodDelegate<Action>(AccessTools.FirstMethod(type, m => m.Name.Equals("OnKissEnd")));
-            }
+            
             var charas = new List<ChaControl>() { male };
             charas.AddRange(lstFemale);
 
@@ -293,6 +227,10 @@ namespace KK_VR.Interpreters
         }
         private void HandleSpeed()
         {
+            if (IntegrationSensibleH.active)
+            {
+                IntegrationSensibleH.StopAuto();
+            }
             if (_lastDirection == TrackpadDirection.Up)
             {
                 SpeedUp();
@@ -443,7 +381,10 @@ namespace KK_VR.Interpreters
             // Happens only when we recently pressed the button.
             _manipulateSpeed = false;
             Pull();
-
+            if (IntegrationSensibleH.active)
+            {
+                IntegrationSensibleH.StopAuto();
+            }
         }
 
         //private bool SetHand()
@@ -601,7 +542,14 @@ namespace KK_VR.Interpreters
                         }
                         break;
                     case Grip.Caress:
-                        MoMiJudgeProc(_lastAibuKind[index]);
+                        if (IntegrationSensibleH.active)
+                        {
+                            IntegrationSensibleH.JudgeProc(_lastAibuKind[index]);
+                        }
+                        else
+                        {
+                            handCtrl.JudgeProc();
+                        }
                         break;
                     case Grip.Grasp:
                         AddWait(index, EVRButtonId.k_EButton_SteamVR_Trigger, 0.35f);
@@ -669,12 +617,15 @@ namespace KK_VR.Interpreters
                 else if (handler.IsBusy)
                 {
                     handler.UpdateTracker();
-                    if (handCtrl.GetUseAreaItemActive() != -1 && handler.IsAibuItemPresent(out var touch))
+                    if (handler.IsAibuItemPresent(out var touch))
                     {
                         _grip = Grip.Caress;
                         handler.StartMovingAibuItem(touch);
                         _lastAibuKind[index] = touch;
-                        ReleaseItem(touch);
+                        if (IntegrationSensibleH.active && handCtrl.GetUseAreaItemActive() != -1)
+                        {
+                            IntegrationSensibleH.ReleaseItem(touch);
+                        }
                         EnableNip(touch);
                         if (_settings.HideHandOnUserInput != Settings.KoikatuSettings.HandType.None)
                         {
@@ -751,9 +702,13 @@ namespace KK_VR.Interpreters
         {
             if (IsWait)
                 PickAction(index, direction);
-            else
+            else if (_manipulateSpeed)
             {
                 _manipulateSpeed = false;
+                if (IntegrationSensibleH.active)
+                {
+                    IntegrationSensibleH.OnUserInput();
+                }
             }
             _hands[index].Grasp.OnScrollRelease();
         }
@@ -878,8 +833,10 @@ namespace KK_VR.Interpreters
                             {
                                 ScrollAibuAnim(direction == TrackpadDirection.Right);
                             }
-                            else
-                                ChangeLoop(GetCurrentLoop(direction == TrackpadDirection.Right));
+                            else if (IntegrationSensibleH.active)
+                            {
+                                IntegrationSensibleH.ChangeLoop(GetCurrentLoop(direction == TrackpadDirection.Right));
+                            }
                         }
                         else
                             wait = 1f;
@@ -975,7 +932,7 @@ namespace KK_VR.Interpreters
         private void PickDirectionAction(InputWait wait, Timing timing)
         {
             _manipulateSpeed = false;
-            VRPlugin.Logger.LogDebug($"PickDirectionAction:{wait.direction}:{timing}");
+            //VRPlugin.Logger.LogDebug($"PickDirectionAction:{wait.direction}:{timing}");
             switch (wait.direction)
             {
                 case TrackpadDirection.Up:
@@ -1101,15 +1058,18 @@ namespace KK_VR.Interpreters
                             PlayShort(lstFemale[0]);
                             break;
                         case Timing.Full:
-                            if (IsTouchpadPress(wait.index))
+                            if (IntegrationSensibleH.active)
                             {
-                                // Any animation goes.
-                                ChangeAnimation(-1);
-                            }
-                            else
-                            {
-                                // SameMode.
-                                ChangeAnimation(3);
+                                if (IsTouchpadPress(wait.index))
+                                {
+                                    // Any animation goes.
+                                    IntegrationSensibleH.ChangeAnimation(-1);
+                                }
+                                else
+                                {
+                                    // SameMode.
+                                    IntegrationSensibleH.ChangeAnimation(3);
+                                }
                             }
                             break;
                     }
@@ -1170,7 +1130,10 @@ namespace KK_VR.Interpreters
         public static void LeanToKiss()
         {
             HScenePatches.HoldKissLoop();
-            MoMiOnKissStart(AibuColliderKind.none);
+            if (IntegrationSensibleH.active)
+            {
+                IntegrationSensibleH.OnKissStart(AibuColliderKind.none);
+            }
             SetPlay(_aibuAnims[4]);
         }
         private void ScrollAibuAnim(bool increase)
@@ -1186,7 +1149,7 @@ namespace KK_VR.Interpreters
             }
             _pov.StartCoroutine(PlayAnimOverTime(index));
 
-            VRPlugin.Logger.LogDebug($"PlayAibuAnim:{_aibuAnims[index]}:{index}");
+            //VRPlugin.Logger.LogDebug($"PlayAibuAnim:{_aibuAnims[index]}:{index}");
         }
         private void PlayReaction()
         {
@@ -1305,6 +1268,7 @@ namespace KK_VR.Interpreters
                     VRPlugin.Logger.LogDebug($"InsertHelper[1][1]");
                     // Sonyu start auto.
                     hFlag.click = ClickKind.modeChange;
+                    IntegrationSensibleH.OnUserInput();
                 }
                 else// if (!hFlag.voiceWait)
                 {
@@ -1325,6 +1289,7 @@ namespace KK_VR.Interpreters
                     //VRPlugin.Logger.LogDebug($"InsertHelper[2][2]");
                     // Start houshi after pose change/long pause after finish.
                     hFlag.click = ClickKind.speedup;
+                    IntegrationSensibleH.OnUserInput();
                 }
                 else if (IsAfterClimaxHoushiInside(nowAnim) || IsAfterClimaxOutside(nowAnim))
                 {
@@ -1418,9 +1383,18 @@ namespace KK_VR.Interpreters
             if (InsertHelper())
             {
                 VRPlugin.Logger.LogDebug($"Insert");
-                ClickButton(GetButtonName(anal, hFlag.isDenialvoiceWait || noVoice));
+                if (IntegrationSensibleH.active)
+                {
+                    IntegrationSensibleH.ClickButton(GetButtonName(anal, hFlag.isDenialvoiceWait || noVoice));
+                }
+                else if (mode == EMode.sonyu)
+                {
+                    // Houshi is done mostly by helper.
+                    hFlag.click = anal ? noVoice ? ClickKind.insert_anal : ClickKind.insert_anal_voice : noVoice ? ClickKind.insert : ClickKind.insert_voice;
+                }
             }
         }
+
         private string GetButtonName(bool anal, bool noVoice)
         {
             string name;
@@ -1448,8 +1422,14 @@ namespace KK_VR.Interpreters
         {
             if (!IsFrameWait() && PullHelper())
             {
-                VRPlugin.Logger.LogDebug($"Pull:Pull");
-                ClickButton("Pull");
+                if (IntegrationSensibleH.active)
+                {
+                    IntegrationSensibleH.ClickButton("Pull");
+                }
+                else
+                {
+                    hFlag.click = ClickKind.pull;
+                }
             }
         }
         private bool IsFrameWait()
@@ -1477,7 +1457,10 @@ namespace KK_VR.Interpreters
         /// </summary>
         private void RandomButton()
         {
-            ClickButton("");
+            if (IntegrationSensibleH.active)
+            {
+                IntegrationSensibleH.ClickButton("");
+            }
         }
         public void HitReactionInitialize(IEnumerable<ChaControl> charas)
         {

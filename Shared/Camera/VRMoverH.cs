@@ -5,6 +5,7 @@ using UnityEngine;
 using VRGIN.Core;
 using KK_VR.Interpreters;
 using KK_VR.Handlers;
+using KKAPI.Utilities;
 
 namespace KK_VR.Camera
 {
@@ -63,7 +64,7 @@ namespace KK_VR.Camera
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
 
             // Wait for IK to put transforms back.
-            yield return new WaitForEndOfFrame();
+            yield return CoroutineUtils.WaitForEndOfFrame;
             var origin = VR.Camera.Origin;
             if (origin.eulerAngles.x != 0f || origin.eulerAngles.z != 0f)
             {
@@ -79,7 +80,7 @@ namespace KK_VR.Camera
                     oldPos = head.position;
                     origin.rotation = Quaternion.Lerp(startRot, uprightRot, step); //Quaternion.RotateTowards(origin.rotation, uprightRot, Time.deltaTime * 120f);
                     origin.position += oldPos - head.position;
-                    yield return new WaitForEndOfFrame();
+                    yield return CoroutineUtils.WaitForEndOfFrame;
                 }
                 //oldPos = head.position;
                 //origin.rotation = uprightRot;
@@ -96,7 +97,7 @@ namespace KK_VR.Camera
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
             //if (actionChange)
             //{
-            //    yield return new WaitForEndOfFrame();
+            //    yield return CoroutineUtils.WaitForEndOfFrame;
             //    var destination = _pov.GetDestination();
             //    if (destination != Vector3.zero)
             //    {
@@ -123,7 +124,7 @@ namespace KK_VR.Camera
             //                var rotSpeed = angleDelta / (distance / step);
             //                origin.rotation = Quaternion.RotateTowards(origin.rotation, rotation, 1f * rotSpeed);
             //                origin.position += moveTowards - head.position;
-            //                yield return new WaitForEndOfFrame();
+            //                yield return CoroutineUtils.WaitForEndOfFrame;
             //            }
             //            while (true)
             //            {
@@ -134,7 +135,7 @@ namespace KK_VR.Camera
             //                var rotSpeed = angleDelta / (distance / step);
             //                origin.rotation = Quaternion.RotateTowards(origin.rotation, rotation, 1f * rotSpeed);
             //                origin.position += moveTowards - head.position;
-            //                yield return new WaitForEndOfFrame();
+            //                yield return CoroutineUtils.WaitForEndOfFrame;
             //                if (distance < step)
             //                {
             //                    break;
@@ -150,7 +151,7 @@ namespace KK_VR.Camera
         {
             yield return null;
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
-            yield return new WaitForEndOfFrame();
+            yield return CoroutineUtils.WaitForEndOfFrame;
             var origin = VR.Camera.Origin;
             var head = VR.Camera.Head;
             MouthGuide.Instance.PauseInteractions = true;
@@ -202,7 +203,7 @@ namespace KK_VR.Camera
                 var pos = Vector3.Lerp(startPos, position, step);
                 origin.rotation = Quaternion.Slerp(startRot, rotation, step);
                 origin.position += pos - head.position;
-                yield return new WaitForEndOfFrame();
+                yield return CoroutineUtils.WaitForEndOfFrame;
             }
             MouthGuide.Instance.PauseInteractions = false;
         }

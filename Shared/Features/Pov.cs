@@ -161,7 +161,10 @@ namespace KK_VR.Features
                         {
                             sDamp = _smoothDamp.Increase();
                         }
+                        var moveTowards = Vector3.MoveTowards(VR.Camera.Head.position, GetEyesPosition(), 0.05f);
                         origin.rotation = Quaternion.RotateTowards(origin.rotation, _targetEyes.rotation, Time.deltaTime  * _degPerSec * sDamp);
+                        origin.position += moveTowards - VR.Camera.Head.position;
+                        return;
                     }
                     if (_sync)
                     {

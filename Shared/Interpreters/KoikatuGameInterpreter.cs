@@ -50,6 +50,7 @@ namespace KK_VR.Interpreters
             //VR.Manager.ModeInitialized += AddModels;
             _settings = VR.Context.Settings as KoikatuSettings;
             Features.LoadVoice.Init();
+            IntegrationSensibleH.Init();
         }
         protected override void OnUpdate()
         {

@@ -84,6 +84,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Interactors\Undresser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\ActionSceneInterpreter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\CustomSceneInterpreter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interpreters\Extras\IntegrationSensibleH.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interpreters\Extras\InputWait.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\Extras\MeshCollider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\Extras\TalkSceneExtras.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\HSceneHelper.cs" />

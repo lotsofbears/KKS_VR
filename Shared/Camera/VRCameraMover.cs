@@ -223,7 +223,7 @@ namespace KK_VR.Camera
         //{
         //    // For reasons I don't understand, the male may not have a correct pose
         //    // until later in the update loop.
-        //    yield return new WaitForEndOfFrame();
+        //    yield return CoroutineUtils.WaitForEndOfFrame;
         //    MoveWithHeuristics(
         //        head.TransformPoint(0, 0.15f, 0.15f),
         //        head.rotation,
