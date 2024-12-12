@@ -86,6 +86,30 @@ namespace KK_VR.Interpreters
                 }
             }
         }
+
+        internal static void EnableDynamicBones(List<ChaControl> charas)
+        {
+            foreach (var chara in charas)
+            {
+                if (chara == null) continue;
+
+                foreach (var db in chara.objAnim.GetComponents<DynamicBone_Ver02>())
+                {
+                    db.enabled = true;
+                }
+            }
+        }
+        internal static void EnableDynamicBones(ChaControl chara)
+        {
+            if (chara == null) return;
+
+            foreach (var db in chara.objAnim.GetComponents<DynamicBone_Ver02>())
+            {
+                db.enabled = true;
+            }
+
+        }
+
         private static readonly string[,] _talkColliders =
         {
             {

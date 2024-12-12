@@ -18,7 +18,7 @@ using UnityEngine;
 using VRGIN.Core;
 using static KK_VR.Grasp.GraspController;
 using static KK_VR.Grasp.TouchReaction;
-using BodyPart = KK_VR.Grasp.GraspController.BodyPart;
+using BodyPart = KK_VR.Grasp.BodyPart;
 using KK_VR.Holders;
 
 namespace KK_VR.Grasp
@@ -96,7 +96,7 @@ namespace KK_VR.Grasp
                 lookAt = LookAt.SetupLookAtIK(chara),
                 reaction = chara.objAnim.AddComponent<TouchReaction>()
             });
-            AnimLoaderHelper.FindMissingBones(_auxDic[chara].oldFbik);
+            //AnimLoaderHelper.FindMissingBones(_auxDic[chara].oldFbik);
             var ik = _auxDic[chara].newFbik;
             if (ik == null) return;
             _bodyPartsDic.Add(chara,
@@ -304,7 +304,6 @@ namespace KK_VR.Grasp
             return dic;
         }
 
-        // With new ik mostly obsolete, only want hook from prefix for anim change.
         internal static void SetWorkingState(ChaControl chara)
         {
             // By default only limbs are used, the rest is limited to offset play by hitReaction.
@@ -315,21 +314,21 @@ namespace KK_VR.Grasp
                 {
                     if (bodyPart.effector != null)
                     {
-                        //if (!bodyPart.IsLimb())
-                        //    bodyPart.targetBaseData.bone = bodyPart.effector.bone;
                         bodyPart.effector.target = bodyPart.anchor;
                         if (bodyPart.chain != null)
                         {
                             bodyPart.chain.bendConstraint.weight = bodyPart.state == State.Default ? 1f : KoikatuInterpreter.Settings.IKDefaultBendConstraint;
                         }
                     }
+
                 }
+                AnimLoaderHelper.FixExtraAnim(chara, _bodyPartsDic[chara]);
                 _auxDic[chara].oldFbik.enabled = false;
             }
         }
 
         /// <summary>
-        /// We put IKEffector.target to theirs ~default states.
+        /// We put IKEffector.target to ~default state.
         /// MotionIK.Calc() requires original stuff, without it we won't get body size offsets or effector's supposed targets.
         /// </summary>
         internal static void SetDefaultState(ChaControl chara, string stateName)
@@ -360,7 +359,7 @@ namespace KK_VR.Grasp
         /// </summary>
         private void StartAnimChange(ChaControl chara, string stateName)
         {
-            VRPlugin.Logger.LogDebug($"Helper:Grasp:StartAnimChange:{chara}");
+            //VRPlugin.Logger.LogDebug($"Helper:Grasp:StartAnimChange:{chara}");
             for (var i = 5; i < 7; i++)
             {
                 var bodyPart = _bodyPartsDic[chara][i];
@@ -368,16 +367,16 @@ namespace KK_VR.Grasp
                 {
                     //var parent = GetParent(bodyPart.name);
                     //VRPlugin.Logger.LogDebug($"AnimChange:Add:{bodyPart.name} -> {parent} -> {_bodyPartsDic[chara][(int)parent].origTarget}");
-                    //if (!_animChangeDic.ContainsKey(chara))
-                    //{
-                    //    _animChangeDic.Add(chara, stateName);
-                    //    _animChange = true;
-                    //}
+                    if (!_animChangeDic.ContainsKey(chara))
+                    {
+                        _animChangeDic.Add(chara, stateName);
+                        _animChange = true;
+                    }
                     bodyPart.guide.Follow(_bodyPartsDic[chara][i - 4].anchor, null); // anchor.parent = _bodyPartsDic[chara][(int)GetParent(bodyPart.name)].anchor;
-                    _animChange = true;
                 }
             }
         }
+
         internal void ChangeMaintainRelativePosition(bool active)
         {
             foreach (var bodyPartList in _bodyPartsDic.Values)
@@ -388,6 +387,7 @@ namespace KK_VR.Grasp
                 }
             }
         }
+
         internal void ChangeParentPush(float number)
         {
             foreach (var bodyPartList in _bodyPartsDic.Values)
@@ -399,17 +399,7 @@ namespace KK_VR.Grasp
                 }
             }
         }
-        //private PartName GetParent(PartName partName)
-        //{
-        //    return partName switch
-        //    {
-        //        PartName.HandL => PartName.ShoulderL,
-        //        PartName.HandR => PartName.ShoulderR,
-        //        PartName.FootL => PartName.ThighL,
-        //        PartName.FootR => PartName.ThighR,
-        //        _ => PartName.Spine
-        //    };
-        //}
+
         private void DoAnimChange()
         {
             foreach (var kv in _animChangeDic)
@@ -424,7 +414,7 @@ namespace KK_VR.Grasp
         }
         private void OnAnimChangeEnd(ChaControl chara)
         {
-            VRPlugin.Logger.LogDebug($"Helper:Grasp:OnAnimChangeEnd");
+            //VRPlugin.Logger.LogDebug($"Helper:Grasp:OnAnimChangeEnd");
             for (var i = 5; i < 7; i++)
             {
                 var bodyPart = _bodyPartsDic[chara][i];
@@ -436,50 +426,97 @@ namespace KK_VR.Grasp
             _animChangeDic.Remove(chara);
             _animChange = _animChangeDic.Count != 0;
         }
+
         internal void ScrollHand(PartName partName, ChaControl chara, bool increase)
         {
             _handChange = true;
             _handScrollList.Add(new HandScroll(partName, chara, increase));
         }
+
         internal void StopScroll()
         {
             _handChange = false;
             _handScrollList.Clear();
         }
+
+        // There are some shady animations where ik will be very wonky.
+        private readonly List<string> _animationsNoIK =
+            [
+            "khs_f_61",
+            ];
+
         internal void OnPoseChange()
         {
-            //VRPlugin.Logger.LogDebug($"Helper:Grasp:OnPoseChange");
-            //StopTransition();
             StopAnimChange();
-            //foreach (var orig in _origOrientList)
-            //{
-            //    orig.Restore();
-            //}
-            RetargetEffectors();
             foreach (var kv in _bodyPartsDic)
             {
-                foreach (var bodyPart in kv.Value)
+                // Disable IK if animation is sloppy.
+                if (_animationsNoIK.Contains(kv.Key.animBody.runtimeAnimatorController.name))
                 {
-                    bodyPart.guide.Sleep(true);
+                    _auxDic[kv.Key].newFbik.enabled = false;
+                    continue;
                 }
-                AnimLoaderHelper.FindMissingBones(kv.Key.objAnim.GetComponent<RootMotion.FinalIK.FullBodyBipedIK>());
-            }
-        }
-        internal void RetargetEffectors()
-        {
-            // Limbs only
-            foreach (var kv in _auxDic)
-            {
-                for (var i = 5; i < 9; i++)
+                var baseDataEmpty = false;
+                for (var i = 0; i < 10; i++)
                 {
-                    if (kv.Value.oldFbik.solver.effectors[i].rotationWeight == 0f)
+                    var bodyPart = kv.Value[i];
+                    bodyPart.guide.Sleep(instant: true);
+                    if (bodyPart.IsLimb())
                     {
-                        _bodyPartsDic[kv.Key][i].targetBaseData.Reset();
-                        _bodyPartsDic[kv.Key][i].targetBaseData.bone = _bodyPartsDic[kv.Key][i].effector.bone;
+                        if (bodyPart.baseData.bone == null)
+                        {
+                            baseDataEmpty = true;
+                        }
+                        var component = bodyPart.beforeIK.GetComponent<NoPosBeforeIK>();
+                        if (_auxDic[kv.Key].oldFbik.solver.effectors[i].rotationWeight == 0f)
+                        {
+                            VRPlugin.Logger.LogWarning($"RetargetEffectors:[{i}]");
+                            //bodyPart.baseData.pos = kv.Key.objBodyBone.transform.InverseTransformDirection(bodyPart.baseData.transform.position - bodyPart.effector.bone.position);
+                            //bodyPart.baseData.bone = bodyPart.effector.bone;
+                            if (component == null)
+                            {
+                                bodyPart.beforeIK.gameObject.AddComponent<NoPosBeforeIK>().Init(bodyPart.effector.bone);
+                            }
+                        }
+                        else if (component != null)
+                        {
+                            Component.Destroy(component);
+                        }
                     }
                 }
+                if (baseDataEmpty)
+                {
+                    AnimLoaderHelper.FindMissingBones(kv.Key.objAnim.GetComponent<RootMotion.FinalIK.FullBodyBipedIK>());
+                }
             }
         }
+        //internal void RetargetEffectors()
+        //{
+        //    // If default target doesn't provide rotation.
+        //    foreach (var kv in _bodyPartsDic)
+        //    {
+        //        for (var i = 5; i < 9; i++)
+        //        {
+        //            var bodyPart = kv.Value[i];
+        //            var component = bodyPart.beforeIK.GetComponent<NoPosBeforeIK>();
+        //            if (_auxDic[kv.Key].oldFbik.solver.effectors[i].rotationWeight == 0f)
+        //            {
+        //                VRPlugin.Logger.LogWarning($"RetargetEffectors:[{i}]");
+        //                //bodyPart.baseData.pos = kv.Key.objBodyBone.transform.InverseTransformDirection(bodyPart.baseData.transform.position - bodyPart.effector.bone.position);
+        //                //bodyPart.baseData.bone = bodyPart.effector.bone;
+        //                if (component == null)
+        //                {
+        //                    bodyPart.beforeIK.gameObject.AddComponent<NoPosBeforeIK>().Init(bodyPart.effector.bone);
+        //                }
+        //            }
+        //            else if (component != null)
+        //            {
+        //                Component.Destroy(component);
+        //            }
+        //        }
+        //    }
+
+        //}
         internal void TouchReaction(ChaControl chara, Vector3 handPosition, Tracker.Body body)
         {
             if (_auxDic.ContainsKey(chara))
@@ -525,6 +562,7 @@ namespace KK_VR.Grasp
                 if (value.oldFbik.solver == solver)
                 {
                     value.newFbik.solver.effectors[index].positionOffset += offset;
+                    return;
                 }
             }
         }
@@ -562,77 +600,17 @@ namespace KK_VR.Grasp
             if (_handChange) DoHandChange();
         }
 
-        internal class BaseHold
-        {
-            internal BaseHold(BodyPart _bodyPart, Transform _objAnim, Transform _attachPoint)
-            {
-                bodyPart = _bodyPart;
-                objAnim = _objAnim;
-                attachPoint = _attachPoint;
-                offsetPos = _attachPoint.InverseTransformDirection(_objAnim.transform.position - _attachPoint.position);
-                offsetRot = Quaternion.Inverse(_attachPoint.rotation) * _objAnim.transform.rotation;
-            }
-            private readonly BodyPart bodyPart;
-            private readonly Transform objAnim;
-            private readonly Transform attachPoint;
-            private Quaternion offsetRot;
-            private Vector3 offsetPos;
-            private int scrollDir;
-            private bool scrollInc;
-
-            private readonly Quaternion _left = Quaternion.Euler(0f, 1f, 0f);
-            private readonly Quaternion _right = Quaternion.Euler(0f, -1f, 0f);
-
-            internal void Execute()
-            {
-                if (scrollDir != 0)
-                {
-                    if (scrollDir == 1)
-                    {
-                        DoBaseHoldVerticalScroll(scrollInc);
-                    }
-                    else
-                    {
-                        DoBaseHoldHorizontalScroll(scrollInc);
-                    }
-                }
-                objAnim.transform.SetPositionAndRotation(
-                    attachPoint.position + attachPoint.TransformDirection(offsetPos),
-                    attachPoint.rotation * offsetRot
-                    );
-            }
-
-            internal void StartBaseHoldScroll(int direction, bool increase)
-            {
-                scrollDir = direction;
-                scrollInc = increase;
-            }
-
-            internal void StopBaseHoldScroll()
-            {
-                scrollDir = 0;
-            }
-
-            private void DoBaseHoldVerticalScroll(bool increase)
-            {
-                offsetPos += VR.Camera.Head.forward * (Time.deltaTime * (increase ? 10f : -10f));
-            }
-
-
-            private void DoBaseHoldHorizontalScroll(bool left)
-            {
-                offsetRot *= (left ? _left : _right);
-            }
-        }
+        
         internal void StartBaseHold(BodyPart bodyPart, Transform objAnim, Transform attachPoint)
         {
             baseHold = new BaseHold(bodyPart, objAnim, attachPoint);
         }
+
         internal void StopBaseHold()
         {
             baseHold = null;
-            
         }
+
         private void DoHandChange()
         {
             foreach (var scroll in _handScrollList)

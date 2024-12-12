@@ -31,7 +31,7 @@ namespace KK_VR.IK
             _ik = ik;
             _ik.solver.OnPreUpdate += ModifyOffset;
         }
-        internal void Add(GraspController.BodyPart bodyPart, float weight)
+        internal void Add(BodyPart bodyPart, float weight)
         {
             _linkList.Add(new EffectorLink(bodyPart.effector, this.transform.InverseTransformPoint(bodyPart.anchor.position), weight));
         }

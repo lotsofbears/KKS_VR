@@ -1,9 +1,11 @@
 ﻿using Illusion.Component.Correct;
 using Illusion.Component.Correct.Process;
+using KK_VR.Grasp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace KK_VR.IK
 {
@@ -14,9 +16,39 @@ namespace KK_VR.IK
 
     public class AnimLoaderHelper
     {
+        internal static void FixExtraAnim(ChaControl chara, List<BodyPart> bodyPartList)
+        {
+            for (var i = 5; i < 9; i++)
+            {
+                var bodyPart = bodyPartList[i];
+                if (bodyPart.baseData.bone != null) return;
+
+                var ikBeforeProcess = bodyPart.baseData.gameObject.GetComponent<IKBeforeProcess>();
+                if (ikBeforeProcess != null)
+                {
+                    bodyPart.baseData.bone = chara.objAnim.transform.Find(cf_pv_bones_efTargets[i - 5]);
+                    bodyPart.baseData.enabled = true;
+                    ikBeforeProcess.enabled = true;
+                    ikBeforeProcess.type = BaseProcess.Type.Sync;
+                }
+                var bendGoal = bodyPart.chain.bendConstraint.bendGoal;
+                var baseData = bendGoal.GetComponent<BaseData>();
+                ikBeforeProcess = bendGoal.GetComponent<IKBeforeProcess>();
+                if (baseData != null && ikBeforeProcess != null)
+                {
+                    baseData.bone = chara.objAnim.transform.Find(cf_pv_bones_bendGoals[i - 5]);
+                    baseData.enabled = true;
+                    ikBeforeProcess.enabled = true;
+                    ikBeforeProcess.type = BaseProcess.Type.Sync;
+                }
+            }
+        }
+
         public static void FindMissingBones(RootMotion.FinalIK.FullBodyBipedIK ik)
         {
-            for (var i = 0; i < ik.solver.effectors.Length; i++)
+            // Limbs only.
+            for (var i = 5; i < 9; i++)
+            //for (var i = 0; i < ik.solver.effectors.Length; i++)
             {
                 var target = ik.solver.effectors[i].target;
                 //if (target == null)
@@ -24,7 +56,8 @@ namespace KK_VR.IK
                 //    ik.solver.effectors[i].target = ik.transform.Find(cf_t_bones_efTargets[i]);
                 //}
                 // We want only limbs.
-                if (target != null && i > 4)
+                if (target != null)
+                //if (target != null && i > 4)
                 {
                     // Our IK anchor. Look at its parent instead.
                     if (target.name.StartsWith("ik_", StringComparison.Ordinal))
@@ -41,6 +74,8 @@ namespace KK_VR.IK
                             {
                                 baseData.bone = ik.transform.Find(cf_pv_bones_efTargets[i - 5]);
                             }
+                            VRPlugin.Logger.LogWarning($"FindMissingBones[{i}]");
+                            //baseData.pos = ik.transform.InverseTransformDirection(ik.solver.effectors[i].bone.position - baseData.bone.position);
                             baseData.enabled = true;
                             ikBeforeProcess.enabled = true;
                             ikBeforeProcess.type = BaseProcess.Type.Sync;
@@ -53,7 +88,7 @@ namespace KK_VR.IK
             for (var i = 1; i < ik.solver.chain.Length; i++)
             {
                 var bendGoal = ik.solver.chain[i].bendConstraint.bendGoal;
-                // Game should do this. Neither do i.
+                // Game should do this.
                 //if (bendGoal == null)
                 //{
                 //    bendGoal = ik.transform.Find(cf_t_bones_bendGoals[i - 1]);
@@ -112,7 +147,6 @@ namespace KK_VR.IK
 
         private static readonly List<string> cf_pv_bones_bendGoals =
             [
-
             "cf_j_root/cf_n_height/cf_pv_root/cf_pv_elbo_L",
             "cf_j_root/cf_n_height/cf_pv_root/cf_pv_elbo_R",
             "cf_j_root/cf_n_height/cf_pv_root/cf_pv_knee_L",

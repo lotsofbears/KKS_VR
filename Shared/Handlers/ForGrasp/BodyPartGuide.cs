@@ -16,7 +16,7 @@ using VRGIN.Controls;
 using VRGIN.Helpers;
 using static KK.RootMotion.FinalIK.IKSolverVR;
 using static KK_VR.Grasp.GraspController;
-using BodyPart = KK_VR.Grasp.GraspController.BodyPart;
+using BodyPart = KK_VR.Grasp.BodyPart;
 
 namespace KK_VR.Handlers
 {

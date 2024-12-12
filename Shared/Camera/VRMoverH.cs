@@ -29,20 +29,26 @@ namespace KK_VR.Camera
             //_torso = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_spine01/cf_j_spine02/cf_j_spine03");
             //_kokan = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_waist01/cf_j_waist02/cf_d_kokan/cf_j_kokan");
         }
-        public void MoveToInH(Vector3 position, Quaternion rotation, bool actionChange, HFlag.EMode mode)
+        public void MoveToInH(Vector3 position, Quaternion rotation, bool spotChange, HFlag.EMode mode)
         {
             //VRPlugin.Logger.LogDebug("VRMoverH:MoveToInH");
             StopAllCoroutines();
-            if (PoV.Active || (KoikatuInterpreter.Settings.AutoEnterPov && actionChange))
+            if (PoV.Active || (KoikatuInterpreter.Settings.AutoEnterPov && mode != HFlag.EMode.aibu))
             {
                 PoV.Instance.TryDisable(moveTo: false);
-                if (mode != HFlag.EMode.aibu)
+                if (spotChange)
                 {
-                    StartCoroutine(FlyToPov());
-                    return;
+                    StartCoroutine(WaitForLag(PoV.Instance.OnSpotChange, null));
+                }
+                else
+                {
+                    StartCoroutine(WaitForLag(PoV.Instance.StartPov, null));
                 }
             }
-            StartCoroutine(FlyToPosition(position, rotation));
+            else
+            {
+                StartCoroutine(FlyToPosition(position, rotation));
+            }
         }
 
         public void MakeUpright(Action method = null, params object[] args)
@@ -82,9 +88,9 @@ namespace KK_VR.Camera
             method?.DynamicInvoke(args);
             VRPlugin.Logger.LogDebug($"VRMoverH:MakeUpright:Done");
         }
-        private IEnumerator FlyToPov()
+        private IEnumerator WaitForLag(Action action, params object[] args)
         {
-            VRPlugin.Logger.LogDebug($"VRMoverH:FlyToPov");
+            VRPlugin.Logger.LogDebug($"VRMoverH:WaitForLag");
             // We wait for the lag of position change.
             yield return null;
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
@@ -138,7 +144,7 @@ namespace KK_VR.Camera
             //    }
             //}
             //VRPlugin.Logger.LogDebug($"VRMoverH:FlyToPov:Done");
-            PoV.Instance.StartPov();
+            action?.DynamicInvoke(args);
         }
         private IEnumerator FlyToPosition(Vector3 position, Quaternion rotation)
         {
@@ -186,7 +192,7 @@ namespace KK_VR.Camera
 
             }
             var lerp = 0f;
-            var lerpModifier = KoikatuInterpreter.Settings.FlightSpeed / Vector3.Distance(head.position, position);
+            var lerpModifier = KoikatuInterpreter.Settings.FlightSpeed * 3f / Vector3.Distance(head.position, position);
             var startPos = head.position;
             var startRot = origin.rotation;
             while (lerp < 1f)

@@ -156,7 +156,6 @@ namespace KK_VR.Controls
                     _selectionAnim.Play("idle");
                 }
             }
-
             CleanupSelection();
         }
 

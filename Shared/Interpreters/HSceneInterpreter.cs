@@ -221,6 +221,7 @@ namespace KK_VR.Interpreters
 
             VRBoop.RefreshDynamicBones(charas);
 
+            TalkSceneExtras.EnableDynamicBones(charas);
             TalkSceneExtras.AddTalkColliders(charas);
             TalkSceneExtras.AddHColliders(charas);
             _hands = HandHolder.GetHands();
@@ -1403,11 +1404,12 @@ namespace KK_VR.Interpreters
             adjustDirLight = true;
             GraspController.OnPoseChange();
             MouthGuide.OnPoseChange(anim.mode);
+            TalkSceneExtras.EnableDynamicBones(male);
         }
         internal void OnSpotChangePost()
         {
             adjustDirLight = true;
-            _pov.OnSpotChange();
+            //_pov.OnSpotChange();
             //GraspHelper.Instance.OnSpotChangePost();
 
         }

@@ -8,7 +8,7 @@ using System.Text;
 using UnityEngine;
 using VRGIN.Helpers;
 using static ActionGame.VisibleController;
-using BodyPart = KK_VR.Grasp.GraspController.BodyPart;
+using BodyPart = KK_VR.Grasp.BodyPart;
 
 namespace KK_VR.Handlers
 {

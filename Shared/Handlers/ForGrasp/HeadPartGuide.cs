@@ -16,7 +16,7 @@ namespace KK_VR.Handlers
     internal class HeadPartGuide : PartGuide
     {
 
-        protected override GraspController.BodyPart BodyPart
+        protected override BodyPart BodyPart
         {
             get => _bodyPart;
             set => _bodyPart = value is BodyPartHead head ? head : null;

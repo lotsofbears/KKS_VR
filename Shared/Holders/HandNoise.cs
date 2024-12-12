@@ -32,7 +32,7 @@ namespace KK_VR.Holders
                 _audioSource.Stop();
             }
 
-            VRPlugin.Logger.LogInfo($"AttemptToPlay:{sfx}:{surface}:{intensity}:{volume}");
+            //VRPlugin.Logger.LogInfo($"AttemptToPlay:{sfx}:{surface}:{intensity}:{volume}");
             AdjustInput(sfx, ref surface, ref intensity);
             var audioClipList = sfxDic[sfx][(int)surface][(int)intensity];
             var count = audioClipList.Count;

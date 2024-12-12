@@ -27,7 +27,7 @@ namespace KK_VR.Handlers
         {
             if (_kissAttemptTimestamp < Time.time)
             {
-                VRPlugin.Logger.LogDebug($"AttemptProactiveKiss:chance - {_kissAttemptChance}");
+                //VRPlugin.Logger.LogDebug($"AttemptProactiveKiss:chance - {_kissAttemptChance}");
                 var headPos = VR.Camera.Head.position;
                 if (Random.value < _kissAttemptChance
                     && !HSceneInterpreter.IsVoiceActive

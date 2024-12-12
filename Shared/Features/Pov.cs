@@ -181,6 +181,12 @@ namespace KK_VR.Features
             _active = true;
             NextChara(keepChara: true);
         }
+
+        public void OnSpotChange()
+        {
+            StartPov();
+            MoveToHeadEx(3f);
+        }
         public void CameraIsFar()
         {
             _mode = Mode.Move;
@@ -242,7 +248,7 @@ namespace KK_VR.Features
         //    origin.rotation = Quaternion.RotateTowards(origin.rotation, targetRot, rotSpeed);
         //    origin.position += moveToward - head.position;
         //}
-        private void MoveToHeadEx()
+        private void MoveToHeadEx(float speed = 1f)
         {
             if (_trip == null)
             {
@@ -255,7 +261,7 @@ namespace KK_VR.Features
                 {
                     // Only one mode is currently operational.
                     _trip = new OneWayTrip(Mathf.Min(
-                        KoikatuInterpreter.Settings.FlightSpeed / Vector3.Distance(VR.Camera.Head.position, GetEyesPosition()),
+                        KoikatuInterpreter.Settings.FlightSpeed * speed / Vector3.Distance(VR.Camera.Head.position, GetEyesPosition()),
                         KoikatuInterpreter.Settings.FlightSpeed * 60f / Quaternion.Angle(VR.Camera.Origin.rotation, _targetEyes.rotation)));
                 }
             }
@@ -268,10 +274,11 @@ namespace KK_VR.Features
         }
 
 
-        public void OnSpotChange()
-        {
-            _newAttachPoint = false;
-        }
+        //public void OnSpotChange()
+        //{
+        //    _newAttachPoint = false;
+        //    //CameraIsFar();
+        //}
 
         private int GetCurrentCharaIndex(List<ChaControl> _chaControls)
         {

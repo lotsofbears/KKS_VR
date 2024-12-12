@@ -73,7 +73,6 @@ namespace KK_VR.Handlers
 
         protected override void OnTriggerEnter(Collider other)
         {
-            VRPlugin.Logger.LogDebug($"OnTriggerEnter:{other.name}");
             if (_tracker.AddCollider(other))
             {
                 if (_tracker.colliderInfo.behavior.touch > AibuColliderKind.mouth

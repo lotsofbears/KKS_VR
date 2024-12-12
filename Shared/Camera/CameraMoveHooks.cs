@@ -113,7 +113,7 @@ namespace KK_VR.Camera
         [HarmonyPatch(typeof(HSceneProc), nameof(HSceneProc.ChangeAnimator))]
         public static void PostChangeAnimator(HSceneProc.AnimationListInfo _nextAinmInfo, bool _isForceCameraReset, HSceneProc __instance, List<ChaControl> ___lstFemale)
         {
-            UpdateVRCamera(__instance, ___lstFemale, null);
+            UpdateVRCamera(__instance, ___lstFemale);
             HSceneInterpreter.OnPoseChange(_nextAinmInfo);
 #if KKS
             Fixes.ObiCtrlFix.SetFluidsState(false);
@@ -126,7 +126,7 @@ namespace KK_VR.Camera
         {
             if (KoikatuInterpreter.SceneInterpreter is HSceneInterpreter hScene)
                 hScene.OnSpotChangePost();
-            UpdateVRCamera(__instance, ___lstFemale, null);// __state);
+            UpdateVRCamera(__instance, ___lstFemale);
 
 #if KKS
             Fixes.ObiCtrlFix.SetFluidsState(false);
@@ -142,8 +142,10 @@ namespace KK_VR.Camera
                 VRMoverH.Instance.MakeUpright();
             }
         }
-        private static void UpdateVRCamera(HSceneProc instance, List<ChaControl> lstFemale, float? previousFemaleY)
+        private static void UpdateVRCamera(HSceneProc instance, List<ChaControl> lstFemale)
         {
+            var spotChange = Vector3.Distance(VR.Camera.transform.position, lstFemale[0].transform.position) > 2f;
+            VRPlugin.Logger.LogDebug($"UpdateVRCamera:spotChange = {spotChange}");
             var baseTransform = lstFemale[0].objTop.transform;
             var camDat = instance.flags.ctrlCamera.CamDat;// new Traverse(instance.flags.ctrlCamera).Field<BaseCameraControl_Ver2.CameraData>("CamDat").Value;
             var cameraRotation = baseTransform.rotation * Quaternion.Euler(camDat.Rot);
@@ -185,7 +187,7 @@ namespace KK_VR.Camera
 
                 if (VRMoverH.Instance != null && KoikatuInterpreter.Settings.FlyInH)
                 {
-                    VRMoverH.Instance.MoveToInH(cameraPosition, cameraRotation, previousFemaleY == null, instance.flags.mode);
+                    VRMoverH.Instance.MoveToInH(cameraPosition, cameraRotation, spotChange, instance.flags.mode);
                 }
                 else
                 {
