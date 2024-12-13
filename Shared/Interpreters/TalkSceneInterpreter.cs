@@ -28,7 +28,6 @@ namespace KK_VR.Interpreters
         public static TalkScene talkScene;
         public static ADVScene advScene;
         internal static bool afterH;
-        private readonly List<HandHolder> _hands;
         private static HitReaction _hitReaction;
         private readonly static List<int> lstIKEffectLateUpdate = [];
         private static bool _lateHitReaction;
@@ -38,11 +37,6 @@ namespace KK_VR.Interpreters
         private bool _talkSceneStart;
         private bool _start;
         private bool? _sittingPose;
-        private readonly bool[] _waitForAction = new bool[2];
-        private readonly float[] _waitTimestamp = new float[2];
-        private readonly float[] _waitTime = new float[2];
-        private readonly TrackpadDirection[] _lastDirection = new TrackpadDirection[2];
-        private readonly int[,] _modifierList = new int[2, 2];
 
         private Transform _eyes;
         private ActionGame.Chara.Player GetPlayer()
@@ -91,10 +85,6 @@ namespace KK_VR.Interpreters
                 talkScene = (TalkScene)behaviour;
                 _talkSceneStart = true;
             }
-            else
-            {
-               //VRPlugin.Logger.LogDebug($"TalkScene:Start:Adv");
-            }
             advScene = Game.Instance.actScene.advScene;
 #else
             advScene = ActionScene.instance.AdvScene;
@@ -106,7 +96,7 @@ namespace KK_VR.Interpreters
 #endif
             _start = true;
             SetHeight();
-            _hands = HandHolder.GetHands();
+            HandHolder.UpdateHandlers<TalkSceneHandler>();
         }
         private void SetHeight()
         {
@@ -126,7 +116,7 @@ namespace KK_VR.Interpreters
             }
         }
 
-        public override void OnDisable()
+        internal override void OnDisable()
         {
             HandHolder.DestroyHandlers();
 #if KK
@@ -135,10 +125,9 @@ namespace KK_VR.Interpreters
             //TalkSceneExtras.ReturnDirLight();
             //HideMaleHead.ForceShowHead = false;
         }
-        public override void OnUpdate()
+        internal override void OnUpdate()
         {
 #if KK
-
             if (talkScene == null && !advScene.isActiveAndEnabled)
 #else
             if (!talkScene._isPaly && !advScene.isActiveAndEnabled)
@@ -193,17 +182,9 @@ namespace KK_VR.Interpreters
                 }
 #endif
             }
-
-            if (_waitForAction[0] && _waitTimestamp[0] < Time.time)
-            {
-                PickAction(Timing.Full, 0);
-            }
-            if (_waitForAction[1] && _waitTimestamp[1] < Time.time)
-            {
-                PickAction(Timing.Full, 1);
-            }
+            base.OnUpdate();
         }
-        public override void OnLateUpdate()
+        internal override void OnLateUpdate()
         {
             if (_lateHitReaction)
             {
@@ -214,7 +195,7 @@ namespace KK_VR.Interpreters
             }
         }
 #if KK
-        public void OverrideAdv(TalkScene instance)
+        internal void OverrideAdv(TalkScene instance)
         {
             talkScene = instance;
             _talkSceneStart = true;
@@ -245,7 +226,6 @@ namespace KK_VR.Interpreters
                 _hitReaction = (HitReaction)Util.CopyComponent(advScene.GetComponent<HitReaction>(), Game.instance.gameObject);
             }
             ControllerTracker.Initialize(charas);
-            HandHolder.UpdateHandlers<TalkSceneHandler>();
         }
         // TalkScenes have clones, reflect it on roam mode.
         private void SynchronizeClothes(ChaControl chara)
@@ -272,7 +252,7 @@ namespace KK_VR.Interpreters
                 originalState[i] = cloneState[i];
             }
         }
-        private TalkSceneHandler GetHandler(int index) => (TalkSceneHandler)_hands[index].Handler;
+        private TalkSceneHandler GetHandler(int index) => (TalkSceneHandler)HandHolder.GetHand(index).Handler;
         public static void HitReactionPlay(AibuColliderKind aibuKind, ChaControl chara)
         {
            //VRPlugin.Logger.LogDebug($"TalkScene:Reaction:{aibuKind}:{chara}");
@@ -302,55 +282,28 @@ namespace KK_VR.Interpreters
             Features.LoadVoice.PlayVoice(Random.value < 0.4f ? Features.LoadVoice.VoiceType.Laugh : Features.LoadVoice.VoiceType.Short, chara);
         }
 
-        private void SetWait(int index, float duration = 1f)
+        protected override bool OnTrigger(int index, bool press)
         {
-            _waitForAction[index] = true;
-            _waitTime[index] = duration;
-            _waitTimestamp[index] = Time.time + duration;
-        }
-        public override bool OnButtonDown(int index, EVRButtonId buttonId, TrackpadDirection direction)
-        {
-           //VRPlugin.Logger.LogDebug($"Interpreter:ButtonDown[{buttonId}]:Index[{index}]");
             var handler = GetHandler(index);
-            switch (buttonId)
+            if (press)
             {
-                case EVRButtonId.k_EButton_SteamVR_Trigger:
-                    if (handler.IsBusy)
-                    {
-                        GetHandler(index).TriggerPress();
-                    }
-                    _modifierList[index, 0]++;
-                    break;
-                case EVRButtonId.k_EButton_Grip:
-                    _modifierList[index, 1]++;
-                    //if (_modifierList[index, 0] > 0) return true;
-                    break;
-                case EVRButtonId.k_EButton_SteamVR_Touchpad:
-                    if (_modifierList[index, 0] > 0)
-                    {
-                        _hands[index].ChangeItem();
-                    }
-                    break;
+                _pressedButtons[index, 0] = true;
+                if (handler.IsBusy)
+                {
+                    GetHandler(index).TriggerPress();
+                }
+            }
+            else
+            {
+                _pressedButtons[index, 0] = false;
+                PickAction(index, EVRButtonId.k_EButton_SteamVR_Trigger);
             }
             return false;
         }
-        public override void OnButtonUp(int index, EVRButtonId buttonId, TrackpadDirection direction)
+        internal override bool OnDirectionDown(int index, TrackpadDirection direction)
         {
-            switch (buttonId)
-            {
-                case EVRButtonId.k_EButton_SteamVR_Trigger:
-                    _modifierList[index, 0]--;
-                    break;
-                case EVRButtonId.k_EButton_Grip:
-                    _modifierList[index, 1]--;
-                    break;
-            }
-        }
-        public override bool OnDirectionDown(int index, TrackpadDirection direction)
-        {
-           //VRPlugin.Logger.LogDebug($"Interpreter:DirDown[{direction}]:Index[{index}]");
+           VRPlugin.Logger.LogDebug($"TalkScene:OnDirectionDown[{direction}]");
             var adv = IsADV;
-            _lastDirection[index] = direction;
             var handler = GetHandler(index);
             switch (direction)
             {
@@ -381,43 +334,22 @@ namespace KK_VR.Interpreters
                     break;
                 case TrackpadDirection.Left:
                 case TrackpadDirection.Right:
-                    if (_modifierList[index, 0] > 0)
+                    if (IsTriggerPress(index))
                     {
-                        _hands[index].ChangeLayer(direction == TrackpadDirection.Right);
+                        HandHolder.GetHand(index).ChangeLayer(direction == TrackpadDirection.Right);
                     }
                     else
                     {
-                        SetWait(index);
+                        AddWait(index, direction, 1f);
                     }
                     break;
             }
             return false;
         }
-        public override void OnDirectionUp(int index, TrackpadDirection direction)
-        {
-           //VRPlugin.Logger.LogDebug($"Interpreter:DirUp[{direction}]:Index[{index}]");
-            _waitForAction[index] = false;
-            var timing = _waitTimestamp[index] - Time.time;
-
-            // Not interested in full wait as it performed automatically once reached via Update().
-            if (timing > 0)
-            {
-                if (_waitTime[index] * 0.5f > timing)
-                {
-                    // More then a half, less then full wait case.
-                    PickAction(Timing.Half, index);
-                }
-                else
-                {
-                    PickAction(Timing.Fraction, index);
-                }
-            }
-        }
-        private void PickAction(Timing timing, int index)
+        protected override void PickDirectionAction(InputWait wait, Timing timing)
         {
             var adv = IsADV;
-            _waitForAction[index] = false;
-            switch (_lastDirection[index])
+            switch (wait.direction)
             {
                 case TrackpadDirection.Up:
                 case TrackpadDirection.Down:
@@ -449,7 +381,7 @@ namespace KK_VR.Interpreters
                             return;
                         }
 
-                        if (_lastDirection[index] == TrackpadDirection.Left)
+                        if (wait.direction == TrackpadDirection.Left)
                         {
                             EnterState(adv);
                         }
@@ -532,6 +464,9 @@ namespace KK_VR.Interpreters
                     //VRPlugin.Logger.LogDebug($"TalkScene:ExtraNPC:{npc.name}:{npc.motion.state}");
                 }
             }
+#if KK
+            origin.rotation = chara.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
+#endif
             origin.position += new Vector3(headPos.x, head.position.y, headPos.z) - head.position;
 
             PlacePlayer(headPos, heroine.transform.rotation);

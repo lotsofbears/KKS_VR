@@ -33,25 +33,9 @@ namespace KK_VR.Holders
     // their orientations are outright horrible for our purposes.
     internal class HandHolder : Holder
     {
-        // There currently a bug that doesn't let every second chosen 'Finger hand" to scale.
-        // Initially asset has component that does exactly this (EliminateScale), but we remove it during initialization.
-        // Yet once parented every !second! time, 'Finger hand' freezes it's own local scale at Vec.one;
-        // At that moment no components 'EliminateScale' are present in runtime, no clue what can it be.
         private static readonly List<HandHolder> _instances = [];
-        //private static readonly Dictionary<int, AibuItem> _loadedAssetsList = [];
         private readonly List<ItemType> _itemList = [];
-        //private ItemType _activeItem;
-        //private Transform _controller;
-        //private Transform _anchor;
-        //private Rigidbody _rigidBody;
-        // private AudioSource _audioSource;
         private Transform _controller;
-        //private readonly Vector3[] _prevPositions = new Vector3[20];
-        //private readonly Quaternion[] _prevRotations = new Quaternion[20];
-        //private readonly float[] _frameCoefs = new float[19];
-        //private readonly float _avgCoef = 1f / 20f;
-        //private int _currentStep;
-        //private bool _lag;
         private ItemLag _itemLag;
         private bool _parent;
         internal bool IsParent => _parent;
@@ -59,13 +43,17 @@ namespace KK_VR.Holders
         internal HandNoise Noise => _handNoise;
         internal Controller Controller { get; private set; }
         internal int Index { get; private set; }
-        //internal static Material Material { get; private set; }
-        //internal AudioSource AudioSource => _audioSource;
         internal ItemHandler Handler => _handler;
         internal GraspController Grasp { get; private set; }
-        //internal Transform Anchor => _anchor;
         internal GameplayTool Tool { get; private set; }
-        internal static List<HandHolder> GetHands() => _instances;
+        internal static void SetKinematic(bool state)
+        {
+            foreach (var inst in _instances)
+            {
+                inst._rigidBody.isKinematic = state;
+            }
+        }
+        internal static List<HandHolder> GetHands => _instances;
         private readonly int[] _itemIDs = [0, 2, 5, 7, 9, 11];
         internal static HandHolder GetHand(int index) => _instances[index];
         internal void Init(int index)
@@ -161,17 +149,6 @@ namespace KK_VR.Holders
         }
         private void SetColliders(int index)
         {
-            /*
-             * Material - static + dynamic friction = 1f
-             * 
-             * 
-             * Hand - child (0,0.01f,0), Capsule - dir = 2, height - 0.1, radius = 0.025
-             * 
-             * Massager -  parent - Capsule - dir = 2, height = 0.15f, radius = 0.025f
-             *             child - (0,0,0.115f), Capsule - dir = 2, height = 0.05f, radius = 0.032f
-             * 
-             * vibe -  child - (0,0,0.1f), Capsule - dir = 2, height = 0.3, radius = 0.025
-             */
 
             foreach (var collider in gameObject.GetComponents<Collider>())
             {
@@ -181,138 +158,6 @@ namespace KK_VR.Holders
             {
                 UnityEngine.Component.Destroy(collider);
             }
-
-            /*
-             * 1 
-             *      db1
-             *      db.m_Direction = DynamicBoneCollider.Direction.Z;
-             *      db.m_Height = 0.1f;
-                    db.m_Radius = 0.025f;
-                    db.m_Center = new Vector3(0f, 0.01f, 0f);
-                    db2
-                    disabled
-               2
-                    9
-                        db1
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-             *          db.m_Height = 0.1f;
-                        db.m_Radius = 0.01f;
-                        db.m_Center = new Vector3(-0.015f, 0.01f, 0.025f);
-            *           db2
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           db.m_Height = 0.04f;
-            *           db.m_Radius = 0.025f;
-            *           db.m_Center = new Vector3(0f, 0.01f, 0f);
-            *       4
-            *           db1
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           db.m_Height = 0.04f;
-            *           db.m_Radius = 0.025f;
-            *           db.m_Center = new Vector3(0f, 0.005f, 0f);
-            *       
-            *           db2
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           db.m_Height = 0.08f;
-            *           db.m_Radius = 0.01f;
-            *           db.m_Center = new Vector3(-0.015f, 0.01f, 0.035f);
-            *           localRotation = Quaternion.Euler(15, 0, 0);
-            *           
-            *       6
-            *           db1
-            *           db.m_Center = new Vector3(0f, 0.005f, 0f);
-            *           db.m_Radius = 0.025f;
-            *           db.m_Height = 0.04f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *       
-            *           db2
-            *           db.m_Center = new Vector3(-0.01f, 0.02f, 0.03f);
-            *           db.m_Radius = 0.013f;
-            *           db.m_Height = 0.07f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           localRotation = Quaternion.Euler(45, 0, 0);
-            *           
-            *       1
-            *           db1
-            *           db.m_Center = new Vector3(0f, 0.005f, 0f);
-            *           db.m_Radius = 0.025f;
-            *           db.m_Height = 0.04f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *       
-            *           db2
-            *           db.m_Center = new Vector3(-0.018f, 0.02f, 0.03f);
-            *           db.m_Radius = 0.01f;
-            *           db.m_Height = 0.06f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           localRotation = Quaternion.Euler(45, 0, 0);
-            *           
-            *       3
-            *           db1
-            *           db.m_Center = new Vector3(0f, 0.005f, 0f);
-            *           db.m_Radius = 0.025f;
-            *           db.m_Height = 0.04f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *       
-            *           db2
-            *           db.m_Center = new Vector3(-0.018f, 0.015f, 0.02f);
-            *           db.m_Radius = 0.01f;
-            *           db.m_Height = 0.05f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           localRotation = Quaternion.Euler(60, 0, 0);
-            * 3
-            *           db1
-            *           db.m_Center = new Vector3(0f, 0f, 0.115f);
-            *           db.m_Radius = 0.032f;
-            *           db.m_Height = 0.05f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *       
-            *           db2
-            *           db.m_Radius = 0.025f;
-            *           db.m_Height = 0.1f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            * 4
-            *           db1
-            *           db.m_Center = new Vector3(0f, 0f, 0.1f);
-            *           db.m_Radius = 0.018f;
-            *           db.m_Height = 0.28f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *       
-            *           db2
-            *           db.m_Center = new Vector3(0f, -0.0325f, 0.1100f);
-            *           db.m_Radius = 0.012f;
-            *           db.m_Height = 0.03f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           localRotation = Quaternion.Euler(-30, 0, 0);
-            *           
-            * 5
-            *           db1
-            *           db.m_Center = new Vector3(0f, 0.0075, 0.1f);
-            *           db.m_Radius = 0.02f;
-            *           db.m_Height = 0.18f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           localRotation = Quaternion.Euler(7, 0, 0);
-            *       
-            *           db2
-            *           db.m_Center = new Vector3(0f, -0.0350, 0.03f);
-            *           db.m_Radius = 0.02f;
-            *           db.m_Height = 0.06f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.X;
-            *           
-            * 6
-            *           db1
-            *           db.m_Center = new Vector3(0f, 0,f 0f);
-            *           db.m_Radius = 0.015f;
-            *           db.m_Height = 0.04f;
-            *           db.m_Direction = DynamicBoneCollider.Direction.Z;
-            *           db2
-            *           disabled
-                        
-             * 
-             * 
-             * 
-             * 
-             */
-
-
             if (index < 2)
             {
                 //First collider is a main collision shape that gets disabled when necessary.
@@ -381,13 +226,6 @@ namespace KK_VR.Holders
             }
             else if (index == 4)
             {
-                // Dildo
-                //_offset.localPosition = new Vector3(0f, -0.01f, 0.1f);
-                //_offset.localRotation = Quaternion.Euler(5f, 0f, 0f);
-                //if (!_offset.TryGetComponent<CapsuleCollider>(out var childCollider))
-                //{
-                //    childCollider = _offset.gameObject.AddComponent<CapsuleCollider>();
-                //}
                 var capsule = gameObject.AddComponent<CapsuleCollider>();
                 capsule.direction = 2;
                 capsule.radius = 0.02f;
@@ -495,19 +333,6 @@ namespace KK_VR.Holders
             }
         }
 
-        /*
-         * Material - static + dynamic friction = 1f
-         * 
-         * 
-         * Hand - child (0,0.01f,0), Capsule - dir = 2, height - 0.1, radius = 0.025
-         * 
-         * Massager -  parent - Capsule - dir = 2, height = 0.15f, radius = 0.025f
-         *             child - (0,0,0.115f), Capsule - dir = 2, height = 0.05f, radius = 0.032f
-         * 
-         * vibe -  child - (0,0,0.1f), Capsule - dir = 2, height = 0.3, radius = 0.025
-         */
-
-
         private void FixedUpdate()
         {
             if (_itemLag == null)
@@ -573,8 +398,6 @@ namespace KK_VR.Holders
         }
         public void ChangeLayer(bool increase, bool skipTransition = false)
         {
-            //TestLayer(increase, skipTransition);
-
             if (_activeItem.animParam.layers == null) return;
             StopSE();
             var anm = _activeItem.aibuItem.anm;
@@ -627,16 +450,12 @@ namespace KK_VR.Holders
         /// </summary>
         internal Transform GetEmptyAnchor()
         {
+            // Broken probably?
+
             DeactivateItem();
             _activeItem = _itemList[_itemList.Count - 1];
 
-
-            // TEST TEST TEST
-            //_rigidBody.isKinematic = true;
-
-
             ActivateItem();
-            // Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.05f, 0.05f, 0.05f), _anchor, Color.cyan, 0.5f);
             return _anchor;
         }
 
@@ -722,27 +541,5 @@ namespace KK_VR.Holders
             "J_vibe_02",
             "J_vibe_05",
         ];
-        //private void AddDynamicBones()
-        //{
-        //    var gameObjectList = new List<GameObject>();
-        //    for (var i = 0; i < _itemList.Count - 1; i++)
-        //    {
-        //        var transforms = _itemList[i].aibuItem.obj.GetComponentsInChildren<Transform>(includeInactive: true)
-        //            .Where(t => _colliderParentListStartsWith.Any(c => t.name.StartsWith(c, StringComparison.Ordinal))
-        //            || _colliderParentListEndsWith.Any(c => t.name.EndsWith(c, StringComparison.Ordinal)))
-        //            .ToList();
-        //        transforms?.ForEach(t => gameObjectList.Add(t.gameObject));
-        //    }
-        //    VRBoop.InitDB(gameObjectList);
-        //}
-        //public void UpdateSkinColor(ChaFileControl chaFile)
-        //{
-        //    var color = chaFile.custom.body.skinMainColor;
-        //    foreach (var item in aibuItemList.Values)
-        //    {
-        //        item.SetHandColor(color);
-        //    }
-        //}
-
     }
 }

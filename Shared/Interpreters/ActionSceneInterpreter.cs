@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using KK_VR.Controls;
 using ADV.Commands.Object;
 using WindowsInput.Native;
+using KK_VR.Holders;
 
 namespace KK_VR.Interpreters
 {
@@ -31,8 +32,6 @@ namespace KK_VR.Interpreters
         private State _state;
         private float _continuousRotation;
         private float _originAngle;
-        private TrackpadDirection _lastDirection;
-        private EVRButtonId[] _modifierList = new EVRButtonId[2];
         enum State
         {
             None,
@@ -41,7 +40,7 @@ namespace KK_VR.Interpreters
         }
         //private ModelHandler _modelHandler;
 
-        public override void OnStart()
+        internal override void OnStart()
         {
             VRLog.Info("ActionScene OnStart");
 
@@ -53,7 +52,7 @@ namespace KK_VR.Interpreters
             actionScene = ActionScene.instance;
 #endif
 
-
+            HandHolder.SetKinematic(true);
             ResetState();
             HoldCamera();
             //var height = VR.Camera.Head.position.y - actionScene.Player.chaCtrl.transform.position.y;
@@ -63,14 +62,15 @@ namespace KK_VR.Interpreters
             //ModelHandler.SetHandColor(Game.Instance.actScene.Player.chaCtrl);
         }
 
-        public override void OnDisable()
+        internal override void OnDisable()
         {
             VRLog.Info("ActionScene OnDisable");
 
+            HandHolder.SetKinematic(false);
             ResetState();
             ReleaseCamera();
         }
-        public override void OnUpdate()
+        internal override void OnUpdate()
         {
             var map = actionScene.Map.mapRoot?.gameObject;
 
@@ -98,11 +98,11 @@ namespace KK_VR.Interpreters
                 ContinuousRotation(_continuousRotation);
             }
             UpdateCrouch();
+            base.OnUpdate();
         }
         private readonly bool[] _mouseState = new bool[3];
-        public override bool OnDirectionDown(int index, TrackpadDirection direction)
+        internal override bool OnDirectionDown(int index, TrackpadDirection direction)
         {
-            _lastDirection = direction;
             switch (direction)
             {
                 case TrackpadDirection.Up:
@@ -140,7 +140,7 @@ namespace KK_VR.Interpreters
             }
             return false;
         }
-        public override void OnDirectionUp(int index, TrackpadDirection direction)
+        internal override void OnDirectionUp(int index, TrackpadDirection direction)
         {
             StopRotation();
             if (_mouseState[0])
@@ -159,52 +159,25 @@ namespace KK_VR.Interpreters
                 _mouseState[2] = false;
             }
         }
-        public override bool OnButtonDown(int index, EVRButtonId buttonId, TrackpadDirection direction)
+        protected override bool OnTrigger(int index, bool press)
         {
-            switch (buttonId)
+            if (press)
             {
-                case EVRButtonId.k_EButton_SteamVR_Trigger:
-                    if (_state == State.None)
-                    {
-                        StartWalking();
-                    }
-                    break;
+                _pressedButtons[index, 0] = true;
+                StartWalking();
             }
-            EvaluateModifiers();
+            else
+            {
+                _pressedButtons[index, 0] = false;
+                StopWalking();
+                //StandUp();
+            }
             return false;
-        }
-        public override void OnButtonUp(int index, EVRButtonId buttonId, TrackpadDirection direction)
-        {
-
-            switch (buttonId)
-            {
-                case EVRButtonId.k_EButton_SteamVR_Trigger:
-                    StopWalking();
-                    break;
-            }
-            EvaluateModifiers();
-            StandUp();
         }
         private void StartStride()
         {
             _state = State.Striding;
             _originAngle = VR.Camera.Origin.rotation.eulerAngles.y;
-        }
-        private void EvaluateModifiers()
-        {
-            switch (_state)
-            {
-                case State.Walking:
-                    if (_modifierList[1] > 0)
-                    {
-                        StartWalking(dash: true);
-                    }
-                    else
-                    {
-                        StartWalking(dash: false);
-                    }
-                    break;
-            }
         }
         private void Stride()
         {
@@ -321,20 +294,21 @@ namespace KK_VR.Interpreters
 
         private void UpdateCrouch()
         {
-            var pl = actionScene.Player?.chaCtrl.objTop;
-
-            if (_settings.CrouchByHMDPos && pl?.activeInHierarchy == true)
+            if (actionScene.Player.chaCtrl.objTop != null)
             {
-                var cam = VR.Camera.transform;
-                var delta_y = cam.position.y - pl.transform.position.y;
+                var objTop = actionScene.Player.chaCtrl.objTop;
+                if (_settings.CrouchByHMDPos && objTop.activeInHierarchy == true)
+                {
+                    var delta_y = VR.Camera.transform.position.y - objTop.transform.position.y;
 
-                if (_standing && delta_y < _settings.CrouchThreshold)
-                {
-                    Crouch();
-                }
-                else if (!_standing && delta_y > _settings.StandUpThreshold)
-                {
-                    StandUp();
+                    if (_standing && delta_y < _settings.CrouchThreshold)
+                    {
+                        Crouch();
+                    }
+                    else if (!_standing && delta_y > _settings.StandUpThreshold)
+                    {
+                        StandUp();
+                    }
                 }
             }
         }

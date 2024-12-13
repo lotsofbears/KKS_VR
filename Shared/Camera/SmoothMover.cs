@@ -12,23 +12,18 @@ namespace KK_VR.Camera
     /// <summary>
     /// We fly towards adjusted positions. By flying rather then teleporting the sense of actual scene is created. No avoidance system (yet). 
     /// </summary>
-    class VRMoverH : MonoBehaviour
+    internal class SmoothMover : MonoBehaviour
     {
-        public static VRMoverH Instance;
+        internal static SmoothMover Instance => _instance;
+        private static SmoothMover _instance;
         //private Transform _chara;
         //private Transform _eyes;
         //private Transform _torso;
         //private Transform _kokan;
         //private List<Coroutine> _activeCoroutines = new List<Coroutine>();
-
-        public void Initialize()
+        private void Awake()
         {
-            Instance = this;
-            //var chara = HSceneInterpreter.lstFemale[0];
-            //_chara = chara.transform;
-            //_eyes = chara.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
-            //_torso = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_spine01/cf_j_spine02/cf_j_spine03");
-            //_kokan = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_waist01/cf_j_waist02/cf_d_kokan/cf_j_kokan");
+            _instance = this;
         }
         public void MoveToInH(Vector3 position, Quaternion rotation, bool spotChange, HFlag.EMode mode)
         {
@@ -48,7 +43,7 @@ namespace KK_VR.Camera
             }
             else
             {
-                StartCoroutine(FlyToPosition(position, rotation));
+                StartCoroutine(FlyToPosition(position, rotation, spotChange));
             }
         }
 
@@ -147,7 +142,7 @@ namespace KK_VR.Camera
             //VRPlugin.Logger.LogDebug($"VRMoverH:FlyToPov:Done");
             action?.DynamicInvoke(args);
         }
-        private IEnumerator FlyToPosition(Vector3 position, Quaternion rotation)
+        private IEnumerator FlyToPosition(Vector3 position, Quaternion rotation, bool spotChange)
         {
             yield return null;
             yield return new WaitUntil(() => Time.deltaTime < 0.05f);
@@ -193,7 +188,7 @@ namespace KK_VR.Camera
 
             }
             var lerp = 0f;
-            var lerpModifier = KoikatuInterpreter.Settings.FlightSpeed * 3f / Vector3.Distance(head.position, position);
+            var lerpModifier = KoikatuInterpreter.Settings.FlightSpeed * (spotChange ? 3f : 1f) / Vector3.Distance(head.position, position);
             var startPos = head.position;
             var startRot = origin.rotation;
             while (lerp < 1f)

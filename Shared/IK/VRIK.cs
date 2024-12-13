@@ -72,7 +72,7 @@ namespace KK_VR.Features
             ];
         private void SyncWithRig(KK.RootMotion.FinalIK.VRIK vrik)
         {
-            var hands = HandHolder.GetHands();
+            var hands = HandHolder.GetHands;
             vrik.solver.leftArm.target = AddHandOffset(0, hands[0].GetEmptyAnchor());
             vrik.solver.rightArm.target = AddHandOffset(1, hands[1].GetEmptyAnchor());
             var headTarget = new GameObject("headTarget").transform;

@@ -222,9 +222,9 @@ namespace KK_VR.Settings
                     new AcceptableValueRange<int>(0, 60)));
             Tie(rotationDeviationThreshold, v => settings.RotationDeviationThreshold = v);
 
-            var flyInH = config.Bind(SectionH, "Transition H", true,
+            var flyInH = config.Bind(SectionH, "Smooth Transition", true,
                 "On position (or location) change, instead of teleportation, transition smoothly to the new location.");
-            Tie(flyInH, v => settings.FlyInH = v);
+            Tie(flyInH, v => settings.SmoothTransition = v);
 
             var imperfectRot = config.Bind(SectionH, "Imperfect rotation", true,
                 "Allow poorly stabilized rotation after mouth/tongue actions.");
@@ -236,9 +236,8 @@ namespace KK_VR.Settings
                     new AcceptableValueRange<float>(0.1f, 3f)));
             Tie(flightSpeed, v => settings.FlightSpeed = v);
 
-
             var contRot = config.Bind(SectionRoaming, "Continuous rotation", true,
-                    "Enable continuous rotation of camera in roaming mode instead of snap turn. Influenced by setting 'Rotation angle'.");
+                    "Enable continuous rotation of camera in roaming mode instead of snap turn. Influenced by the setting 'Rotation angle'.");
             Tie(contRot, v => settings.ContinuousRotation = v);
 
             // Didn't meet expectations.

@@ -9,7 +9,6 @@ using VRGIN.Controls.Tools;
 using VRGIN.Core;
 using VRGIN.Native;
 using VRGIN.Visuals;
-using static VRGIN.Native.WindowsInterop;
 
 namespace VRGIN.Controls.Handlers
 {
@@ -31,8 +30,6 @@ namespace VRGIN.Controls.Handlers
         private Buttons _PressedButtons;
         private Controller.TrackpadDirection _LastDirection;
         private float? _NextScrollTime;
-        private List<HelpText> _HelpTexts = new List<HelpText>();
-        private float? _AppButtonPressTime;
 
         enum Buttons
         {
@@ -44,38 +41,39 @@ namespace VRGIN.Controls.Handlers
         protected override void OnStart()
         {
             base.OnStart();
-            VRLog.Info("Menu Handler started");
             _Controller = GetComponent<Controller>();
             _ScaleVector = new Vector2((float)VRGUI.Width / Screen.width, (float)VRGUI.Height / Screen.height);
             _Other = _Controller.Other.GetComponent<MenuHandler>();
         }
-
         private void OnRenderModelLoaded()
         {
             try
             {
-                if(!_Controller) 
+                if (!_Controller) 
                     _Controller = GetComponent<Controller>();
                 var attachPosition = _Controller.FindAttachPosition("tip");
-                //var attachPosition = _Controller.transform;
+
                 if (!attachPosition)
                 {
                     VRLog.Error("Attach position not found for laser!");
                     attachPosition = transform;
                 }
                 Laser = new GameObject("Laser").AddComponent<LineRenderer>();
-                Laser.transform.parent = _Controller.transform; // (attachPosition, false);
-                Laser.transform.SetPositionAndRotation(_Controller.transform.position, _Controller.transform.rotation);
+                Laser.transform.SetParent(_Controller.transform, false); // (attachPosition, false);
+                Laser.transform.SetPositionAndRotation(attachPosition.position, attachPosition.rotation);
                 Laser.material = new Material(Shader.Find("Sprites/Default"));
                 Laser.material.renderQueue += 5000;
                 Laser.SetColors(Color.cyan, Color.cyan);
 
                 if (SteamVR.instance.hmd_TrackingSystemName == "lighthouse")
                 {
-                    //Laser.transform.localRotation = Quaternion.Euler(60, 0, 0);
+                    Laser.transform.localRotation = Quaternion.Euler(60, 0, 0);
                     Laser.transform.position += Laser.transform.forward * 0.06f;
                 }
-                Laser.transform.localRotation *= Quaternion.Euler(30f, 0, 0);
+                else
+                {
+                    Laser.transform.localRotation *= Quaternion.Euler(-10f, 0, 0);
+                }
                 Laser.SetVertexCount(2);
                 Laser.useWorldSpace = true;
                 Laser.SetWidth(0.002f, 0.002f);
@@ -101,19 +99,10 @@ namespace VRGIN.Controls.Handlers
         {
             if (LaserVisible)
             {
-                //if (IsResizing)
-                //{
-                //    Laser.SetPosition(0, Laser.transform.position);
-                //    Laser.SetPosition(1, Laser.transform.position);
-                //}
-                //else
-                //{
                 UpdateLaser();
-                //}
                 CheckInput();
-
             }
-            else if (_Controller.CanAcquireFocus())
+            else if (_Controller.CanAcquireFocus() && !Device.GetPress(EVRButtonId.k_EButton_Grip))
             {
                 CheckForNearMenu();
             }
@@ -441,7 +430,6 @@ namespace VRGIN.Controls.Handlers
             }
             _PressedButtons = 0;
             _NextScrollTime = null;
-            _AppButtonPressTime = null;
         }
 
         private void AbandonGUI()

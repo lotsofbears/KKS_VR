@@ -47,6 +47,7 @@ namespace KK_VR.Interpreters
             SceneManager.sceneLoaded += OnSceneLoaded;
             _mirrorManager = new KK_VR.Fixes.Mirror.Manager();
             VR.Camera.gameObject.AddComponent<VREffector>();
+            VR.Camera.gameObject.AddComponent<SmoothMover>();
             //VR.Manager.ModeInitialized += AddModels;
             _settings = VR.Context.Settings as KoikatuSettings;
             Features.LoadVoice.Init();

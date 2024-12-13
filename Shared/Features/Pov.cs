@@ -97,7 +97,7 @@ namespace KK_VR.Features
             _smoothDamp = new SmoothDamp();
             _degPerSec = 30f * KoikatuInterpreter.Settings.RotationMultiplier;
             _rotDeviationThreshold = KoikatuInterpreter.Settings.RotationDeviationThreshold;
-            _rotDeviationHalf = _rotDeviationThreshold / 2;
+            _rotDeviationHalf = (int)(_rotDeviationThreshold * 0.4f);
             _offsetVecEyes = new Vector3(0f, KoikatuInterpreter.Settings.PositionOffsetY, KoikatuInterpreter.Settings.PositionOffsetZ);
         }
         private void SetVisibility(ChaControl chara)
@@ -149,7 +149,7 @@ namespace KK_VR.Features
                             {
                                 if (_syncTimestamp == 0f)
                                 {
-                                    if (Quaternion.Angle(VR.Camera.Head.rotation, _targetEyes.rotation) < 15f)
+                                    if (Quaternion.Angle(VR.Camera.Head.rotation, _targetEyes.rotation) < 30f)
                                     {
                                         _syncTimestamp = Time.time + 2f;
                                     }
@@ -158,7 +158,7 @@ namespace KK_VR.Features
                                 {
                                     if (_syncTimestamp < Time.time)
                                     {
-                                        if (Quaternion.Angle(VR.Camera.Head.rotation, _targetEyes.rotation) < 15f)
+                                        if (Quaternion.Angle(VR.Camera.Head.rotation, _targetEyes.rotation) < 30f)
                                         {
                                             _sync = true;
                                             _syncTimestamp = 0f;

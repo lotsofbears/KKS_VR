@@ -16,7 +16,8 @@ namespace KK_VR.Features
         /// Reference to the image used by the vanilla SceneFade object.
         /// </summary>
         //Graphic _vanillaGraphic;
-
+        private static VRFade _instance;
+        internal static bool IsFade => _instance._alpha != 0f;
 #if KK
         private Image _vanillaImage;
         private Slider _vanillaProgressBar;
@@ -32,6 +33,8 @@ namespace KK_VR.Features
         private bool _inDeepFade;
         private Color _fadeColor;
 
+        
+
         const float DeepFadeAlphaThreshold = 0.9999f;
 
         public static void Create()
@@ -40,6 +43,7 @@ namespace KK_VR.Features
         }
         private void Awake()
         {
+            _instance = this;
 #if KK
             _vanillaImage = Manager.Scene.Instance.sceneFade.image;
             _vanillaProgressBar = Manager.Scene.Instance.progressSlider;

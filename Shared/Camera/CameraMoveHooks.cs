@@ -137,9 +137,9 @@ namespace KK_VR.Camera
         [HarmonyPatch(typeof(HSceneProc), nameof(HSceneProc.GotoPointMoveScene))]
         public static void GotoPointMoveScenePostfix()
         {
-            if (VRMoverH.Instance != null)
+            if (SmoothMover.Instance != null)
             {
-                VRMoverH.Instance.MakeUpright();
+                SmoothMover.Instance.MakeUpright();
             }
         }
         private static void UpdateVRCamera(HSceneProc instance, List<ChaControl> lstFemale)
@@ -185,9 +185,9 @@ namespace KK_VR.Camera
                 // We are starting from scratch.
                 // TODO: the height calculation below assumes standing mode.
 
-                if (VRMoverH.Instance != null && KoikatuInterpreter.Settings.FlyInH)
+                if (KoikatuInterpreter.Settings.SmoothTransition && SmoothMover.Instance != null && !VRFade.IsFade)
                 {
-                    VRMoverH.Instance.MoveToInH(cameraPosition, cameraRotation, spotChange, instance.flags.mode);
+                    SmoothMover.Instance.MoveToInH(cameraPosition, cameraRotation, spotChange, instance.flags.mode);
                 }
                 else
                 {

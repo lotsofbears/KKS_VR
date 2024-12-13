@@ -31,7 +31,6 @@ namespace KK_VR.Handlers
         internal bool IsActive => _activeCo;
         private bool _activeCo;
         private bool _disengage;
-        private List<HandHolder> _hands;
         private ChaControl _lastChara;
         private float _kissDistance = 0.2f;
         private bool _mousePress;
@@ -60,7 +59,6 @@ namespace KK_VR.Handlers
         private void Awake()
         {
             _instance = this;
-            _hands = HandHolder.GetHands();
             var collider = gameObject.AddComponent<SphereCollider>();
             collider.isTrigger = true;
             var rigidBody = gameObject.AddComponent<Rigidbody>();
@@ -593,14 +591,14 @@ namespace KK_VR.Handlers
 
         private void DestroyGrab()
         {
-            foreach (var hand in _hands)
+            foreach (var hand in HandHolder.GetHands)
             {
                 hand.Tool.DestroyGrab();
             }
         }
         private void UnlazyGripMove()
         {
-            foreach (var hand in _hands)
+            foreach (var hand in HandHolder.GetHands)
             {
                 hand.Tool.UnlazyGripMove();
             }

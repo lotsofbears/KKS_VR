@@ -13,13 +13,13 @@ using KK_VR.Settings;
 using UnityEngine;
 using VRGIN.Core;
 using VRGIN.Helpers;
+using VRGIN.Controls.Handlers;
 
 namespace KK_VR
 {
     [BepInPlugin(GUID, Name, Version)]
     [BepInProcess(KoikatuAPI.GameProcessName)]
     [BepInDependency(KoikatuAPI.GUID, KoikatuAPI.VersionConst)]
-    //[BepInDependency(KK_SensibleH.SensibleH.GUID, KK_SensibleH.SensibleH.Version)]
     [BepInDependency(KK.PluginFinalIK.GUID, KK.PluginFinalIK.Version)]
     [BepInIncompatibility("bero.crossfadervr")]
     public class VRPlugin : BaseUnityPlugin
@@ -104,6 +104,9 @@ namespace KK_VR
                 VRBoop.Initialize();
             }
             GameAPI.RegisterExtraBehaviour<InterpreterHooks>(GUID);
+
+            // In KK they refuse to assume proper position on init.
+
             Logger.LogInfo("Finished loading into VR mode!");
         }
 

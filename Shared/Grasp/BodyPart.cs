@@ -27,7 +27,6 @@ namespace KK_VR.Grasp
         //internal readonly KK_VR.IK.OffsetEffector offsetEffector;
         // Default component. We need it to not upset default code when animator changes state.
         internal readonly BaseData baseData;
-        internal Transform baseDataTarget;
         internal State state;
         internal Dictionary<Collider, bool> colliders = [];
         // Component responsible for moving and collider tracking.

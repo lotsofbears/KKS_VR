@@ -25,8 +25,6 @@ namespace KK_VR.Holders
         internal Transform Anchor => _anchor;
         protected private Transform _anchor;
         protected private Transform _offset;
-        protected private Vector3 _lastAnchorPos;
-        internal Vector3 GetMoveVec => _anchor.position - _lastAnchorPos;
         protected private static readonly Dictionary<int, AibuItem> _loadedAssetsList = [];
         // Transparent thingy.
         internal static Material Material { get; private set; }

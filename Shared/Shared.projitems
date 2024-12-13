@@ -16,7 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Camera\MoveToPoi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Camera\VRCameraMover.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Camera\VREffector.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Camera\VRMoverH.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Camera\SmoothMover.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Caress\CaressUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Caress\HandCtrlHooks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />

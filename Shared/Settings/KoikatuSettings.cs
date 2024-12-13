@@ -132,7 +132,7 @@ namespace KK_VR.Settings
         }
         private bool _UseLegacyInputSimulator;
 
-        public bool FlyInH { get; set; }
+        public bool SmoothTransition { get; set; }
         public float FlightSpeed { get; set; }
         public Impersonation PoV { get; set; }
         public float PositionOffsetY { get; set; }

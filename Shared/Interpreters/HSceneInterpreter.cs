@@ -27,15 +27,14 @@ using KK_VR.Interactors;
 using KK_VR.Patches;
 using KK_VR.Grasp;
 using KK_VR.Holders;
+using System.Diagnostics;
 
 namespace KK_VR.Interpreters
 {
-    class HSceneInterpreter : SceneInterpreter
+    internal class HSceneInterpreter : SceneInterpreter
     {
         
         private readonly PoV _pov;
-        private readonly VRMoverH _vrMoverH;
-        private readonly List<InputWait> _waitList = [];
         private TrackpadDirection _lastDirection;
         private HPointMove _hPointMove;
 
@@ -54,53 +53,38 @@ namespace KK_VR.Interpreters
         internal static ChaControl male;
         private static int _backIdle;
         private static bool adjustDirLight;
-        private readonly List<HandHolder> _hands;
         private readonly MouthGuide _mouth;
         private static HitReaction _hitReaction;
-        private Grip _grip;
         private bool _manipulateSpeed;
 
         // For the manual manipulation of an aibu item, so we don't lose it.
-        enum Grip
-        {
-            None,
-            Caress,
-            Grasp,
-            Move,
-        }
 
 
-        /// <summary>
-        /// 0 - Trigger. 
-        /// 1 - Grip. 
-        /// 2 - Touchpad (Joystick click).
-        /// </summary>
-        private readonly bool[,] _pressedButtons = new bool[2, 3];
         private readonly AibuColliderKind[] _lastAibuKind = new AibuColliderKind[2];
 
-        public static bool IsInsertIdle(string nowAnim) => nowAnim.EndsWith("InsertIdle", StringComparison.Ordinal);
-        public static bool IsIdleOutside(string nowAnim) => nowAnim.Equals("Idle");
-        public static bool IsAfterClimaxInside(string nowAnim) => nowAnim.EndsWith("IN_A", StringComparison.Ordinal);
-        public static bool IsAfterClimaxOutside(string nowAnim) => nowAnim.EndsWith("OUT_A", StringComparison.Ordinal);
-        public static bool IsClimaxHoushiInside(string nowAnim) => nowAnim.StartsWith("Oral", StringComparison.Ordinal);
-        public static bool IsAfterClimaxHoushiInside(string nowAnim) => nowAnim.Equals("Drink_A") || nowAnim.Equals("Vomit_A");
-        public static bool IsFinishLoop => hFlag.finish != FinishKind.none && IsOrgasmLoop;
-        public static bool IsWeakLoop => hFlag.nowAnimStateName.EndsWith("WLoop", StringComparison.Ordinal);
-        public static bool IsStrongLoop => hFlag.nowAnimStateName.EndsWith("SLoop", StringComparison.Ordinal);
-        public static bool IsOrgasmLoop => hFlag.nowAnimStateName.EndsWith("OLoop", StringComparison.Ordinal);
-        public static bool IsKissAnim => hFlag.nowAnimStateName.StartsWith("K_", StringComparison.Ordinal);
-        public static bool IsTouch => hFlag.nowAnimStateName.EndsWith("Touch", StringComparison.Ordinal);
-        public HPointMove GetHPointMove => _hPointMove == null ? _hPointMove = UnityEngine.Object.FindObjectOfType<HPointMove>() : _hPointMove;
-        public static int GetBackIdle => _backIdle;
+        internal static bool IsInsertIdle(string nowAnim) => nowAnim.EndsWith("InsertIdle", StringComparison.Ordinal);
+        internal static bool IsIdleOutside(string nowAnim) => nowAnim.Equals("Idle");
+        internal static bool IsAfterClimaxInside(string nowAnim) => nowAnim.EndsWith("IN_A", StringComparison.Ordinal);
+        internal static bool IsAfterClimaxOutside(string nowAnim) => nowAnim.EndsWith("OUT_A", StringComparison.Ordinal);
+        internal static bool IsClimaxHoushiInside(string nowAnim) => nowAnim.StartsWith("Oral", StringComparison.Ordinal);
+        internal static bool IsAfterClimaxHoushiInside(string nowAnim) => nowAnim.Equals("Drink_A") || nowAnim.Equals("Vomit_A");
+        internal static bool IsFinishLoop => hFlag.finish != FinishKind.none && IsOrgasmLoop;
+        internal static bool IsWeakLoop => hFlag.nowAnimStateName.EndsWith("WLoop", StringComparison.Ordinal);
+        internal static bool IsStrongLoop => hFlag.nowAnimStateName.EndsWith("SLoop", StringComparison.Ordinal);
+        internal static bool IsOrgasmLoop => hFlag.nowAnimStateName.EndsWith("OLoop", StringComparison.Ordinal);
+        internal static bool IsKissAnim => hFlag.nowAnimStateName.StartsWith("K_", StringComparison.Ordinal);
+        internal static bool IsTouch => hFlag.nowAnimStateName.EndsWith("Touch", StringComparison.Ordinal);
+        internal HPointMove GetHPointMove => _hPointMove == null ? _hPointMove = UnityEngine.Object.FindObjectOfType<HPointMove>() : _hPointMove;
+        internal static int GetBackIdle => _backIdle;
 #if KK
-        public static bool IsHPointMove => Scene.Instance.AddSceneName.Equals("HPointMove");
+        internal static bool IsHPointMove => Scene.Instance.AddSceneName.Equals("HPointMove");
 #else
-        public static bool IsHPointMove => Scene.AddSceneName.Equals("HPointMove");
+        internal static bool IsHPointMove => Scene.AddSceneName.Equals("HPointMove");
 #endif
-        public static bool IsVoiceActive => hVoice.nowVoices[0].state != HVoiceCtrl.VoiceKind.breath || IsKissAnim;
-        public static bool IsHandAttached => handCtrl.useItems[0] != null || handCtrl.useItems[1] != null;
-        public static bool IsHandActive => handCtrl.GetUseAreaItemActive() != -1;
-        public static bool IsActionLoop
+        internal static bool IsVoiceActive => hVoice.nowVoices[0].state != HVoiceCtrl.VoiceKind.breath || IsKissAnim;
+        internal static bool IsHandAttached => handCtrl.useItems[0] != null || handCtrl.useItems[1] != null;
+        internal static bool IsHandActive => handCtrl.GetUseAreaItemActive() != -1;
+        internal static bool IsActionLoop
         {
             get
             {
@@ -112,7 +96,6 @@ namespace KK_VR.Interpreters
                 };
             }
         }
-        private bool IsWait => _waitList.Count != 0;
         private static readonly List<string> _aibuAnims =
         [
             "Idle",     // 0
@@ -158,7 +141,6 @@ namespace KK_VR.Interpreters
             TalkSceneExtras.EnableDynamicBones(charas);
             TalkSceneExtras.AddTalkColliders(charas);
             TalkSceneExtras.AddHColliders(charas);
-            _hands = HandHolder.GetHands();
             GraspController.Init(charas);
 
             //var gameObj = Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.1f, 0.1f, 0.1f), VR.Camera.transform, Color.magenta, 0.2f, true);
@@ -171,8 +153,6 @@ namespace KK_VR.Interpreters
             _mouth = mouthGuide.gameObject.AddComponent<MouthGuide>();
             _pov = VR.Camera.gameObject.AddComponent<PoV>();
             _pov.Initialize();
-            _vrMoverH = VR.Camera.gameObject.AddComponent<VRMoverH>();
-            _vrMoverH.Initialize();
             adjustDirLight = true;
             // Init after everything.
 //#if KKS
@@ -187,11 +167,10 @@ namespace KK_VR.Interpreters
             Manager.Config.HData.HInitCamera = true;
 #endif
         }
-        public override void OnDisable()
+        internal override void OnDisable()
         {
+            SmoothMover.Instance.MakeUpright();
             Component.Destroy(_pov);
-            _vrMoverH.MakeUpright(() => Component.Destroy(_vrMoverH));
-            //GameObject.Destroy(_vrMoverH);
             Component.Destroy(_mouth.gameObject);
 
             TalkSceneExtras.ReturnDirLight();
@@ -206,24 +185,12 @@ namespace KK_VR.Interpreters
                 GraspHelper.Instance.DestroyComponents();
             }
         }
-        public override void OnUpdate()
+        internal override void OnUpdate()
         {
             // Exit through the title button in config doesn't trigger hook.
             if (hFlag == null) KoikatuInterpreter.EndScene(KoikatuInterpreter.SceneType.HScene);
-            HandleInput();
+            base.OnUpdate();
             if (_manipulateSpeed) HandleSpeed();
-        }
-        private void HandleInput()
-        {
-            foreach (var wait in _waitList)
-            {
-                if (wait.finish < Time.time)
-                {
-                    PickAction(wait);
-                    RemoveWait(wait);
-                    return;
-                }
-            }
         }
         private void HandleSpeed()
         {
@@ -240,71 +207,9 @@ namespace KK_VR.Interpreters
                 SlowDown();
             }
         }
-        private void RemoveWait(InputWait wait)
-        {
-            if (wait != null)
-            {
-                _waitList.Remove(wait);
-            }
-        }
-        private void RemoveWait(int index, EVRButtonId button)
-        {
-            RemoveWait(_waitList
-                .Where(w => w.index == index && w.button == button)
-                .FirstOrDefault());
-        }
-        //private void RemoveWait(int index, TrackpadDirection direction)
-        //{
-        //    RemoveWait(_waitList
-        //        .Where(w => w.index == index && w.direction == direction)
-        //        .FirstOrDefault());
-        //}
-        private void PickAction(InputWait wait)
-        {
-            // Main entry.
-            if (wait == null) return;
-            if (wait.button == EVRButtonId.k_EButton_System)
-                PickDirectionAction(wait, GetTiming(wait.timestamp, wait.duration));
-            else
-            {
-                if (_grip == Grip.Move)
-                {
-                    PickButtonActionGripMove(wait, GetTiming(wait.timestamp, wait.duration));
-                }
-                else
-                {
-                    PickButtonAction(wait, GetTiming(wait.timestamp, wait.duration));
-                }
-            }
-            RemoveWait(wait);
-        }
-        private void PickAction()
-        {
-            PickAction(
-                _waitList
-                .OrderByDescending(w => w.button)
-                .First());
-        }
 
-        private void PickAction(int index, EVRButtonId button)
-        {
-            if (_waitList.Count == 0) return;
-            PickAction(
-                _waitList
-                .Where(w => w.button == button && w.index == index)
-                .FirstOrDefault());
-        }
 
-        private void PickAction(int index, TrackpadDirection direction)
-        {
-            if (_waitList.Count == 0) return;
-            PickAction(
-                _waitList
-                .Where(w => w.direction == direction && w.index == index)
-                .FirstOrDefault());
-        }
-
-        public override void OnLateUpdate()
+        internal override void OnLateUpdate()
         {
             if (_lateHitReaction)
             {
@@ -429,41 +334,8 @@ namespace KK_VR.Interpreters
         //        return true;
         //    }
         //}
-        public override bool OnButtonDown(int index, EVRButtonId buttonId, TrackpadDirection direction)
-        {
-            return buttonId switch
-            {
-                EVRButtonId.k_EButton_SteamVR_Trigger => OnTrigger(index, press: true),
-                EVRButtonId.k_EButton_Grip => OnGrip(index, press: true) || IsWait,
-                EVRButtonId.k_EButton_SteamVR_Touchpad => OnTouchpad(index, press: true),
-                EVRButtonId.k_EButton_ApplicationMenu => OnMenu(index, press: true),
-                _ => false,
-            };
-        }
-        public override void OnButtonUp(int index, EVRButtonId buttonId, TrackpadDirection direction)
-        {
-            switch (buttonId)
-            {
-                case EVRButtonId.k_EButton_SteamVR_Trigger:
-                    OnTrigger(index, press: false);
-                    break;
-                case EVRButtonId.k_EButton_Grip:
-                    OnGrip(index, press: false);
-                    break;
-                case EVRButtonId.k_EButton_SteamVR_Touchpad:
-                    OnTouchpad(index, press: false);
-                    break;
-            }
-        }
-        private Timing GetTiming(float timestamp, float duration)
-        {
-            var timing = Time.time - timestamp;
-            if (timing > duration) return Timing.Full;
-            if (timing > duration * 0.5f) return Timing.Half;
-            return Timing.Fraction;
-        }
 
-        public override void OnGripMove(int index, bool press)
+        internal override void OnGripMove(int index, bool press)
         {
             if (press)
             {
@@ -474,8 +346,9 @@ namespace KK_VR.Interpreters
                 _grip = Grip.Move;
                 if (_mouth.IsActive)
                 {
-                    _hands[index].Tool.LazyGripMove(KoikatuInterpreter.ScaleWithFps(15));
-                    _hands[index].Tool.AttachGripMove(_mouth.LookAt);
+                    var hand = HandHolder.GetHand(index);
+                    hand.Tool.LazyGripMove(KoikatuInterpreter.ScaleWithFps(15));
+                    hand.Tool.AttachGripMove(_mouth.LookAt);
                 }
             }
             else
@@ -494,23 +367,13 @@ namespace KK_VR.Interpreters
                 }
             }
         }
-        public override bool IsGripMove() => _pressedButtons[0, 1] || _pressedButtons[1, 1];
-        public override bool IsTriggerPress(int index) => _pressedButtons[index, 0];
-        private void AddWait(int index, EVRButtonId button, float duration)
-        {
-            _waitList.Add(new InputWait(index, button, duration));
-        }
-        //private void AddWait(int index, TrackpadDirection direction, bool manipulateSpeed, float duration)
-        //{
-        //    _waitList.Add(new InputWait(index, direction, manipulateSpeed, duration));
-        //}
-        private HSceneHandler GetHandler(int index) => (HSceneHandler)_hands[index].Handler;
-        private bool OnTrigger(int index, bool press)
+        private HSceneHandler GetHandler(int index) => (HSceneHandler)HandHolder.GetHand(index).Handler;
+        protected override bool OnTrigger(int index, bool press)
         {
             // With present 'Wait' for 'Direction' (no buttons pressed) trigger simply finishes 'Wait' and prompts the action,
             // but if button is present, it in addition also offers alternative mode. Currently TouchpadPress only.
             var handler = GetHandler(index);
-            var grasp = _hands[index].Grasp;
+            var grasp = HandHolder.GetHand(index).Grasp;
             if (press)
             {
                 _pressedButtons[index, 0] = true;
@@ -563,7 +426,7 @@ namespace KK_VR.Interpreters
                 _pressedButtons[index, 0] = false;
                 if (_grip != Grip.Move)
                 {
-                    _hands[index].Grasp.OnTriggerRelease();
+                    HandHolder.GetHand(index).Grasp.OnTriggerRelease();
                 }
                 handler.TriggerRelease();
                 PickAction(index, EVRButtonId.k_EButton_SteamVR_Trigger);
@@ -571,7 +434,6 @@ namespace KK_VR.Interpreters
 
             return false;
         }
-        public override bool IsGripPress(int index) => _pressedButtons[index, 1];
         internal static void EnableNip(AibuColliderKind colliderKind)
         {
             if (colliderKind == AibuColliderKind.muneL || colliderKind == AibuColliderKind.muneR)
@@ -595,24 +457,24 @@ namespace KK_VR.Interpreters
             renderer.enabled = !renderer.enabled;
             EnableNip(colliderKind);
         }
-        private bool OnMenu(int index, bool press)
+        protected override bool OnMenu(int index, bool press)
         {
             if (press)
             {
-                return _hands[index].Grasp.OnMenuPress();
+                return HandHolder.GetHand(index).Grasp.OnMenuPress();
             }
             return false;
         }
-        private bool OnGrip(int index, bool press)
+        protected override bool OnGrip(int index, bool press)
         {
             var handler = GetHandler(index);
             //VRPlugin.Logger.LogDebug($"OnGrip:{handler.IsBusy}");
             if (press)
             {
                 _pressedButtons[index, 1] = true;
-                if (_hands[index].IsParent)
+                if (HandHolder.GetHand(index).IsParent)
                 {
-                    _hands[index].Grasp.OnGripRelease();
+                    HandHolder.GetHand(index).Grasp.OnGripRelease();
                 }
                 else if (handler.IsBusy)
                 {
@@ -635,7 +497,7 @@ namespace KK_VR.Interpreters
                             }
                             if (_settings.HideHandOnUserInput != Settings.KoikatuSettings.HandType.CaressItem)
                             {
-                                _hands[index].SetItemRenderer(false);
+                                HandHolder.GetHand(index).SetItemRenderer(false);
                             }
                         }
                     }
@@ -643,9 +505,9 @@ namespace KK_VR.Interpreters
                     {
                         if (!handler.InBlack)
                         {
-                            // We grasped something, don't start GrabMove.
+                            // We grasped something, don't start GripMove.
                             _grip = Grip.Grasp;
-                            _hands[index].Grasp.OnGripPress(handler.GetTrackPartName(), handler.GetChara);
+                            HandHolder.GetHand(index).Grasp.OnGripPress(handler.GetTrackPartName(), handler.GetChara);
                         }
                     }
                     return true;
@@ -656,12 +518,11 @@ namespace KK_VR.Interpreters
                 _grip = Grip.None;
                 _pressedButtons[index, 1] = false;
                 handler.StopMovingAibuItem();
-                _hands[index].Grasp.OnGripRelease();
+                HandHolder.GetHand(index).Grasp.OnGripRelease();
             }
             return false;
         }
-        public override bool IsTouchpadPress(int index) => _pressedButtons[index, 2];
-        private bool OnTouchpad(int index, bool press)
+        protected override bool OnTouchpad(int index, bool press)
         {
             if (press)
             {
@@ -682,9 +543,9 @@ namespace KK_VR.Interpreters
                 {
                     if (IsTriggerPress(index))
                     {
-                        _hands[index].ChangeItem();
+                        HandHolder.GetHand(index).ChangeItem();
                     }
-                    else if (!_hands[index].Grasp.OnTouchpadResetHeld())
+                    else if (!HandHolder.GetHand(index).Grasp.OnTouchpadResetHeld())
                     {
                         AddWait(index, EVRButtonId.k_EButton_SteamVR_Touchpad, 0.35f);
                     }
@@ -698,7 +559,7 @@ namespace KK_VR.Interpreters
             }
             return false;
         }
-        public override void OnDirectionUp(int index, TrackpadDirection direction)
+        internal override void OnDirectionUp(int index, TrackpadDirection direction)
         {
             if (IsWait)
                 PickAction(index, direction);
@@ -710,7 +571,7 @@ namespace KK_VR.Interpreters
                     IntegrationSensibleH.OnUserInput();
                 }
             }
-            _hands[index].Grasp.OnScrollRelease();
+            HandHolder.GetHand(index).Grasp.OnScrollRelease();
         }
         private TrackpadDirection SwapSides(TrackpadDirection direction)
         {
@@ -722,12 +583,12 @@ namespace KK_VR.Interpreters
             };
 
         }
-        public override bool OnDirectionDown(int index, TrackpadDirection direction)
+        internal override bool OnDirectionDown(int index, TrackpadDirection direction)
         {
             var wait = 0f;
             var speed = false;
             var handler = GetHandler(index);
-            var grasp = _hands[index].Grasp;
+            var grasp = HandHolder.GetHand(index).Grasp;
 
             if (index == 0)
             {
@@ -818,7 +679,7 @@ namespace KK_VR.Interpreters
                     {
                         if (IsTriggerPress(index))
                         {
-                            _hands[index].ChangeLayer(direction == TrackpadDirection.Right);
+                            HandHolder.GetHand(index).ChangeLayer(direction == TrackpadDirection.Right);
                         }
                         else if (IsHPointMove)
                         {
@@ -847,18 +708,18 @@ namespace KK_VR.Interpreters
             _lastDirection = direction;
             if (wait != 0f)
             {
-                _waitList.Add(new InputWait(index, direction, speed, wait));
+                AddWait(index, direction, speed, wait);
                 return true;
             }
             else
                 return false;
         }
 
-        private void PickButtonAction(InputWait wait, Timing timing)
+        protected override void PickButtonAction(InputWait wait, Timing timing)
         {
            //VRPlugin.Logger.LogDebug($"PickButtonAction:{wait.button}");
             var handler = GetHandler(wait.index);
-            var grasp = _hands[wait.index].Grasp;
+            var grasp = HandHolder.GetHand(wait.index).Grasp;
             switch (wait.button)
             {
                 case EVRButtonId.k_EButton_SteamVR_Touchpad:
@@ -895,7 +756,7 @@ namespace KK_VR.Interpreters
                         else
                         {
                            //VRPlugin.Logger.LogDebug($"PickButtonAction:Touchpad:Sleep");
-                            if (!_hands[wait.index].Grasp.OnTouchpadSyncEnd())
+                            if (!HandHolder.GetHand(wait.index).Grasp.OnTouchpadSyncEnd())
                             {
                                //VRPlugin.Logger.LogDebug($"PoV:Handle:Enable:");
                                 _pov.TryEnable();
@@ -911,28 +772,9 @@ namespace KK_VR.Interpreters
                     break;
             }
         }
-        private void PickButtonActionGripMove(InputWait wait, Timing timing)
-        {
-           //VRPlugin.Logger.LogDebug($"PickButtonActionGripMove:{wait.button}:{IsTriggerPress(wait.index)}");
-            switch (wait.button)
-            {
-                case EVRButtonId.k_EButton_SteamVR_Touchpad:
-                    if (timing == Timing.Full)
-                    {
-                        if (!IsTriggerPress(wait.index))
-                        {
-                            _vrMoverH.MakeUpright();
-                        }
-                    }
-                    break;
-
-            }
-
-        }
-        private void PickDirectionAction(InputWait wait, Timing timing)
+        protected override void PickDirectionAction(InputWait wait, Timing timing)
         {
             _manipulateSpeed = false;
-            //VRPlugin.Logger.LogDebug($"PickDirectionAction:{wait.direction}:{timing}");
             switch (wait.direction)
             {
                 case TrackpadDirection.Up:

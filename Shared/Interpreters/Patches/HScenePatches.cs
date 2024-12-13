@@ -4,7 +4,6 @@ using KK_VR.Caress;
 using KK_VR.Features;
 using KK_VR.Grasp;
 using KK_VR.Interpreters;
-using KK_VR.Interpreters;
 using RootMotion.FinalIK;
 using System;
 using System.Collections.Generic;

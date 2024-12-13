@@ -413,12 +413,6 @@ namespace VRGIN.Core
         protected override void OnUpdate()
         {
             base.OnUpdate();
-
-            if (SteamCam.origin)
-            {
-                // Make sure the scale is right
-                SteamCam.origin.localScale = Vector3.one * VR.Settings.IPDScale;
-            }
         }
 
         public void Refresh()
