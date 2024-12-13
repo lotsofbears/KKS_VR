@@ -6,6 +6,7 @@ using Valve.VR;
 using VRGIN.Core;
 using ActionGame;
 using Manager;
+using KK_VR.Interpreters;
 
 namespace KK_VR.Features
 {
@@ -23,6 +24,7 @@ namespace KK_VR.Features
         private LoadingIconJob _loadingIconJob;
         private SceneFadeCanvas _sceneFadeCanvas;
         private bool _isFade;
+        private float _fadeTimestamp;
 #endif
         private Material _fadeMaterial;
         private int _fadeMaterialColorID;
@@ -55,16 +57,27 @@ namespace KK_VR.Features
 #if KKS
         private void OnFadeIn(FadeCanvas.Fade fade)
         {
-            _isFade = true;
-            _fadeColor = GetFadeColor();
+             if (!_isFade)
+             {
+                _isFade = true;
+                _fadeColor = GetFadeColor();
 
+                _fadeTimestamp = Time.unscaledTime + 2f;
+            }
         }
         private void OnFadeOut(FadeCanvas.Fade fade)
         {
-            if (!_sceneFadeCanvas.isFading && _inDeepFade)
+            if (!_sceneFadeCanvas.isFading)
             {
-                _isFade = false;
-                _alpha = 0f;
+                if (_inDeepFade)
+                {
+                    _isFade = false;
+                    _alpha = 0f;
+                }
+                if (TalkSceneInterpreter.advScene != null && KoikatuInterpreter.SceneInterpreter is TalkSceneInterpreter talkInterpreter)
+                {
+                    talkInterpreter.AdjustAdvScene();
+                }
             }
         }
 
@@ -74,17 +87,27 @@ namespace KK_VR.Features
             {
                 if (!_inDeepFade)
                 {
-                    _alpha = Mathf.Clamp01(Scene.IsFadeNow ? _alpha + Mathf.Min(Time.deltaTime, 0.05f) : _alpha - Mathf.Min(Time.deltaTime, 0.05f));
+                    if (Scene.IsFadeNow)
+                    {
+                        if (_alpha != 1f)
+                        {
+                            _alpha = Mathf.Clamp01(_alpha + Mathf.Min(Time.deltaTime, 0.05f));
+                        }
+                        else if (_fadeTimestamp < Time.unscaledTime)
+                        {
+                            StartCoroutine(DeepFadeCo());
+                        }
+                    }
+                    else
+                    {
+                        _alpha = Mathf.Clamp01(_alpha - Mathf.Min(Time.deltaTime, 0.05f));
+                        if (_alpha == 0f)
+                        {
+                            _isFade = false;
+                        }
+                    }
                     _fadeColor.a = Mathf.Clamp01(_alpha);
                     DrawQuad();
-                    if (_alpha == 1f)
-                    {
-                        StartCoroutine(DeepFadeCo());
-                    }
-                    else if (_alpha == 0f)
-                    {
-                        _isFade = false;
-                    }
                 }
                 else
                 {

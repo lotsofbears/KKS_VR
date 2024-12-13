@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿#if KK
+using HarmonyLib;
 using KK_VR.Interpreters;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ namespace KK_VR.Patches
     [HarmonyPatch]
     internal class TalkScenePatches
     {
-#if KK
         [HarmonyPostfix]
         [HarmonyPatch(typeof(TalkScene), nameof(TalkScene.Awake))]
         public static void TalkSceneAwakePrefix(TalkScene __instance)
@@ -26,6 +26,6 @@ namespace KK_VR.Patches
                 KoikatuInterpreter.StartScene(KoikatuInterpreter.SceneType.TalkScene, __instance);
             }
         }
-#endif
     }
 }
+#endif

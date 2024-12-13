@@ -3,9 +3,11 @@ using System.Collections;
 using System.Diagnostics;
 using System.Linq;
 using ADV;
+using ADV.Commands.Object;
 using HarmonyLib;
 using KK_VR.Interpreters;
 using KK_VR.Settings;
+using Manager;
 using UnityEngine;
 using VRGIN.Core;
 
@@ -22,7 +24,6 @@ namespace KK_VR.Camera
 
         private Vector3 _lastPosition;
         private Quaternion _lastRotation;
-        private readonly KoikatuSettings _settings;
 
         public delegate void OnMoveAction();
 
@@ -32,7 +33,6 @@ namespace KK_VR.Camera
         {
             _lastPosition = Vector3.zero;
             _lastRotation = Quaternion.identity;
-            _settings = VR.Settings as KoikatuSettings;
         }
 
         /// <summary>
@@ -42,26 +42,15 @@ namespace KK_VR.Camera
         {
             if (position.Equals(Vector3.zero))
             {
-                //VRLog.Warn($"Prevented something from moving camera to pos={position} rot={rotation.eulerAngles} Trace:\n{new StackTrace(1)}");
-                //Console.WriteLine();
                 return;
             }
-//            if (!quiet)
-//            {
-//#if DEBUG
-//                //VRLog.Debug("Moving camera to pos={0} rot={1} Trace:\n{2}", position, rotation.eulerAngles, new StackTrace(1));
-//                VRLog.Debug("Moving camera to pos={0} rot={1}", position, rotation.eulerAngles);
-//#else
-//                VRLog.Debug("Moving camera to pos={0} rot={1}", position, rotation.eulerAngles);
-//#endif
-//            }
-
-
+#if KKS
+               //VRPlugin.Logger.LogDebug($"{}");
+#endif
             _lastPosition = position;
             _lastRotation = rotation;
 
-
-            // We don't want to respect head rotations when we deal with text.
+            // We don't want to respect head rotations when we deal with adv text.
             VR.Camera.Origin.rotation = Quaternion.Euler(0f, rotation.eulerAngles.y, 0f);
             VR.Camera.Origin.position += position - VR.Camera.Head.position;
 
@@ -99,17 +88,21 @@ namespace KK_VR.Camera
             MoveWithHeuristics(closerPosition, rotation, !advFade.IsEnd);
         }
 
-        private static Vector3 AdjustAdvPosition(TextScenario textScenario, Vector3 position, Quaternion rotation)
+        private Vector3 AdjustAdvPosition(TextScenario textScenario, Vector3 position, Quaternion rotation)
         {
             // Needed for zero checks later
             if (position.Equals(Vector3.zero)) return Vector3.zero;
 
-            var characterTransforms = textScenario.commandController?.Characters.Where(x => x.Value?.transform != null).Select(x => x.Value.transform.position).ToArray();
-            if (characterTransforms != null && characterTransforms.Length > 0)
+            var characterTransforms = textScenario.commandController?.Characters
+                .Where(x => x.Value?.transform != null)
+                .Select(x => x.Value.transform.position);
+
+            if (characterTransforms != null && characterTransforms.Count() > 0)
             {
                 //var closerPosition = position + (rotation * Vector3.forward) * 1f;
 
-                var averageV = new Vector3(characterTransforms.Sum(x => x.x), characterTransforms.Sum(x => x.y), characterTransforms.Sum(x => x.z));
+                var averageV = new Vector3(characterTransforms.Sum(x => x.x), characterTransforms.Sum(x => x.y), characterTransforms.Sum(x => x.z)) / characterTransforms.Count();
+
 
                 var positionNoY = position;
                 positionNoY.y = 0;
@@ -122,7 +115,7 @@ namespace KK_VR.Camera
 
                     closerPosition.y = averageV.y + ActionCameraControl.GetPlayerHeight();
 
-                    VRLog.Warn("Adjusting position {0} -> {1} for rotation {2}", position, closerPosition, rotation.eulerAngles);
+                    //VRLog.Warn("Adjusting position {0} -> {1} for rotation {2}", position, closerPosition, rotation.eulerAngles);
 
                     return closerPosition;
                 }
@@ -150,6 +143,7 @@ namespace KK_VR.Camera
             //}
             if (ShouldApproachCharacter(textScenario, out var character))
             {
+                VRPlugin.Logger.LogDebug("HandleTextScenarioProgress");
 #if KK
                 var distance = InCafe() ? 0.75f : TalkSceneInterpreter.talkDistance;
 #elif KKS
@@ -166,7 +160,7 @@ namespace KK_VR.Camera
                     VRLog.Debug("Approaching character (H)");
                     // TODO: find a way to get a proper height.
                     height = character.transform.position.y + 1.3f;
-                    rotation = character.transform.rotation * Quaternion.AngleAxis(180f, Vector3.up);
+                    rotation = character.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
                 }
                 else
                 {
@@ -189,15 +183,15 @@ namespace KK_VR.Camera
                 var targetRotation = target.rotation;
 
                 targetPosition = AdjustAdvPosition(textScenario, targetPosition, target.rotation);
-
+#if KKS
                 AdjustBasedOnMap(ref targetPosition, ref targetRotation);
-
+#endif
                 if (ActionCameraControl.HeadIsAwayFromPosition(targetPosition))
                     MoveWithHeuristics(targetPosition, targetRotation, isFadingOut);
             }
         }
-
-        private static void AdjustBasedOnMap(ref Vector3 targetPosition, ref Quaternion targetRotation)
+#if KKS
+        private void AdjustBasedOnMap(ref Vector3 targetPosition, ref Quaternion targetRotation)
         {
             var insideMyRoom = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GasyukuMyroom";
             if (insideMyRoom)
@@ -212,11 +206,19 @@ namespace KK_VR.Camera
                 }
             }
         }
+#endif
 
-        private static bool IsFadingOut(ADVFade fade)
+
+        private bool IsFadingOut(ADVFade fade)
         {
+#if KK
             static bool IsFadingOutSub(ADVFade.Fade f) => f.initColor.a > 0.5f && !f.IsEnd;
             return IsFadingOutSub(fade.front) || IsFadingOutSub(fade.back);
+#else
+            // KKS doesn't have working advFade.
+            return Scene.sceneFadeCanvas.isFading;
+#endif
+
         }
 
         //private IEnumerator ImpersonateCo(bool isFadingOut, Transform head)
@@ -237,7 +239,7 @@ namespace KK_VR.Camera
             {
                 var eyes = chara.objHeadBone.transform
                     .Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
-                var position = eyes.TransformPoint(0f, _settings.PositionOffsetY, _settings.PositionOffsetZ);
+                var position = eyes.TransformPoint(0f, KoikatuInterpreter.Settings.PositionOffsetY, KoikatuInterpreter.Settings.PositionOffsetZ);
                 MoveTo(position, eyes.rotation);
             }
         }
@@ -257,43 +259,44 @@ namespace KK_VR.Camera
             //var fadeOk = fade.isEnd; //(fade._Fade == SimpleFade.Fade.Out) ^ fade.IsEnd;
 #endif
             {
+                VRPlugin.Logger.LogDebug("MoveWithHeuristics:Move");
                 MoveTo(position, rotation);
             }
             else
             {
-                VRLog.Debug("Not moving because heuristic conditions are not met");
+                VRPlugin.Logger.LogDebug("MoveWithHeuristics:Stay");
             }
         }
 
         private bool IsDestinationFar(Vector3 position, Quaternion rotation)
         {
             var distance = (position - _lastPosition).magnitude;
-            var angleDistance = Mathf.Abs(Mathf.DeltaAngle(rotation.eulerAngles.y, _lastRotation.eulerAngles.y));
-            return 1f < distance / 2f + angleDistance / 90f;
+            var deltaAngle = Mathf.Abs(Mathf.DeltaAngle(rotation.eulerAngles.y, _lastRotation.eulerAngles.y));
+            return 1f < distance * 0.5f + deltaAngle / 90f;
         }
 
-        private static bool FindMaleToImpersonate(out ChaControl male)
-        {
-            male = null;
+//        private static bool FindMaleToImpersonate(out ChaControl male)
+//        {
+//            male = null;
 
-            if (!Manager.Character.IsInstance()) return false;
+//            if (!Manager.Character.IsInstance()) return false;
 
-#if KK
-            var males = Manager.Character.Instance.dictEntryChara.Values
-#elif KKS
-            var males = Manager.Character.dictEntryChara.Values
-#endif
-                .Where(ch => ch.isActiveAndEnabled && ch.sex == 0 && ch.objTop?.activeSelf == true && ch.visibleAll)
-                .ToArray();
-            if (males.Length == 1)
-            {
-                male = males[0];
-                return true;
-            }
-            return false;
-        }
+//#if KK
+//            var males = Manager.Character.Instance.dictEntryChara.Values
+//#elif KKS
+//            var males = Manager.Character.dictEntryChara.Values
+//#endif
+//                .Where(ch => ch.isActiveAndEnabled && ch.sex == 0 && ch.objTop?.activeSelf == true && ch.visibleAll)
+//                .ToArray();
+//            if (males.Length == 1)
+//            {
+//                male = males[0];
+//                return true;
+//            }
+//            return false;
+//        }
 
-        private static bool ShouldApproachCharacter(ADV.TextScenario textScenario, out ChaControl control)
+        private bool ShouldApproachCharacter(ADV.TextScenario textScenario, out ChaControl control)
         {
 #if KK
             if ((Manager.Scene.Instance.NowSceneNames[0] == "H" || textScenario.BGParam.visible) 
@@ -310,7 +313,7 @@ namespace KK_VR.Camera
         }
 
 #if KK
-        private static bool InCafe()
+        private bool InCafe()
         {
             return Manager.Game.IsInstance() 
                 && Manager.Game.Instance.actScene.transform.Find("cafeChair");

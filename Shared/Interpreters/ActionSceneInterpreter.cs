@@ -380,8 +380,7 @@ namespace KK_VR.Interpreters
                 attachPoint.y = _standing ? _settings.StandingCameraPos : _settings.CrouchingCameraPos;
                 vec = player.position - attachPoint;
             }
-            var rot = Quaternion.Euler(0f, head.eulerAngles.y, 0f);
-            player.rotation = rot;
+            player.rotation = Quaternion.Euler(0f, head.eulerAngles.y, 0f);
             player.position = head.position + vec;
         }
 

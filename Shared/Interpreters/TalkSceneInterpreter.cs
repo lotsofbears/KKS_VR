@@ -37,17 +37,31 @@ namespace KK_VR.Interpreters
         private Button _lastSelectedButton;
         private bool _talkSceneStart;
         private bool _start;
-        //private bool _advSceneStart;
         private bool? _sittingPose;
-        //private bool _talkScenePreSet;
         private readonly bool[] _waitForAction = new bool[2];
         private readonly float[] _waitTimestamp = new float[2];
         private readonly float[] _waitTime = new float[2];
         private readonly TrackpadDirection[] _lastDirection = new TrackpadDirection[2];
-        //private Button _previousButton;
-        //private TalkSceneHandler[] _handlers;
         private readonly int[,] _modifierList = new int[2, 2];
 
+        private Transform _eyes;
+        private ActionGame.Chara.Player GetPlayer()
+        {
+#if KK
+            return Game.instance.actScene.Player;
+#else
+            return ActionScene.instance.Player;
+#endif
+        }
+
+        private Vector3 GetEyesPosition()
+        {
+            if (_eyes == null)
+            {
+                _eyes = GetPlayer().chaCtrl.objHeadBone.transform.Find("cf_J_N_FaceRoot/cf_J_FaceRoot/cf_J_FaceBase/cf_J_FaceUp_ty/cf_J_FaceUp_tz/cf_J_Eye_tz");
+            }
+            return _eyes.TransformPoint(0f, _settings.PositionOffsetY, _settings.PositionOffsetZ);
+        }
         private bool IsADV => advScene.isActiveAndEnabled;
         private bool IsADVChoice => advScene.scenario.isChoice;
 #if KK   
@@ -150,7 +164,6 @@ namespace KK_VR.Interpreters
                     if (talkScene.cameraMap.enabled)
                     {
                         AdjustTalkScene();
-                        _start = false;
                     }
                 }
                 else
@@ -159,10 +172,9 @@ namespace KK_VR.Interpreters
                     && Manager.Scene.Instance.sceneFade._Color.a < 1f)
                     {
                         AdjustAdvScene();
-                        _start = false;
                     }
                 }
-                    
+
 #else
                 if (!_talkSceneStart && talkScene._isPaly)
                 {
@@ -177,14 +189,7 @@ namespace KK_VR.Interpreters
                     if (talkScene.cameraMap.enabled)
                     {
                         AdjustTalkScene();
-                        _start = false;
                     }
-                }
-                else if (Scene.IsFadeNow && Scene.IsFadeEnd)
-                {
-                    // Find proper KKS hook?
-                    AdjustAdvScene();
-                    _start = false;
                 }
 #endif
             }
@@ -215,26 +220,20 @@ namespace KK_VR.Interpreters
             _talkSceneStart = true;
         }
 #endif
-        private void AdjustAdvScene()
+        internal void AdjustAdvScene()
         {
-           //VRPlugin.Logger.LogDebug($"AdjustAdvScene");
-            //_advSceneStart = false;
-            var chara = advScene.Scenario.currentChara.chaCtrl;
-            //VRPlugin.Logger.LogDebug($"AdjustAdvScene:{chara.transform.position}:{chara.transform.eulerAngles}:{gazeVec}:{gazeVec * talkDistance}");
-            var position = VR.Camera.Origin.position;
-            position.y = chara.transform.position.y;
-            if (!PlacePlayer(position, chara.transform.rotation * Quaternion.Euler(0f, 180f, 0f)))
+            _start = false;
+            if (advScene.Scenario.currentChara != null && advScene.Scenario.currentChara.chaCtrl != null)
             {
-#if KK
-                // There already was player active, that kind of ADV scene, move to impersonate instead.
-                VRCameraMover.Instance.Impersonate(Game.Instance.actScene.Player.chaCtrl);
-#endif
+                var chara = advScene.Scenario.currentChara.chaCtrl;
+                {
+                    PlacePlayer(chara.transform.position, chara.transform.rotation);
+                    var charas = advScene.scenario.characters.GetComponentsInChildren<ChaControl>();
+                    AddTalkColliders(charas);
+                    AddHColliders(charas);
+                    HitReactionInitialize(charas);
+                }
             }
-            //PlacePlayer(chara.transform.position + (chara.transform.forward * talkDistance), chara.transform.rotation * Quaternion.Euler(0f, 180f, 0f));
-            var charas = advScene.scenario.characters.GetComponentsInChildren<ChaControl>();
-            AddTalkColliders(charas);
-            AddHColliders(charas);
-            HitReactionInitialize(charas);
         }
 
 
@@ -247,7 +246,6 @@ namespace KK_VR.Interpreters
             }
             ControllerTracker.Initialize(charas);
             HandHolder.UpdateHandlers<TalkSceneHandler>();
-            
         }
         // TalkScenes have clones, reflect it on roam mode.
         private void SynchronizeClothes(ChaControl chara)
@@ -472,28 +470,29 @@ namespace KK_VR.Interpreters
         /// </summary>
         private void AdjustTalkScene()
         {
-            // Basic TalkScene camera orientation if near worthless.
+            _start = false;
+            // Basic TalkScene camera if near worthless.
             // Does nothing about clippings with map objects, provides the simplest possible position,
             // a chara.forward vector + lookAt rotation, and chara orientation is determined by the position of chara/camera on the roam map.
             // ADV camera on other hand is legit. ADV Mover though is a headache, would be nice to update it.
 
-            // Here we reposition a bit forward if chara had low y-position(sitting prob) on roam map, adjust distance chara <-> camera, place player,
-            // and bring back hidden/disabled charas(and correlating NPC component), so they do and go about their stuff. Bringing back can be prettier by transpiling init of
+            // Here we reposition chara a bit forward if y-position on roam map was on lower side (probably sitting), adjust distance chara <-> camera, place player,
+            // and bring back hidden/disabled charas(and correlating NPC components), so they do and go about their stuff (In KKS the "go" part doesn't always work). Bringing back can be prettier by transpiling init of
             // TalkScene(was it Action?), but i yet to figure out how to patch nested types, and that thingy has a fustercluck of them. On other hand the price is quite low,
             // we simply catch a glimpse of crossfading animation of all surrounding charas on fade end.
 
-           //VRPlugin.Logger.LogDebug($"TalkScene:AdjustTalk");
+            //VRPlugin.Logger.LogDebug($"TalkScene:AdjustTalk");
             _talkSceneStart = false;
             talkScene.canvasBack.enabled = false;
 
             var head = VR.Camera.Head;
             var origin = VR.Camera.Origin;
-            var heroine = talkScene.targetHeroine.transform;
-            var headsetPos = head.position;
+            var heroine = talkScene.targetHeroine;
             var chara = talkScene.targetHeroine.chaCtrl;
+            var headPos = head.position;
 
-            //VRPlugin.Logger.LogDebug($"TalkScene:AdjustTalk:{chara.transform.rotation.eulerAngles}:{Quaternion.LookRotation(origin.position - chara.transform.position).eulerAngles}");
-            headsetPos.y = heroine.position.y;
+            VRPlugin.Logger.LogInfo($"TalkScene:AdjustTalk:sitting = {_sittingPose}");
+            headPos.y = heroine.transform.position.y;
 #if KK
             talkDistance = 0.4f + (talkScene.targetHeroine.isGirlfriend ? 0f : 0.1f) + (0.1f - talkScene.targetHeroine.intimacy * 0.001f);
 #else
@@ -502,36 +501,28 @@ namespace KK_VR.Interpreters
             var offset = _sittingPose == true || afterH ? 0.3f : 0f;
             afterH = false;
 
-            heroine.rotation = Quaternion.LookRotation(headsetPos - heroine.position);
-            var gazeVec = heroine.transform.forward;
-            heroine.position += gazeVec * offset;
+            heroine.transform.rotation = Quaternion.LookRotation(headPos - heroine.transform.position);
+            var forwardVec = heroine.transform.forward;
+            heroine.transform.position += forwardVec * offset;
 
-            headsetPos = heroine.position + (gazeVec * talkDistance);
-
-            var reverseRot = heroine.rotation * Quaternion.Euler(0f, 180f, 0f);
-
-            // An option to keep the head behind vr camera, allowing it to remain visible
-            // so we don't see the shadow of a headless body.
+            headPos = heroine.transform.position + (forwardVec * talkDistance);
+#if KK
+            var actionScene = Game.Instance.actScene;
+#else
+            var actionScene = ActionScene.instance;
+#endif
 
             var charas = new List<ChaControl>()
             {
                 chara,
-#if KK
-                Game.Instance.actScene.Player.chaCtrl
-#else
-                ActionScene.instance.Player.chaCtrl
-#endif
+                actionScene.Player.chaCtrl
             };
 
-#if KK
-            var actScene = Game.Instance.actScene;
-            //var actScene = ActionScene.instance;
-            foreach (var npc in actScene.npcList)
+            foreach (var npc in actionScene.npcList)
             {
                 if (npc.heroine.Name != talkScene.targetHeroine.Name)
                 {
-                    // TODO Don't add/stop walking/running animation, and check why async cloth load (plugin) hates us for this.
-                    if (npc.mapNo == actScene.Map.no)
+                    if (npc.mapNo == actionScene.Map.no)
                     {
                         npc.SetActive(true);
                         charas.Add(chara);
@@ -541,18 +532,9 @@ namespace KK_VR.Interpreters
                     //VRPlugin.Logger.LogDebug($"TalkScene:ExtraNPC:{npc.name}:{npc.motion.state}");
                 }
             }
-#endif
-            if (!PlacePlayer(headsetPos, reverseRot))
-            {
-                // If we already had player visible. Not possible in TalkScene?
-#if KK
-                VRCameraMover.Instance.Impersonate(Game.Instance.actScene.Player.chaCtrl);
-#else
-                VRCameraMover.Instance.Impersonate(ActionScene.instance.Player.chaCtrl);
-#endif
-            }
-            //headsetPos.y = head.position.y;
+            origin.position += new Vector3(headPos.x, head.position.y, headPos.z) - head.position;
 
+            PlacePlayer(headPos, heroine.transform.rotation);
             AddHColliders(charas);
             HitReactionInitialize(charas);
 #if KK
@@ -561,41 +543,41 @@ namespace KK_VR.Interpreters
 #endif
         }
 
-        // To make it proper we need rewritten ADV mover, as of now we wait for mover to do it's thingy, and then place chara
-        // with offset on the headset, so everything is visible. Then mover goes and impersonates it. And then we adjust this chara again with offset
-        // and so it can happen ~10 times in one fade. Needless to say we'll be god knows where after all this.
-
-        private bool PlacePlayer(Vector3 position, Quaternion rotation)
+        private void PlacePlayer(Vector3 floor, Quaternion rotation)
         {
-#if KK
-            var player = Game.instance.actScene.Player;
-#else
-            var player = ActionScene.instance.Player;
-#endif
+
+            var player = GetPlayer();
             if (player.chaCtrl == null)
             {
-               //VRPlugin.Logger.LogDebug($"No player's chara to place");
-                return true;
+                VRPlugin.Logger.LogDebug($"PlacePlayer:No chara to place");
+                return;
             }
-            //if (talkScene == null)
-            //{
-            //    position.y = advScene.Scenario.currentChara.chaCtrl.transform.position.y;
-            //}
+
             if (player.chaCtrl.objTop.activeSelf)
             {
-               //VRPlugin.Logger.LogDebug($"Player is already active");
-                return false;
+                VRCameraMover.Instance.Impersonate(player.chaCtrl);
+                VRPlugin.Logger.LogDebug($"PlacePlayer:Already present, impersonating");
+                return;
             }
+            var head = VR.Camera.Head;
+            var eyePos = GetEyesPosition();
+            var headPos = head.position;
+            headPos.y = floor.y + (eyePos.y - player.position.y);
+            VR.Camera.Origin.position += headPos - head.position;
+            var vec = player.position - eyePos;
+
             player.SetActive(true);
-            player.rotation = rotation;
+            player.rotation = rotation * Quaternion.Euler(0f, 180f, 0f);
+
+
+            // An option to keep the head behind vr camera, allowing it to remain visible
+            // so we don't see the shadow of a headless body.
             //if (KoikatuInterpreter.settings.ForceShowMaleHeadInAdv)
             //{
             //    VRMale.ForceShowHead = true;
             //    position += player.transform.forward * -0.15f;
             //}
-            player.position = position;
-            //VRPlugin.Logger.LogDebug($"Place player at:{player.position}:{player.eulerAngles}:{talkDistance}");
-            return true;
+            player.position = head.position + vec;
         }
 
         private bool ClickLastButton()
