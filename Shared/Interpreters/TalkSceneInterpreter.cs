@@ -11,7 +11,7 @@ using RootMotion.FinalIK;
 using KK_VR.Fixes;
 using Valve.VR;
 using static HandCtrl;
-using static KK_VR.Interpreters.TalkSceneExtras;
+using static KK_VR.Interpreters.SceneExtras;
 using static VRGIN.Controls.Controller;
 using KK_VR.Handlers;
 using KK_VR.Features;
@@ -120,7 +120,7 @@ namespace KK_VR.Interpreters
         {
             HandHolder.DestroyHandlers();
 #if KK
-            TalkSceneExtras.ReturnDirLight();
+            SceneExtras.ReturnDirLight();
 #endif
             //TalkSceneExtras.ReturnDirLight();
             //HideMaleHead.ForceShowHead = false;

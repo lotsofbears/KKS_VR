@@ -138,9 +138,9 @@ namespace KK_VR.Interpreters
 
             VRBoop.RefreshDynamicBones(charas);
 
-            TalkSceneExtras.EnableDynamicBones(charas);
-            TalkSceneExtras.AddTalkColliders(charas);
-            TalkSceneExtras.AddHColliders(charas);
+            SceneExtras.EnableDynamicBones(charas);
+            SceneExtras.AddTalkColliders(charas);
+            SceneExtras.AddHColliders(charas);
             GraspController.Init(charas);
 
             //var gameObj = Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.1f, 0.1f, 0.1f), VR.Camera.transform, Color.magenta, 0.2f, true);
@@ -171,9 +171,9 @@ namespace KK_VR.Interpreters
         {
             SmoothMover.Instance.MakeUpright();
             Component.Destroy(_pov);
-            Component.Destroy(_mouth.gameObject);
+            GameObject.Destroy(_mouth.gameObject);
 
-            TalkSceneExtras.ReturnDirLight();
+            SceneExtras.ReturnDirLight();
             HandHolder.DestroyHandlers();
             LocationPicker.DestroyComponents();
             TalkSceneInterpreter.afterH = true;
@@ -220,7 +220,7 @@ namespace KK_VR.Interpreters
             }
             if (adjustDirLight)
             {
-                TalkSceneExtras.RepositionDirLight(lstFemale[0]);
+                SceneExtras.RepositionDirLight(lstFemale[0]);
                 adjustDirLight = false;
             }
         }
@@ -1211,7 +1211,7 @@ namespace KK_VR.Interpreters
             adjustDirLight = true;
             GraspController.OnPoseChange();
             MouthGuide.OnPoseChange(anim.mode);
-            TalkSceneExtras.EnableDynamicBones(male);
+            SceneExtras.EnableDynamicBones(male);
         }
         internal void OnSpotChangePost()
         {
@@ -1326,7 +1326,7 @@ namespace KK_VR.Interpreters
             var dic = handCtrl.dicNowReaction;
             if (dic.Count == 0)
             {
-                dic = TalkSceneExtras.dicNowReactions;
+                dic = SceneExtras.dicNowReactions;
             }
             var key = aibuKind - AibuColliderKind.reac_head;
             var index = Random.Range(0, dic[key].lstParam.Count);

@@ -40,7 +40,7 @@ namespace KK_VR.Handlers
         private Rigidbody _rigidBody;
         internal override bool IsBusy => _tracker.colliderInfo != null && _tracker.colliderInfo.chara != null;
 
-        // Default velocity is in controller or origin local space.
+        // Default velocity is in local space of a controller or camera origin.
 #if KK
         protected Vector3 GetVelocity => _controller.Input.velocity;
 #else
@@ -68,8 +68,6 @@ namespace KK_VR.Handlers
                 }
             }
         }
-
-
 
         protected override void OnTriggerEnter(Collider other)
         {
@@ -154,7 +152,6 @@ namespace KK_VR.Handlers
             }
         }
 
-        //internal Tracker.Body GetPartName() => _tracker.colliderInfo.behavior.part;
         internal Tracker.Body GetTrackPartName(ChaControl tryToAvoidChara = null, int preferredSex = -1)
         {
             return tryToAvoidChara == null && preferredSex == -1 ? _tracker.GetGraspBodyPart() : _tracker.GetGraspBodyPart(tryToAvoidChara, preferredSex);

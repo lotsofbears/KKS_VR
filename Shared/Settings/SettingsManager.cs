@@ -290,10 +290,10 @@ namespace KK_VR.Settings
                     new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
             Tie(ikBendConstraint, v => settings.IKDefaultBendConstraint = v);
 
-            var ikHeadEffector = config.Bind(SectionIK, "HeadEffector", KoikatuSettings.HeadEffector.Disabled,
+            var ikHeadEffector = config.Bind(SectionIK, "HeadEffector", KoikatuSettings.HeadEffector.OnDemand,
                 "HeadEffector is VERY finicky even on highly tailored settings." +
                 "Will make it or break it, if latter can be fixed manually (more often then not)." +
-                "'WhenRequired' setting will disable effector on soft/hard reset");
+                "'OnDemand' setting will disable effector on soft/hard reset");
             Tie(ikHeadEffector, v => settings.IKHeadEffector = v);
 
             //void updateKeySets()

@@ -14,7 +14,7 @@ using Random = UnityEngine.Random;
 
 namespace KK_VR.Interpreters
 {
-    internal static class TalkSceneExtras
+    internal static class SceneExtras
     {
         private static Transform _dirLight;
         private static Transform _oldParent;
@@ -22,9 +22,9 @@ namespace KK_VR.Interpreters
         {
 #if KK
             _dirLight = Component.FindObjectsOfType<Light>()
-                    .Where(g => g.name.Equals("Directional Light") && g.gameObject.active)
-                    .Select(g => g.transform)
-                    .FirstOrDefault();
+                .Where(g => g.name.Equals("Directional Light") && g.gameObject.active)
+                .Select(g => g.transform)
+                .FirstOrDefault();
 #else
             _dirLight = Component.FindObjectsOfType<Light>()
                 .Where(c => c.gameObject.activeSelf && c.name.Equals("Directional Light")
@@ -87,16 +87,11 @@ namespace KK_VR.Interpreters
             }
         }
 
-        internal static void EnableDynamicBones(List<ChaControl> charas)
+        internal static void EnableDynamicBones(IEnumerable<ChaControl> charas)
         {
             foreach (var chara in charas)
             {
-                if (chara == null) continue;
-
-                foreach (var db in chara.objAnim.GetComponents<DynamicBone_Ver02>())
-                {
-                    db.enabled = true;
-                }
+                EnableDynamicBones(chara);
             }
         }
         internal static void EnableDynamicBones(ChaControl chara)

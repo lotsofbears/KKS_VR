@@ -20,6 +20,7 @@ using static KK_VR.Grasp.GraspController;
 using static KK_VR.Grasp.TouchReaction;
 using BodyPart = KK_VR.Grasp.BodyPart;
 using KK_VR.Holders;
+using static KK.RootMotion.FinalIK.IKSolverVR;
 
 namespace KK_VR.Grasp
 {
@@ -98,7 +99,8 @@ namespace KK_VR.Grasp
             });
             //AnimLoaderHelper.FindMissingBones(_auxDic[chara].oldFbik);
             var ik = _auxDic[chara].newFbik;
-            if (ik == null) return;
+            var oldIK = _auxDic[chara].oldFbik;
+            if (ik == null || oldIK == null) return;
             _bodyPartsDic.Add(chara,
             [
 
@@ -315,15 +317,15 @@ namespace KK_VR.Grasp
                     if (bodyPart.effector != null)
                     {
                         bodyPart.effector.target = bodyPart.anchor;
+
                         if (bodyPart.chain != null)
                         {
                             bodyPart.chain.bendConstraint.weight = bodyPart.state == State.Default ? 1f : KoikatuInterpreter.Settings.IKDefaultBendConstraint;
                         }
                     }
-
                 }
-                AnimLoaderHelper.FixExtraAnim(chara, _bodyPartsDic[chara]);
                 _auxDic[chara].oldFbik.enabled = false;
+                AnimLoaderHelper.FixExtraAnim(chara, _bodyPartsDic[chara]);
             }
         }
 

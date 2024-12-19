@@ -52,21 +52,14 @@ namespace KK_VR.Handlers
         // Transform that guides IK, separate gameObject.
         protected Transform _anchor;
 
-        // p_cf_body_bone (chara.objAnim) , doesn't move much, has all IKs in on place.
-        // not actual anymore.
-        //protected Transform _objAnim;
         protected Transform _target;
-        // F it, non-penetrative behavior hardly worth it here. Maybe later.
         protected Rigidbody _rigidBody;
 
-        //protected Vector3 _origScale;
         protected Vector3 _offsetPos;
         protected Quaternion _offsetRot;
 
         protected Translate _translate;
 
-        //private float _timer;
-        //private bool _unwind;
         protected bool _wasBusy;
 
         // If are not in default state.
@@ -76,12 +69,10 @@ namespace KK_VR.Handlers
 
         protected virtual void Awake()
         {
-            //_origScale = transform.localScale;
             _rigidBody = gameObject.AddComponent<Rigidbody>();
             _rigidBody.isKinematic = true;
             _rigidBody.freezeRotation = true;
 
-            // Implement accurate, controlled play with this.
             _rigidBody.useGravity = false;
 
             // Default primitive's collider-trigger.
@@ -103,10 +94,9 @@ namespace KK_VR.Handlers
         {
             BodyPart = bodyPart;
             _anchor = bodyPart.anchor;
-            //_objAnim = chara.objAnim.transform;
         }
         /// <summary>
-        /// Sets the transform (controller) as parent of the part for further manipulation. 
+        /// Sets the transform (controller?) as the parent of the part for further manipulation. 
         /// </summary>
         internal abstract void Follow(Transform target, HandHolder hand);
         /// <summary>
@@ -133,9 +123,6 @@ namespace KK_VR.Handlers
                 _translate = new(_anchor, Disable);
             }
             BodyPart.visual.Hide();
-            //transform.localScale = _origScale;
-            //transform.localPosition = Vector3.zero;
-            //transform.localRotation = Quaternion.identity;
         }
         protected virtual void Disable()
         {
@@ -146,8 +133,6 @@ namespace KK_VR.Handlers
             }
             BodyPart.state = Grasp.GraspController.State.Default;
             _anchor.gameObject.SetActive(BodyPart.GetDefaultState());
-            //transform.parent = _bodyPart.beforeIK;
-            //SetBodyPartCollidersToTrigger(false);
         }
 
         /// <summary>

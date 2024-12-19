@@ -19,7 +19,7 @@ namespace KK_VR.Handlers.Helpers
             _lastPos = anchor.position;
             _item = HSceneInterpreter.handCtrl.useAreaItems[_itemId].obj.transform;
         }
-        private int _itemId;
+        private readonly int _itemId;
         private readonly Transform _item;
         private readonly Transform _anchor;
         private Vector3 _lastPos;

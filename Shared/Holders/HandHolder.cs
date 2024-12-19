@@ -82,13 +82,13 @@ namespace KK_VR.Holders
                 inst.AddHandler<T>();
             }
         }
-        protected private void AddHandler<T>() 
+        private void AddHandler<T>() 
             where T : ItemHandler
         {
             _handler = gameObject.AddComponent<T>();
             _handler.Init(this);
         }
-        protected private void RemoveHandler()
+        private void RemoveHandler()
         {
             if (_handler != null)
             {
@@ -337,9 +337,6 @@ namespace KK_VR.Holders
         {
             if (_itemLag == null)
             {
-                // Debug.
-                //_anchor.SetPositionAndRotation(_controller.TransformPoint(_activeItem.positionOffset), _controller.rotation);
-
                 _rigidBody.MoveRotation(_controller.rotation);
                 _rigidBody.MovePosition(_controller.TransformPoint(_activeOffsetPos));
             }
@@ -445,6 +442,7 @@ namespace KK_VR.Holders
             _activeItem.layer = newLayer;
             UpdateDynamicBoneColliders();
         }
+
         /// <summary>
         /// Sets current item to an empty one and returns it's anchor.
         /// </summary>
@@ -478,7 +476,7 @@ namespace KK_VR.Holders
         }
         internal void Shackle(int amount)
         {
-            // We compensate release of rigidBody's velocity by teleporting controller (target point of rigidBody).
+            // We compensate the release of rigidBody's velocity by applying offset (target point of rigidBody).
             var pos = _anchor.position;
             _rigidBody.isKinematic = true;
             _anchor.position = pos;
@@ -527,19 +525,19 @@ namespace KK_VR.Holders
             return false;
         }
 
-        private readonly List<string> _colliderParentListStartsWith =
-            [
-            "cf_j_middle02_",
-            "cf_j_index02_",
-            "cf_j_ring02_",
-            "cf_j_thumb02_",
-            "cf_s_hand_",
-        ];
-        private readonly List<string> _colliderParentListEndsWith =
-            [
-            "_head_00",
-            "J_vibe_02",
-            "J_vibe_05",
-        ];
+        //private readonly List<string> _colliderParentListStartsWith =
+        //    [
+        //    "cf_j_middle02_",
+        //    "cf_j_index02_",
+        //    "cf_j_ring02_",
+        //    "cf_j_thumb02_",
+        //    "cf_s_hand_",
+        //];
+        //private readonly List<string> _colliderParentListEndsWith =
+        //    [
+        //    "_head_00",
+        //    "J_vibe_02",
+        //    "J_vibe_05",
+        //];
     }
 }

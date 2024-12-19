@@ -86,20 +86,6 @@ namespace KK_VR.Grasp
             Attached,    // 
             //Grounded     // Not implemented. Is attached to floor/some map item collider. 
         }
-
-
-        internal class BodyPartHead : BodyPart
-        {
-            internal readonly KK.RootMotion.FinalIK.FBBIKHeadEffector headEffector;
-            internal BodyPartHead(
-                PartName _name,
-                ChaControl _chara,
-                Transform _afterIK,
-                Transform _beforeIK) : base(_name, _afterIK, _beforeIK)
-            {
-                headEffector = FBBIK.CreateHeadEffector(_chara, anchor);
-            }
-        }
         
         public enum PartName
         {

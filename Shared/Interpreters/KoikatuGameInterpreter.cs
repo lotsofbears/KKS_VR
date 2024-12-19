@@ -13,6 +13,7 @@ using KK_VR.Handlers;
 using VRGIN.Controls;
 using KK_VR.Settings;
 using KK_VR.Holders;
+using System;
 
 namespace KK_VR.Interpreters
 {
@@ -35,6 +36,7 @@ namespace KK_VR.Interpreters
         private static SceneType _currentScene;
         private static SceneInterpreter _sceneInterpreter;
         private static KoikatuSettings _settings;
+        private static KoikatuInterpreter _instance;
 
         private KK_VR.Fixes.Mirror.Manager _mirrorManager;
         private int _kkapiCanvasHackWait;
@@ -42,6 +44,7 @@ namespace KK_VR.Interpreters
         private bool _hands;
         protected override void OnAwake()
         {
+            _instance = this;
             _currentScene = SceneType.OtherScene;
             _sceneInterpreter = new OtherSceneInterpreter();
             SceneManager.sceneLoaded += OnSceneLoaded;
@@ -321,10 +324,19 @@ namespace KK_VR.Interpreters
 
         private const float _targetFps = 1f / 45f;
         // As my potater can't into 90fps, I limit it to half and use frame interpolation to compensate.
-        // Thus all calculations are done with 45fps in mind.
+        // Thus all frame based calculations are done with 45fps in mind, feel free to supersede.
         internal static int ScaleWithFps(int number)
         {
             return Mathf.FloorToInt(_targetFps / Time.deltaTime * number);
+        }
+        internal static void RunAfterUpdate(Action action)
+        {
+            _instance.StartCoroutine(_instance.RunAfterUpdateCo(action));
+        }
+        private IEnumerator RunAfterUpdateCo(Action action)
+        {
+            yield return null;
+            action.Invoke();
         }
     }
 }

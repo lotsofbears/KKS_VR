@@ -180,15 +180,14 @@ namespace KK_VR.Holders
                 //}
 #if KK
 
-                yield return audioFile.Send();//  SendWebRequest();
+                yield return audioFile.Send();
                 if (audioFile.isError)
 #else
-                    yield return audioFile.SendWebRequest();
+                yield return audioFile.SendWebRequest();
                 if (audioFile.isHttpError || audioFile.isNetworkError)
 #endif
                 {
-                    VRPlugin.Logger.LogWarning(audioFile.error);
-                    VRPlugin.Logger.LogWarning(Path.Combine(path, name));
+                    VRPlugin.Logger.LogWarning($"{audioFile.error} - {Path.Combine(path, name)}");
                 }
                 else
                 {

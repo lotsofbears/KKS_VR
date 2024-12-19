@@ -14,22 +14,22 @@ namespace KK_VR.Holders
 {
     internal class Holder : MonoBehaviour
     {
-        protected private Rigidbody _rigidBody;
-        //protected private AudioSource _audioSource;
-        protected private ItemType _activeItem;
+        protected Rigidbody _rigidBody;
+        protected ItemType _activeItem;
 
         // Can't arbitrary move VR controllers like in KK, have to do it with offsets.
-        protected private Vector3 _activeOffsetPos;
-        protected private Quaternion _activeOffsetRot;
+        protected Vector3 _activeOffsetPos;
+        protected Quaternion _activeOffsetRot;
 
         internal Transform Anchor => _anchor;
-        protected private Transform _anchor;
-        protected private Transform _offset;
-        protected private static readonly Dictionary<int, AibuItem> _loadedAssetsList = [];
+        protected Transform _anchor;
+        protected Transform _offset;
+        protected static readonly Dictionary<int, AibuItem> _loadedAssetsList = [];
+
         // Transparent thingy.
         internal static Material Material { get; private set; }
-        protected private ItemHandler _handler;
-        protected private class AnimParam
+        protected ItemHandler _handler;
+        protected readonly struct AnimParam
         {
             internal AnimParam(int _index, int[] _layers, List<ColInfo[]> _dbcInfo, int _startLayer, string _movePartName, Vector3 _posOffset, Quaternion _rotOffset)
             {
@@ -50,7 +50,7 @@ namespace KK_VR.Holders
             internal readonly Quaternion rotationOffset;
         }
 
-        protected private class ColInfo
+        protected class ColInfo
         {
             internal ColInfo(Vector3 _center, float _radius, float _height, int _direction, Quaternion _localRot)
             {
@@ -253,7 +253,7 @@ namespace KK_VR.Holders
             //    rotationOffset = Quaternion.identity, // Quaternion.Euler(-90f, 0f, 0f)
             //},
             ];
-        protected private class ItemType
+        protected class ItemType
         {
             internal readonly AibuItem aibuItem;
             //internal readonly GameObject handlerParent;
@@ -301,7 +301,7 @@ namespace KK_VR.Holders
             }
         }
 #if KK
-        protected private void LoadAssets()
+        protected void LoadAssets()
         {
             // Straight from HandCtrl.
             var textAsset = GlobalMethod.LoadAllListText("h/list/", "AibuItemObject", null);
@@ -421,7 +421,7 @@ namespace KK_VR.Holders
             return result;
         }
 
-        protected private void LoadAssets()
+        protected void LoadAssets()
         {
             // KKS HandCtrl.
 

@@ -83,6 +83,7 @@ namespace KK_VR.Handlers
         }
         private void Update()
         {
+            // Current version might be able to handle cross fader? test it?
             if (_aibu && !PauseInteractions && !CrossFader.InTransition)
             {
                 if (!HandleKissing())
@@ -113,10 +114,6 @@ namespace KK_VR.Handlers
         {
             if (Tracker.AddCollider(other))
             {
-                //if (tracker.reactionType > Tracker.ReactionType.None)
-                //{
-                //    DoReaction();
-                //}
                 var touch = Tracker.colliderInfo.behavior.touch;
                 if (touch != AibuColliderKind.none && !PauseInteractions && (_aibu || KoikatuInterpreter.SceneInterpreter.IsGripMove()))
                 {
@@ -177,7 +174,7 @@ namespace KK_VR.Handlers
                 hand.selectKindTouch = AibuColliderKind.mouth;
                 yield return null;
             }
-            DestroyGrab();
+            DestroyGripMove();
             yield return CoroutineUtils.WaitForEndOfFrame;
             if (IntegrationSensibleH.active)
             {
@@ -273,7 +270,7 @@ namespace KK_VR.Handlers
             if (IsLickingAllowed(colliderKind, out var layerNum))
             {
                 Halt(disengage: false);
-                DestroyGrab();
+                DestroyGripMove();
                 _lastChara = HSceneInterpreter.lstFemale[0];
                 _activeCo = true;
                 if (IntegrationSensibleH.active)
@@ -488,25 +485,25 @@ namespace KK_VR.Handlers
 
             _activeCo = true;
             _disengage = true;
-            var origin = VR.Camera.Origin;
-            var head = VR.Camera.Head;
             yield return new WaitUntil(() => !_gripMove);
             yield return CoroutineUtils.WaitForEndOfFrame;
 
-            // One of kill-switch-postfixes can bring this.
-            var lookAt = (_lookAt == null ? head : _lookAt).position;
-
-            // If pitch is too high - keep it, prob preferable.
-            var headPitch = Math.Abs(Mathf.DeltaAngle(head.eulerAngles.x, 0f)) > 40f;
-
-            var uprightRot = Quaternion.identity;
-            var lerpMultiplier = 0f;
-            var startRot = origin.rotation;
-            var lerp = 0f;
-            var sDamp = new SmoothDamp(1f);
             // Pov can handle itself without this just fine.
             if (!PoV.Active)
             {
+                var origin = VR.Camera.Origin;
+                var head = VR.Camera.Head;
+                // One of kill-switch-postfixes can bring this.
+                var lookAt = (_lookAt == null ? head : _lookAt).position;
+
+                // If pitch is too high - keep it, prob preferable.
+                var headPitch = Math.Abs(Mathf.DeltaAngle(head.eulerAngles.x, 0f)) > 40f;
+
+                var uprightRot = Quaternion.identity;
+                var lerpMultiplier = 0f;
+                var startRot = origin.rotation;
+                var lerp = 0f;
+                var sDamp = new SmoothDamp(1f);
                 while (true)
                 {
                     var dist = Vector3.Distance(lookAt, head.position);
@@ -548,10 +545,11 @@ namespace KK_VR.Handlers
             }
             else
             {
+                // Let pov handle re-engage on slower then usual speed.
                 PoV.Instance.CameraIsFar(0.25f);
                 PauseInteractions = true;
             }
-            
+
             //VRPlugin.Logger.LogDebug($"MouthGuide:Disengage:End");
             _activeCo = false;
             _disengage = false;
@@ -589,12 +587,13 @@ namespace KK_VR.Handlers
             }
         }
 
-        private void DestroyGrab()
+        private void DestroyGripMove()
         {
             foreach (var hand in HandHolder.GetHands)
             {
                 hand.Tool.DestroyGrab();
             }
+            _gripMove = false;
         }
         private void UnlazyGripMove()
         {
@@ -605,19 +604,15 @@ namespace KK_VR.Handlers
         }
 
         // About to be obsolete in favor of dynamic offsets and bootleg tongue.
-        class LickItem
+        private struct LickItem
         {
-            public string path;
-            public float itemOffsetForward;
-            public float itemOffsetUp;
-            public float poiOffsetUp;
-            public float directionUp;
-            public float directionForward;
+            internal string path;
+            internal float itemOffsetForward;
+            internal float itemOffsetUp;
+            internal float poiOffsetUp;
+            internal float directionUp;
+            internal float directionForward;
         }
-        //private readonly List<string> _lookAtList =
-        //    [
-
-        //    ]
 
         private readonly Dictionary<AibuColliderKind, LickItem> PoI = new()
         {

@@ -188,7 +188,7 @@ namespace KK_VR.Settings
         public enum HeadEffector
         {
             Disabled,
-            WhenRequired,
+            OnDemand,
             Always
         }
         public enum Impersonation

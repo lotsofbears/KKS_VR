@@ -1,6 +1,7 @@
 ﻿//using Leap.Unity;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -116,7 +117,6 @@ namespace VRGIN.Modes
         protected virtual void OnDisable()
         {
             VRLog.Info("Disabled {0}", GetType().Name);
-
             SteamVR_Events.DeviceConnected.Remove(OnDeviceConnected);
         }
 
@@ -349,7 +349,6 @@ namespace VRGIN.Modes
             Destroy(ControllerManager);
             Destroy(Left);
             Destroy(Right);
-
 #if !UNITY_4_5
             if (_CapturePanorama)
             {

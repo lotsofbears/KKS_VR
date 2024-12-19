@@ -54,8 +54,8 @@ namespace KK_VR.Handlers
         internal override void Init(BodyPart bodyPart)
         {
             base.Init(bodyPart);
-            _effector = BodyPart.effector;
             _bodyPart = bodyPart;
+            _effector = bodyPart.effector;
         }
         internal override void Follow(Transform target, HandHolder hand)
         {
@@ -203,7 +203,7 @@ namespace KK_VR.Handlers
         }
         private void LateUpdate()
         {
-            _effector.positionOffset += _anchor.position - _effector.bone.position;
+            _effector.positionOffset += _anchor.position - _effector.bone.position; 
         }
 
         //private void FixedUpdate()

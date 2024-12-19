@@ -17,6 +17,7 @@ namespace KK_VR.IK
             if (newFbik != null) return newFbik;
 
             var oldFbik = chara.objAnim.GetComponent<RootMotion.FinalIK.FullBodyBipedIK>();
+            if (oldFbik == null) return null;
             newFbik = chara.objAnim.AddComponent<KK.RootMotion.FinalIK.FullBodyBipedIK>();
 
             newFbik.references.root = oldFbik.references.root;
@@ -72,18 +73,6 @@ namespace KK_VR.IK
         {
             // We don't use actual root-head bone, as neck-aim script gets in the way there on LateUpdate/FixedUpdate,
             // instead we use direct descendant. While not mazing-amazing, script is just fine, i'd rather not tinker/rewrite it.
-
-            //var head = chara.objHeadBone.transform.parent;
-            //var beforeIKObj = new GameObject("cf_t_head").transform;
-            //beforeIKObj.parent = chara.transform.Find("BodyTop/p_cf_body_bone/cf_t_root");
-            //beforeIKObj.SetPositionAndRotation(head.transform.position, head.transform.rotation);
-            //var beforeIK = beforeIKObj.gameObject.AddComponent<BeforeIK>();
-            //beforeIK.Init(head.transform, chara);
-
-            // cf_s_head
-
-            // We do it long way when we can't afford a mistake.
-            // Way too often SetParent( ,false) fails me in KK.
 
             var newFbik = chara.objAnim.GetComponent<KK.RootMotion.FinalIK.FullBodyBipedIK>();
             var oldFbik = chara.objAnim.GetComponent<RootMotion.FinalIK.FullBodyBipedIK>();

@@ -27,7 +27,6 @@ namespace KK_VR.Grasp
                     bodyPart.afterIK,
                     _colors[3],
                     removeCollider: false);
-            //gameObject.name = "ik_visual";
             gameObject.name = "ik_vl_" + bodyPart.GetLowerCaseName();
             _renderer = gameObject.GetComponent<Renderer>();
             _renderer.enabled = false;

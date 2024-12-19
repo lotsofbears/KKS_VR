@@ -142,6 +142,7 @@ namespace KK_VR.Camera
                 SmoothMover.Instance.MakeUpright();
             }
         }
+
         private static void UpdateVRCamera(HSceneProc instance, List<ChaControl> lstFemale)
         {
             var spotChange = Vector3.Distance(VR.Camera.transform.position, lstFemale[0].transform.position) > 2f;

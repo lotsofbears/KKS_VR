@@ -15,6 +15,7 @@ using UnityEngine;
 using UnityStandardAssets.ImageEffects;
 using VRGIN.Core;
 using Object = UnityEngine.Object;
+using KK_VR.Camera;
 
 /*
  * Fixes for issues that are in the base game but are only relevant in VR.
@@ -71,18 +72,18 @@ namespace KK_VR.Fixes
     /// This removes the mask and applies the amplify effect to the whole camera, with downside of darkening the UI.
     /// This component also exists in some places in main game, but it seems like this patch has no ill effects related to that.
     /// </summary>
-    [HarmonyPatch(typeof(CameraEffectorColorMask))]
-    public class CameraEffectorColorMaskFix
-    {
-        [HarmonyPrefix]
-        [HarmonyPatch(nameof(CameraEffectorColorMask.Awake), MethodType.Normal)]
-        private static bool SkipCameraSetup(CameraEffectorColorMask __instance)
-        {
-           //VRPlugin.Logger.LogDebug("Skipping CameraEffectorColorMask.Awake and destroying the component");
-            GameObject.Destroy(__instance);
-            return false;
-        }
-    }
+    //[HarmonyPatch(typeof(CameraEffectorColorMask))]
+    //public class CameraEffectorColorMaskFix
+    //{
+    //    [HarmonyPrefix]
+    //    [HarmonyPatch(nameof(CameraEffectorColorMask.Awake), MethodType.Normal)]
+    //    private static bool SkipCameraSetup(CameraEffectorColorMask __instance)
+    //    {
+    //       //VRPlugin.Logger.LogDebug("Skipping CameraEffectorColorMask.Awake and destroying the component");
+    //        GameObject.Destroy(__instance);
+    //        return false;
+    //    }
+    //}
 
 
     /// <summary>
@@ -130,6 +131,40 @@ namespace KK_VR.Fixes
 
         static readonly Vector3[] _frustumBuffer = new Vector3[4];
     }
+#if KKS
+
+    // When the game disables the map in HScene (Alpha6 shortcut), it changes camera's config, we want to syncronize it with VR camera to get propper pass-through in VR.
+    [HarmonyPatch]
+    public class CameraClearFlagsHook
+    {
+        public static void UpdateVRCamera()
+        {
+            KoikatuInterpreter.RunAfterUpdate(VRGIN.Core.VRCamera.Instance.UpdateCameraBlueprint);
+        }
+        static MethodBase TargetMethod()
+        {
+            // Our target is nested type in HSceneProc.SetShortcutKey.
+            var nested = typeof(HSceneProc).GetNestedType("<>c", BindingFlags.NonPublic);
+            if (nested == null)
+            {
+                return null;
+            }
+            return AccessTools.Method(nested, "<SetShortcutKey>b__191_7");
+        }
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var method = AccessTools.Method(typeof(CameraClearFlagsHook), nameof(CameraClearFlagsHook.UpdateVRCamera));
+            foreach (var code in instructions)
+            {
+                if (code.opcode == OpCodes.Ret)
+                {
+                    yield return new CodeInstruction(OpCodes.Call, method);
+                }
+                yield return code;
+            }
+        }
+    }
+#endif
 
 
     // Not tagging VRCamera as MainCamera fixes all those issues.
