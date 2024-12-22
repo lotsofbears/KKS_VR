@@ -35,7 +35,7 @@ namespace KK_VR.Settings
         public const string SectionEventScenes = "1. Event scenes";
         public const string SectionPov = "4. Pov";
         public const string SectionIK = "5. IK";
-
+        public const string SectionPerformance = "6. Performance";
 
         public static ConfigEntry<bool> EnableBoop { get; private set; }
         /// <summary>
@@ -295,6 +295,10 @@ namespace KK_VR.Settings
                 "Will make it or break it, if latter can be fixed manually (more often then not)." +
                 "'OnDemand' setting will disable effector on soft/hard reset");
             Tie(ikHeadEffector, v => settings.IKHeadEffector = v);
+
+            var fixMirrors = config.Bind(SectionPerformance, "FixMirrors", true,
+                "Fix mirror reflections, adds about 10-20% to gpu load when mirror is being rendered.");
+            Tie(fixMirrors, v => settings.FixMirrors = v);
 
             //void updateKeySets()
             //{

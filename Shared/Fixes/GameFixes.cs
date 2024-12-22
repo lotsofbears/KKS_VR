@@ -72,18 +72,17 @@ namespace KK_VR.Fixes
     /// This removes the mask and applies the amplify effect to the whole camera, with downside of darkening the UI.
     /// This component also exists in some places in main game, but it seems like this patch has no ill effects related to that.
     /// </summary>
-    //[HarmonyPatch(typeof(CameraEffectorColorMask))]
-    //public class CameraEffectorColorMaskFix
-    //{
-    //    [HarmonyPrefix]
-    //    [HarmonyPatch(nameof(CameraEffectorColorMask.Awake), MethodType.Normal)]
-    //    private static bool SkipCameraSetup(CameraEffectorColorMask __instance)
-    //    {
-    //       //VRPlugin.Logger.LogDebug("Skipping CameraEffectorColorMask.Awake and destroying the component");
-    //        GameObject.Destroy(__instance);
-    //        return false;
-    //    }
-    //}
+    [HarmonyPatch(typeof(CameraEffectorColorMask))]
+    public class CameraEffectorColorMaskFix
+    {
+        [HarmonyPrefix]
+        [HarmonyPatch(nameof(CameraEffectorColorMask.Awake), MethodType.Normal)]
+        private static bool SkipCameraSetup(CameraEffectorColorMask __instance)
+        {
+            GameObject.Destroy(__instance);
+            return false;
+        }
+    }
 
 
     /// <summary>

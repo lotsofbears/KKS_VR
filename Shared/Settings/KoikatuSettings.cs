@@ -154,6 +154,7 @@ namespace KK_VR.Settings
         public bool IKShowDebug { get; set; }
         public float IKDefaultBendConstraint { get; set; }
         public bool ImperfectRotation { get; set; }
+        public bool FixMirrors { get; set; }
         public bool MaintainLimbOrientation 
         {
             get => _maintainLimbOrientation;

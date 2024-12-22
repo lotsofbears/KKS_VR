@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <EmbeddedResource Include="../Shared/Fixes/Mirror/mirror-shader" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\KoikatuCompatibilityAnalyzer.1.1.0\analyzers\dotnet\cs\KoikatuCompatibilityAnalyzer.dll" />

@@ -77,28 +77,13 @@ namespace KK_VR.Interpreters
                 // Init too early will throw a wrench into VRGIN's init.
                 CreateHands();
             }
-#if KK
-            // Change collision layers for action scene instead.
-            var map = GameObject.Find("Map");
-            if (map != null)
+            if (_settings.FixMirrors)
             {
-                foreach (Transform child in map.transform)
+                foreach (var reflection in GameObject.FindObjectsOfType<MirrorReflection>())
                 {
-                    if (child.name.StartsWith("mo_koi_sky_", System.StringComparison.Ordinal))
-                    {
-                        if (child.GetComponent<Collider>() != null)
-                            Destroy(child.GetComponent<Collider>());
-                    }
+                    _mirrorManager.Fix(reflection);
                 }
             }
-            
-            // KKS requires special care, it starts to show ?floor_collider?
-            // Is it even broken in KKS? seems to work fine.
-            foreach (var reflection in GameObject.FindObjectsOfType<MirrorReflection>())
-            {
-                _mirrorManager.Fix(reflection);
-            }
-#endif
         }
 
         private void CreateHands()
