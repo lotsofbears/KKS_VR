@@ -138,18 +138,20 @@ namespace KK_VR.Handlers
            //VRPlugin.Logger.LogDebug($"DoReaction:{_tracker.colliderInfo.behavior.react}:{_tracker.colliderInfo.behavior.touch}:{_tracker.reactionType}:{velocity}");
             if (_settings.AutomaticTouching > KoikatuSettings.SceneType.TalkScene)
             {
-                //if (GraspHelper.Instance != null)
-                //{
-                //    GraspHelper.Instance.TouchReaction(_tracker.colliderInfo.chara, _hand.Anchor.position, _tracker.colliderInfo.behavior.part);
-                //}
                 if (velocity > 1.5f || (_tracker.reactionType == Tracker.ReactionType.HitReaction && !IsAibuItemPresent(out _)))
                 {
-                    HSceneInterpreter.HitReactionPlay(_tracker.colliderInfo.behavior.react, _tracker.colliderInfo.chara, voiceWait: true);
+                    if (_settings.TouchReaction != 0f && GraspHelper.Instance != null && UnityEngine.Random.value < _settings.TouchReaction)
+                    {
+                        GraspHelper.Instance.TouchReaction(_tracker.colliderInfo.chara, _hand.Anchor.position, _tracker.colliderInfo.behavior.part);
+                    }
+                    else
+                    {
+                        HSceneInterpreter.HitReactionPlay(_tracker.colliderInfo.behavior.react, _tracker.colliderInfo.chara, voiceWait: true);
+                    }
                 }
                 else if (_tracker.reactionType == Tracker.ReactionType.Short)
                 {
                     Features.LoadVoice.PlayVoice(Features.LoadVoice.VoiceType.Short, _tracker.colliderInfo.chara, voiceWait: true);
-                    //HSceneInterpreter.PlayShort(_tracker.colliderInfo.chara, voiceWait: true);
                 }
                 else //if (_tracker.reactionType == ControllerTracker.ReactionType.Laugh)
                 {

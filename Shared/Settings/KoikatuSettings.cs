@@ -181,11 +181,7 @@ namespace KK_VR.Settings
             }
         }
         private float _pushParent;
-        //public enum HeadsetType
-        //{
-        //    None,
-        //    Pico4
-        //}
+        public float TouchReaction {  get; set; }
         public enum HeadEffector
         {
             Disabled,

@@ -31,10 +31,10 @@ namespace KK_VR.Settings
     {
         public const string SectionGeneral = "0. General";
         public const string SectionRoaming = "1. Roaming";
-        public const string SectionH = "1. H";
-        public const string SectionEventScenes = "1. Event scenes";
-        public const string SectionPov = "4. Pov";
-        public const string SectionIK = "5. IK";
+        public const string SectionEventScenes = "2. Event scenes";
+        public const string SectionH = "3. H Scene";
+        public const string SectionPov = "4. Impersonation (PoV)";
+        public const string SectionIK = "5. Inverse Kinematics (IK)";
         public const string SectionPerformance = "6. Performance";
 
         public static ConfigEntry<bool> EnableBoop { get; private set; }
@@ -154,7 +154,7 @@ namespace KK_VR.Settings
                 "Improve framerate and reduce stutter in H and Talk scenes inside Roaming. May cause visual glitches.");
             Tie(optimizeHInsideRoaming, v => settings.OptimizeHInsideRoaming = v);
 
-            var automaticTouching = config.Bind(SectionH, "Automatic touching", KoikatuSettings.SceneType.TalkScene,
+            var automaticTouching = config.Bind(SectionH, "Automatic touching", KoikatuSettings.SceneType.Both,
                 "Touching body with controller triggers reaction");
             Tie(automaticTouching, v => settings.AutomaticTouching = v);
 
@@ -299,6 +299,13 @@ namespace KK_VR.Settings
             var fixMirrors = config.Bind(SectionPerformance, "FixMirrors", true,
                 "Fix mirror reflections, adds about 10-20% to gpu load when mirror is being rendered.");
             Tie(fixMirrors, v => settings.FixMirrors = v);
+
+            var touchReaction = config.Bind(SectionH, "TouchReactionProbability", 0.2f,
+                new ConfigDescription(
+                    "Set probability of an alternative reaction on touch.",
+                    new AcceptableValueRange<float>(0f, 1f),
+                    new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
+            Tie(touchReaction, v => settings.TouchReaction = v);
 
             //void updateKeySets()
             //{

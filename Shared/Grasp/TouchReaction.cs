@@ -63,6 +63,9 @@ namespace KK_VR.Grasp
         private IKEffector[] _effectors;
         private ChaControl chara;
 
+        // Consequent reaction doesn't work well/look good, we'll keep to one at a time.
+        internal bool IsBusy => _currentReactions.Count > 0;
+
         private void Awake()
         {
             chara = transform.GetComponentInParent<ChaControl>();

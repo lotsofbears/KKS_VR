@@ -21,6 +21,7 @@ using static KK_VR.Grasp.TouchReaction;
 using BodyPart = KK_VR.Grasp.BodyPart;
 using KK_VR.Holders;
 using static KK.RootMotion.FinalIK.IKSolverVR;
+using KK_VR.Features;
 
 namespace KK_VR.Grasp
 {
@@ -383,7 +384,7 @@ namespace KK_VR.Grasp
         {
             foreach (var bodyPartList in _bodyPartsDic.Values)
             {
-                for (var i = 5; i <= 7; i++)
+                for (var i = 5; i < 7; i++)
                 {
                     bodyPartList[i].effector.maintainRelativePositionWeight = active ? 1f : 0f;
                 }
@@ -394,7 +395,7 @@ namespace KK_VR.Grasp
         {
             foreach (var bodyPartList in _bodyPartsDic.Values)
             {
-                for (var i = 5; i <= 7; i++)
+                for (var i = 5; i < 7; i++)
                 {
                     bodyPartList[i].chain.push = number == 0f ? 0f : 1f;
                     bodyPartList[i].chain.pushParent = number;
@@ -521,8 +522,9 @@ namespace KK_VR.Grasp
         //}
         internal void TouchReaction(ChaControl chara, Vector3 handPosition, Tracker.Body body)
         {
-            if (_auxDic.ContainsKey(chara))
+            if (_auxDic.ContainsKey(chara) && !_auxDic[chara].reaction.IsBusy)
             {
+                Features.LoadVoice.PlayVoice(Features.LoadVoice.VoiceType.Short, chara);
                 foreach (var bodyPart in _bodyPartsDic[chara])
                 {
                     if (bodyPart.IsLimb())
