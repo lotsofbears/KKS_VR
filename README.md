@@ -37,9 +37,9 @@ There is no input customization or helping texts. Designed to be able to do any 
 The only means of movement are native in-game functions and *GripMove*, no *Warp*.  
 No double clicks, only *Short* or *LongPress* for buttons and *DirectionalInput* for *Touchpad*. The sole function of *Menu* button is to toggle a floating menu's visibility.
 
-The plugin assumes that VR controller has the following buttons:
-* **Grip** used as a **Grab** button. It grabs things to move them around.  
-* **Trigger** used as an **Action** button that performs actions where applicable or completes their wait period if one is already queued but not yet determined whether it's *Short* or *LongPress*.  
+The plugin assumes that VR controller has:
+* **Grip** used as a **Grab** button. Grabs things to move them around.  
+* **Trigger** used as an **Action** button. Performs actions where applicable or completes their wait period if one is already queued but not yet determined whether it's a *Short* or *LongPress*.  
 * **Touchpad** aka *Thumbstick* aka *Joystick* used as a **Generic** button. Never requires a click in non-centered positions.
 
 ### Modules and their inputs:
@@ -55,10 +55,10 @@ Available in **Any Scene** as the last priority action i.e. when no better actio
 Depending on the context may behave differently.  
 
 ### Impersonation aka PoV
-Assume orientation of a character's head and loosely follow it.  
+Assume orientation of a character's head and follow it loosely.  
 Available in **H Scene** outside of character interactions.  
 * **Touchpad** to start, stop, change or reset *Impersonation*. Registers after *LongPress*.  
-* **Touchpad** while in *Impersonation* and in *GripMove* with pressed *Trigger* to enable remote following with current vector between the camera and a character's head as an offset.  
+* **Touchpad** while in *Impersonation* and in *GripMove* with pressed *Trigger* to set custom offset.  
 
 Has settings for gender preferences and automatization.
 
@@ -71,7 +71,7 @@ Available in **H Scene** when the camera is in direct proximity to the said PoI.
 Has plenty of settings for customization. 
 
 ### Controller representation
-Native in-game items serving as a representation of controllers.  
+Native in-game items serving as a controller's representation.  
 Available in **Any Scene** as the last priority action i.e. when no better actions are available.  
 They won't go inside of things easily, preferring instead to stick to the surface.
 * **Touchpad** with pressed *Trigger* to cycle available items.
