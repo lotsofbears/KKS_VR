@@ -1,4 +1,3 @@
-
 # KKS_VR - VR Plugin for Koikatsu and Koikatsu Sunshine
 A BepInEx plugin for Koikatsu (KK) and Koikatsu Sunshine (KKS) that allows you to play the main game and studio (Sunshine only) in VR.  
 The difference from the official VR modules is that you have access to the full game/studio, while the official modules have limited features and spotty mod support.
@@ -24,18 +23,21 @@ The studio part is a fork of the [KKS_CharaStudioVR](https://vr-erogamer.com/arc
 2. Download the latest [release](https://github.com/IllusionMods/KKS_VR/releases) for the corresponding game.
 3. Extract the zip into the game folder (where the abdata and BepInEx folders are).
 4. Create a shortcut to Koikatu.exe and/or KoikatsuSunshine.exe and/or CharaStudio.exe, and add `--vr` to the command line.  
-The game (not the studio) also can be launched without any added arguments if SteamVR is running.
+   The game (not the studio) also can be launched without any added arguments if SteamVR is running.
 
 ## Tip
- * Be advised to set InterPupillary Distance (IPD) in the in-game settings to change the scale of the world according to a personal preference and used hardware.
+ * Be advised to set InterPupillary Distance (IPD) in the settings to change the scale of the world according to a personal preference and used hardware.
 
 ## Controls Game
 ### Overview
 
 There are two controllers for each hand with identical functional without any tools or modes.  
-There is no input customization or helping texts. Designed to be able to do any action with a single hand.  
+There is no input customization or helping texts.  
+Designed to be able to do any action with a single hand.  
 The only means of movement are native in-game functions and *GripMove*, no *Warp*.  
-No double clicks, only *Short* or *LongPress*. The sole function of *Menu* button is to toggle menu's visibility.  
+No double clicks, only *Short* or *LongPress*.  
+The sole function of *Menu* button is to toggle menu's visibility.
+
 The plugin assumes that VR controller has the following buttons:
 * **Grip** used as a **Grab** button. It grabs things to move them around.  
 * **Trigger** used as an **Action** button that performs actions where applicable or completes their wait period if one is already queued but not yet determined whether it's *Short* or *LongPress*.  
@@ -143,7 +145,7 @@ Available in **Talk and Text Scenes**.
 Available in **Roaming Scene**.
 * **Trigger** to start locomotion.
 * **DirectionUp** to interact.
-* **Horizontal direction** to change yaw relative to the ground using the camera as an axis.
+* **Horizontal direction** to change *Yaw* relative to the ground using the camera as an axis.
 
 ## Controls Studio
 **Warning: This section was written for [KK_MainGameVR](https://github.com/mosirnik/KK_MainGameVR) and serves as a loose, vague reference for an actual functional.**
