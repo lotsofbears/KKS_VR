@@ -1,5 +1,6 @@
-# KKS_VR - VR Plugin for Koikatsu Sunshine
-A BepInEx plugin for Koikatsu Sunshine (KKS) that allows you to play both the main game and studio in VR.
+
+# KKS_VR - VR Plugin for Koikatsu and Koikatsu Sunshine
+A BepInEx plugin for Koikatsu (KK) and Koikatsu Sunshine (KKS) that allows you to play the main game and studio (Sunshine only) in VR.
 The difference from the official VR modules is that you have access to the full game/studio, while the official modules have limited features and spotty mod support.
 
 Currently only the standing (aka room-scale) mode is fully supported.
@@ -10,22 +11,144 @@ The studio part is a fork of the [KKS_CharaStudioVR](https://vr-erogamer.com/arc
 
 ## Prerequisites
 
-* Koikatsu Sunshine
+* Koikatsu or Koikatsu Sunshine
 * Latest version of BepInEx 5.x and KKSAPI/ModdingAPI
 * SteamVR
 * A VR headset supported by SteamVR
 * VR controllers
 
+
 ## Installation
 
 1. Make sure BepInEx, KKSAPI and all their dependencies have been installed.
-2. Download the latest [release](https://github.com/IllusionMods/KKS_VR/releases).
+2. Download the latest [release](https://github.com/IllusionMods/KKS_VR/releases) for the corresponding game.
 3. Extract the zip into the game folder (where the abdata and BepInEx folders are).
-4. Create a shortcut to KoikatsuSunshine.exe and/or CharaStudio.exe, and add `--vr` to the command line.
+4. Create a shortcut to Koikatu.exe and/or KoikatsuSunshine.exe and/or CharaStudio.exe, and add `--vr` to the command line.  
+   The game (not the studio) also can be launched without any added arguments if SteamVR is running.
 
-## Control
+## Tip
+ * Be advised to set InterPupillary Distance (IPD) in the settings to change the scale of the world according to a personal preference and used hardware.
 
-**Warning: This section was written for KK_MainGameVR and might not be accurate, especially in Studio.**
+## Controls Game
+### Overview
+
+There are two controllers for each hand with identical functional without any tools or modes.  
+There is no input customization or helping texts.  
+Designed to be able to do any action with a single hand.  
+The only means of movement are native in-game functions and *GripMove*, no *Warp*.  
+No double clicks, only *Short* or *LongPress*.  
+The sole function of *Menu* button is to toggle menu's visibility.  
+The plugin assumes that VR controller has the following buttons:
+* **Grip** used as a **Grab** button. It grabs things to move them around.  
+* **Trigger** used as an **Action** button that performs actions where applicable or completes their wait period if one is already queued but not yet determined whether it's *Short* or *LongPress*.  
+* **Touchpad** aka *Thumbstick* aka *Joystick* used as a **Generic** button. Never requires a click in non-centered positions.
+
+### Modules and their inputs:
+
+### GripMove  
+Grab the world and move around oneself.  
+Available in **Any Scene** as the last priority action i.e. when no better actions are available.   
+* **Grip** to start *GripMove*.  
+* **Trigger** while in *GripMove* to manipulate **Yaw** while using controller as an axis.  
+* **Touchpad** while in *GripMove* with pressed *Trigger* to manipulate **Rotation** of the camera.  
+* **Touchpad** while in *GripMove* without pressed *Trigger* to become **Upright**. Registers after *LongPress*.
+
+Depending on the context may behave differently.  
+
+### Impersonation aka PoV
+Assume orientation of a character's head and loosely follow it.  
+Available in **H Scene** outside of character interactions.  
+* **Touchpad** to start, stop, change or reset *Impersonation*. Registers after *LongPress*.  
+* **Touchpad** while in *Impersonation* and in *GripMove* with pressed *Trigger* to enable remote following with current vector between the camera and a character's head as an offset.  
+
+Has settings for gender preferences and automatization.
+
+### Assisted kiss/lick
+Attach the camera to a partner's PoI to follow it.  
+Available in **H Scene** when the camera is in direct proximity to the said PoI. Outside of caress positions requires *GripMove*.  
+* **Grip** while *Assisted* to start altered version of *GripMove* to acquire precise offsets on the fly. The long gap between camera and PoI will cause disengagement.
+* **Trigger** while *Assisted* and not in *GripMove* to stop action and disengage.
+
+Has plenty of settings for customization. 
+
+### Controller representation
+Native in-game items serving as a representation of controllers.  
+Available in **Any Scene** as the last priority action i.e. when no better actions are available.  
+They won't go inside of things easily, preferring instead to stick to the surface.
+* **Touchpad** with pressed *Trigger* to cycle available items.
+* **DirectionHorizontal** with pressed *Trigger* to cycle through item's animations.
+
+### IK Manipulator aka Grasp
+Alter currently playing animation on the fly.  
+Available in **H, Talk and Text Scenes** when interacting with a character i.e. controller is in close proximity to it.  
+* **Grip** to start *Grasp* i.e. hold relevant body parts and reposition them with the controller movements.
+* **Trigger** while in *Grasp* and visual cue of held body part is green to attach body part.  
+  Currently only to self/different character or controller. ~~Hand holding.~~
+* **Trigger** while in *Grasp* to extend the amount of held body parts, up to the whole character. Registers after *ShortPress*.
+* **Trigger** while in *Grasp* to extend the amount of held body parts temporarily. Registers after *LongPress*.
+* **Touchpad** while in *Grasp* to reset currently held body parts to default offsets.
+* **Touchpad** while not in *Grasp* to reset relevant body part to the default offset. Registers after *LongPress*.
+* **DirectionHorizontal** while in *Grasp* and the main held body part is a hand to scroll through hand animations. Goes full circle then resets to the animation's default.
+* **DirectionHorizontal** while in *Grasp* and holding whole character to change *Yaw* of a character.
+* **DirectionVertical** while in *Grasp* and holding whole character to move said character in direction of the camera.
+
+### Menu interaction
+Available in **Any Scene** when aiming controller at the floating in-game *Menu*.
+* **Grip** to grab *Menu*.
+* **Touchpad** while holding *Menu* with pressed *Trigger* to abandon it the world.
+* **DirectionHorizontal** while holding *Menu* to change it's size.
+* **DirectionVertical** while holding *Menu* to move it in controller's direction.
+
+### H Interpreter
+Available in **H Scene**, relies heavily on [SensibleH](https://github.com/lotsofbears/KK_SensibleH), without it many functions will be unavailable.  
+Described horizonal directions assume the right controller, for the left controller the directions will be mirrored.
+
+#### Generic
+* **DirectionLeft** to choose random position of current category. Registers after *LongPress*. 
+* **DirectionRight** to enter *PointMove*. Registers after *LongPress*.
+* **DirectionVertical** on partner's body part to (un)dress it.
+
+#### PointMove
+* **DirectionLeft** to exit *PointMove*.
+* **DirectionRight** to choose one at random and exit *PointMove*. Registers after *LongPress*.
+* **DirectionVertical** to scroll through available categories.
+
+#### Caress
+*AutoCaress* can be overtaken in any way by *Assisted kiss/lick*.  
+* **Grip** on attached caress item while in *AutoCaress* to take manual control.
+* **Trigger** on attached caress item to start *AutoCaress*. Registers after *LongPress*.
+* **Trigger** on attached caress item while in *AutoCaress* to stop it.
+* **Trigger** while in manual control of a caress item to squeeze. Might not always work if *AutoCaress* still runs some other item.
+* **DirectionDown** on attached caress item while not in *AutoCaress* to detach it.
+* **DirectionDown** while not in *AutoCaress* to prompt a partner to initiate a kiss. Limited to caress positions. Registers after *LongPress*.
+* **DirectionHorizontal** on attached caress item to toggle it's visibility.
+* **DirectionHorizontal** while an attached caress item is present to scroll through animations. Limited to caress positions.
+
+#### Service, Intercourse
+* **DirectionUp** to insert, start, finish, change speed. Registers after *LongPress*.
+* **DirectionUp** with pressed *Trigger* to opt for a no voice options. Registers after *LongPress*.
+* **DirectionUp** with pressed *Touchpad* to opt for anal if applicable. Can be used with pressed *Trigger*. Registers after *LongPress*.
+* **DirectionDown** to set condom, pullout, stop, change to outside during climax, change speed. Registers after *LongPress*.
+* **DirectionHorizontal** to scroll through animations.
+
+### Talk/Text Interpreter
+Available in **Talk and Text Scenes**. 
+* **Trigger** on partner's body part to provoke a reaction.
+* **DirectionVertical** on partner's body part to (un)dress it.
+* **DirectionVertical** to scroll buttons on the left side of the screen or choices from the text scenario.
+* **DirectionHorizontal** to select/deselect current button/category.
+* **DirectionHorizontal** to click on previous action. Registers after *LongPress*.
+* **DirectionHorizontal** while text is visible to advance text scenario.
+* **DirectionHorizontal** while text is visible to toggle *Auto*. Registers after *LongPress*.
+
+### Roaming Interpreter
+Available in **Roaming Scene**.
+* **Trigger** to start locomotion.
+* **DirectionUp** to interact.
+* **Horizontal direction** to change yaw relative to the ground using the camera as an axis.
+
+## Controls Studio
+**Warning: This section was written for [KK_MainGameVR](https://github.com/mosirnik/KK_MainGameVR) and serves as a loose, vague reference for an actual functional.**
 
 This plugin assumes that your VR controller has the following buttons/controls:
 
@@ -109,69 +232,6 @@ Just touching the touchpad or tilting the thumbstick won't be recognized.
 Exceptions to this rule are mouse wheel scroll actions and rotate actions,
 which only require touching.
 
-## Situation-specific controls
-
-**Warning: This section was written for KK_MainGameVR and might not be accurate, especially in Studio.**
-
-The school tool can be used when you need more complex interactions than simple
-mouse clicks.
-
-There are also a few types of context-specific controls, where you can interact
-directly with 3D objects using the controllers. This type of interaction does
-not require any specific tool to be selected. The tool icon disappears when
-such an interaction is available.
-
-Below is a list of situations that offer special controls.
-
-### Roaming
-
-In the Roaming mode, you can move around by using the school tool to walk
-(default: Trigger), and turn left and right (default: Touchpad left and right).
-You can also use the warp tool to teleport.
-
-You can use the school tool to simulate ordinary mouse and keyboard
-inputs, e.g. right click (default: touchpad center) for interacting with an
-object.
-
-Use the laser pointer (touchpad center) to open the middle-button menu.
-
-You can crouch by lowering your viewpoint relative to the floor. To do this,
-you can either physically move your head or use grab action to bring the
-floor closer. This behavior can be disabled in the config.
-
-### Talk scene
-
-When talking to a character, most interactions are done through the menu.
-In addition, you can touch or look at the character by putting one of the
-controllers at the position you want to touch/look at, then pulling the
-Trigger. 
-
-### H scene
-
-Caressing can be done in the same way as touching in talk scenes. Additionally,
-you can switch to a different mode of caressing by pressing the Application
-menu button with the controller in place.
-
-Optionally, automatic touching can be enabled, so that you don't even need to
-pull the Trigger.
-
-You can also kiss or lick the female by moving your head to the right place.
-This can be turned off in the config.
-
-You can undress a female character by putting a controller on one of her
-clothing items, then pressing the touchpad. A single touchpad click will
-perform one level of undressing. If you press and hold the touchpad,
-move the controller away and then release the touchpad, it will completely
-remove that part of clothing.
-
-Unfortunately this direct undressing operation doesn't work as expected for
-all clothes because the plugin doesn't exactly know what parts of
-body each clothing item covers. You can always fall back to
-using the menu for clothing state changes.
-
-When changing location, you can use the green laser to point to a new location
-icon and pull the Trigger to confirm.
-
 ## Configuration
 
 **Warning: This section was written for KK_MainGameVR and might not be accurate, especially in Studio.**
@@ -179,9 +239,6 @@ icon and pull the Trigger to confirm.
 This plugin has a lot of configuration options. It is recommended that you use
 [ConfigurationManager](https://github.com/BepInEx/BepInEx.ConfigurationManager),
 which allows you to change settings of this plugin from within the game.
-
-Alternatively you can manually edit `BepInEx\config\mosirnik.kk-main-game-vr.cfg`
-with a text editor.
 
 ## Controller Support
 
