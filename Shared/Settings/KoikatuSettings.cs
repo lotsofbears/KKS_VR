@@ -89,15 +89,15 @@ namespace KK_VR.Settings
         }
         public SceneType AutomaticTouching { get; set; }
 
-        public bool AutomaticTouchingByHeadset { get; set; }
+        //public bool AutomaticTouchingByHeadset { get; set; }
 
-        public bool AutomaticKissing { get; set; }
+        public bool AssistedKissing { get; set; }
 
-        public bool AutomaticLicking { get; set; }
+        public bool AssistedLicking { get; set; }
 
-        public bool FirstPersonADV { get; set; }
+        //public bool FirstPersonADV { get; set; }
 
-        public bool TeleportWithProtagonist { get; set; }
+        //public bool TeleportWithProtagonist { get; set; }
 
         public bool PrivacyScreen
         {
@@ -125,12 +125,12 @@ namespace KK_VR.Settings
 
         private float _NearClipPlane;
 
-        public bool UseLegacyInputSimulator
-        {
-            get { return _UseLegacyInputSimulator; }
-            set { _UseLegacyInputSimulator = value; TriggerPropertyChanged("UseLegacyInputSimulator"); }
-        }
-        private bool _UseLegacyInputSimulator;
+        //public bool UseLegacyInputSimulator
+        //{
+        //    get { return _UseLegacyInputSimulator; }
+        //    set { _UseLegacyInputSimulator = value; TriggerPropertyChanged("UseLegacyInputSimulator"); }
+        //}
+        //private bool _UseLegacyInputSimulator;
 
         public bool SmoothTransition { get; set; }
         public float FlightSpeed { get; set; }
@@ -144,7 +144,7 @@ namespace KK_VR.Settings
         public float ProximityDuringKiss { get; set; }
         public bool ContinuousRotation { get; set; }
         //public HeadsetType HeadsetSpecifications { get; set; }
-        public bool ForceShowMaleHeadInAdv { get; set; }
+        //public bool ForceShowMaleHeadInAdv { get; set; }
         //public bool DirectImpersonation { get; set; }
         //public Color GuideObjectsColor { get; set; }
         public bool ShowGuideObjects { get; set; }
@@ -193,7 +193,7 @@ namespace KK_VR.Settings
             Disabled,
             Boys,
             Girls,
-            Any
+            Both
         }
 
 

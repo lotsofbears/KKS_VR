@@ -442,7 +442,7 @@ namespace KK_VR.Grasp
             _handScrollList.Clear();
         }
 
-        // There are some shady animations where ik will be very wonky.
+        // Those are some shady animations where ik will be very wonky.
         private readonly List<string> _animationsNoIK =
             [
             "khs_f_61",

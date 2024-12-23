@@ -95,7 +95,7 @@ namespace KK_VR.Handlers
 
         private bool HandleKissing()
         {
-            if (KoikatuInterpreter.Settings.AutomaticKissing)
+            if (KoikatuInterpreter.Settings.AssistedKissing)
             {
                 var head = VR.Camera.Head;
                 if (Vector3.Distance(_eyes.position, head.position) < _kissDistance
@@ -117,11 +117,11 @@ namespace KK_VR.Handlers
                 var touch = Tracker.colliderInfo.behavior.touch;
                 if (touch != AibuColliderKind.none && !PauseInteractions && (_aibu || KoikatuInterpreter.SceneInterpreter.IsGripMove()))
                 {
-                    if (touch == AibuColliderKind.mouth)
+                    if (touch == AibuColliderKind.mouth && KoikatuInterpreter.Settings.AssistedKissing)
                     {
                         StartKiss();
                     }
-                    else if (touch < AibuColliderKind.reac_head)
+                    else if (touch < AibuColliderKind.reac_head && KoikatuInterpreter.Settings.AssistedLicking)
                     {
                         StartLick(touch);
                     }

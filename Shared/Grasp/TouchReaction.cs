@@ -11,6 +11,7 @@ using KK_VR.Fixes;
 
 namespace KK_VR.Grasp
 {
+    // Custom HitReaction. 
     internal class TouchReaction : MonoBehaviour
     {
         private class HitPoint

@@ -49,15 +49,17 @@ namespace KK_VR.Settings
         {
             var settings = new KoikatuSettings();
 
-            var ipdScale = config.Bind(SectionGeneral, "IPD Scale", 1f,
+            // Seen some folks discovering this setting after quite a while, thus a smaller default for extra realism from get go.
+            // At 1.0 scale the characters are way too tiny.
+            var ipdScale = config.Bind(SectionGeneral, "IPD Scale", 0.9f,
                 new ConfigDescription(
-                    "Scale of the camera. The higher, the more gigantic the player is.",
+                    "Scale of the camera. The lesser the bigger the world around appears.",
                     new AcceptableValueRange<float>(0.25f, 4f)));
             Tie(ipdScale, v => settings.IPDScale = v);
 
-            // KKS SteamVR also has it built-in on trigger/grip press/release.
+            // KKS SteamVR also has it built-in on trigger/grip press/release, should be possible to remove them in unity project.
             var rumble = config.Bind(SectionGeneral, "Haptic Feedback", true,
-                "Whether or not haptic feedback is activated.");
+                "Whether or not haptic feedback is active.");
             Tie(rumble, v => settings.Rumble = v);
 
             var rotationMultiplier = config.Bind(SectionGeneral, "Rotation multiplier", 1f,
@@ -96,12 +98,13 @@ namespace KK_VR.Settings
                     new AcceptableValueRange<float>(0.001f, 0.2f)));
             Tie(nearClipPlane, v => settings.NearClipPlane = v);
 
-            var useLegacyInputSimulator = config.Bind(SectionGeneral, "Use legacy input simulator", false,
-                new ConfigDescription(
-                    "Simulate mouse and keyboard input by generating system-wide fake events",
-                    null,
-                    new ConfigurationManagerAttributes { IsAdvanced = true }));
-            Tie(useLegacyInputSimulator, v => settings.UseLegacyInputSimulator = v);
+            // Pretty sure this got removed.
+            //var useLegacyInputSimulator = config.Bind(SectionGeneral, "Use legacy input simulator", false,
+            //    new ConfigDescription(
+            //        "Simulate mouse and keyboard input by generating system-wide fake events",
+            //        null,
+            //        new ConfigurationManagerAttributes { IsAdvanced = true }));
+            //Tie(useLegacyInputSimulator, v => settings.UseLegacyInputSimulator = v);
 
             var usingHeadPos = config.Bind(SectionRoaming, "Use head position", true,
                 new ConfigDescription(
@@ -145,61 +148,92 @@ namespace KK_VR.Settings
                     new ConfigurationManagerAttributes { Order = -4 }));
             Tie(standUpThreshold, v => settings.StandUpThreshold = v);
 
-            var teleportWithProtagonist = config.Bind(SectionRoaming, "Teleport with protagonist", true,
-                "When teleporting, the protagonist also teleports");
-            Tie(teleportWithProtagonist, v => settings.TeleportWithProtagonist = v);
+            // With removed warp tool has no use.
+            //var teleportWithProtagonist = config.Bind(SectionRoaming, "Teleport with protagonist", true,
+            //    "When teleporting, the protagonist also teleports");
+            //Tie(teleportWithProtagonist, v => settings.TeleportWithProtagonist = v);
 
-
-            var optimizeHInsideRoaming = config.Bind(SectionRoaming, "Aggressive performance optimizations", true,
+            // Couldn't really see the difference tbh, but oh well.
+            var optimizeHInsideRoaming = config.Bind(SectionPerformance, "Aggressive performance optimizations", true,
                 "Improve framerate and reduce stutter in H and Talk scenes inside Roaming. May cause visual glitches.");
             Tie(optimizeHInsideRoaming, v => settings.OptimizeHInsideRoaming = v);
 
+            // This one can be a bit annoying currently as characters can overreact if unintentionally bullied by the controller in pov mode during animations.
             var automaticTouching = config.Bind(SectionH, "Automatic touching", KoikatuSettings.SceneType.Both,
-                "Touching body with controller triggers reaction");
+                "Touching body with controller triggers a reaction");
             Tie(automaticTouching, v => settings.AutomaticTouching = v);
 
-            var automaticKissing = config.Bind(SectionH, "Automatic kissing", true,
-                "Initiate kissing by moving your head");
-            Tie(automaticKissing, v => settings.AutomaticKissing = v);
+            var assistedKissing = config.Bind(SectionH, "Assisted kissing", true,
+                new ConfigDescription(
+                    "Initiate kissing by moving your head to partner's head.\nGripMove required outside of caress.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 10 }));
+            Tie(assistedKissing, v => settings.AssistedKissing = v);
 
-            var automaticLicking = config.Bind(SectionH, "Automatic licking", true,
-                "Initiate licking by moving your head");
-            Tie(automaticLicking, v => settings.AutomaticLicking = v);
+            var assistedLicking = config.Bind(SectionH, "Assisted licking", true,
+                new ConfigDescription(
+                    "Initiate licking by moving your head to partner's point of interest.\nGripMove required outside of caress.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 9 }));
+            Tie(assistedLicking, v => settings.AssistedLicking = v);
 
-            var automaticTouchingByHmd = config.Bind(SectionH, "Kiss body", true,
-                "Touch body by moving your head");
-            Tie(automaticTouchingByHmd, v => settings.AutomaticTouchingByHeadset = v);
+            var followRotationDuringKiss = config.Bind(SectionH, "Assisted action rotation", true,
+                new ConfigDescription(
+                    "Apply rotation to the camera during the assisted kiss/lick.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 8 }));
+            Tie(followRotationDuringKiss, v => settings.FollowRotationDuringKiss = v);
 
-            var firstPersonADV = config.Bind(SectionEventScenes, "First person", true,
-                "Prefer first person view in event scenes");
-            Tie(firstPersonADV, v => settings.FirstPersonADV = v);
+            var proximityKiss = config.Bind(SectionH, "Assisted kiss distance", 0.1f,
+                new ConfigDescription(
+                    "The distance between the camera and partner's head during the initial phase of assisted kiss.",
+                    new AcceptableValueRange<float>(0.05f, 0.15f),
+                    new ConfigurationManagerAttributes { Order = 7 }));
+            Tie(proximityKiss, v => settings.ProximityDuringKiss = v);
 
-            var showMaleHeadInAdv = config.Bind(SectionEventScenes, "Show head in ADV", true,
-                "");
-            Tie(showMaleHeadInAdv, v => settings.ForceShowMaleHeadInAdv = v);
+            var imperfectRot = config.Bind(SectionH, "Imperfect rotation", true,
+                new ConfigDescription(
+                    "Allow poorly stabilized rotation after assisted kiss/lick. Purely for aesthetic reasons.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 6 }));
+            Tie(imperfectRot, v => settings.ImperfectRotation = v);
 
-            //var headsetType = config.Bind(SectionGeneral, "Controller adjustments", KoikatuSettings.HeadsetType.None,
-            //    "Placeholder.\nEnables controller adjustments made for particular headset model.");
-            //Tie(headsetType, v => settings.HeadsetSpecifications = v);
+            // Disabled for now, as the tongue isn't implemented yet, and a stop gap measure seems half assed.
+            //var automaticTouchingByHmd = config.Bind(SectionH, "Kiss body", true,
+            //    "Touch body by moving your head");
+            //Tie(automaticTouchingByHmd, v => settings.AutomaticTouchingByHeadset = v);
+
+            // Removed in favor of talkscene/adv rework, it (attempts) takes  care of everything.
+            //var firstPersonADV = config.Bind(SectionEventScenes, "First person", true,
+            //    "Prefer first person view in event scenes");
+            //Tie(firstPersonADV, v => settings.FirstPersonADV = v);
+
+            // Synchronizing shenanigans during adv/talk scene between both games proved to be a major headache, removed for now.
+            //var showMaleHeadInAdv = config.Bind(SectionEventScenes, "Show head in ADV", true,
+            //    "");
+            //Tie(showMaleHeadInAdv, v => settings.ForceShowMaleHeadInAdv = v);
+
 
             EnableBoop = config.Bind(SectionGeneral, "Enable Boop", true,
-                "Adds colliders to the controllers so you can boop things.\nGame restart required for change to take effect.");
+                "Add dynamic bone colliders to items that represent vr controllers.\nRequires game restart.");
 
 
             var enablePOV = config.Bind(SectionPov, "Enable", KoikatuSettings.Impersonation.Boys,
-                new ConfigDescription("Enable the ability to impersonate characters.", null,
-                new ConfigurationManagerAttributes { Order = 10 }));
+                new ConfigDescription(
+                    "The range of targets for impersonations.", 
+                    null,
+                    new ConfigurationManagerAttributes { Order = 10 }));
             Tie(enablePOV, v => settings.PoV = v);
 
             var HeadPosPoVY = config.Bind(SectionGeneral, "Camera offset-Y", 0.05f,
                 new ConfigDescription(
-                    "Camera offset from attachment point. Applies in Roaming and H PoV mode.",
+                    "Camera offset from an attachment point. Applies whenever the camera assumes head orientation of a character.",
                     new AcceptableValueRange<float>(-1f, 1f)));
             Tie(HeadPosPoVY, v => settings.PositionOffsetY = v);
 
             var HeadPosPoVZ = config.Bind(SectionGeneral, "Camera offset-Z", 0.05f,
                 new ConfigDescription(
-                    "Camera offset from attachment point. Applies in Roaming and H PoV mode.",
+                    "Camera offset from an attachment point. Applies whenever the camera assumes head orientation of a character.",
                     new AcceptableValueRange<float>(-1f, 1f)));
             Tie(HeadPosPoVZ, v => settings.PositionOffsetZ = v);
 
@@ -207,104 +241,108 @@ namespace KK_VR.Settings
                 "Hide the corresponding head when the camera is in it. Can be used in combination with camera offset to have simultaneously visible head and PoV mode.(~0.11 Z-offset for that)");
             Tie(hideHeadInPOV, v => settings.HideHeadInPOV = v);
 
-            var flyInPov = config.Bind(SectionPov, "Transition PoV", KoikatuSettings.MovementTypeH.Upright,
-                "When in PoV mode, on position (or location) change, instead of teleportation, transition smoothly to the new location.");
+            // No second mode after rework yet.
+            var flyInPov = config.Bind(SectionPov, "Smooth transition", KoikatuSettings.MovementTypeH.Upright,
+                new ConfigDescription(
+                    "Apply camera's movements smoothly during impersonation.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 9 }));
             Tie(flyInPov, v => settings.FlyInPov = v);
 
-            var autoEnter = config.Bind(SectionPov, "Auto enter", true,
-                "If not in PoV mode, on position change PoV mode will be automatically activated if there is a male.");
+            var autoEnter = config.Bind(SectionPov, "Auto impersonation", true,
+                "Automatically impersonate on position change if appropriate according to the setting.");
             Tie(autoEnter, v => settings.AutoEnterPov = v);
 
-            var rotationDeviationThreshold = config.Bind(SectionPov, "Lazy rotation", 15,
+            var rotationDeviationThreshold = config.Bind(SectionPov, "Lazy", 15,
                 new ConfigDescription(
-                    "Introduces lazy rotation when above 0. Won't apply rotation as long as deviation is within limits.\n" +
+                    "Introduces lazy impersonation when above 0. Follows camera in less invasive way for as long as the angle deviation is within limit.\n" +
                     "Changes take place after new impersonation.",
                     new AcceptableValueRange<int>(0, 60)));
             Tie(rotationDeviationThreshold, v => settings.RotationDeviationThreshold = v);
 
-            var flyInH = config.Bind(SectionH, "Smooth Transition", true,
-                "On position (or location) change, instead of teleportation, transition smoothly to the new location.");
+            var flyInH = config.Bind(SectionH, "Smooth transition", true,
+                "Apply camera's movements smoothly when camera supposed to teleport.");
             Tie(flyInH, v => settings.SmoothTransition = v);
 
-            var imperfectRot = config.Bind(SectionH, "Imperfect rotation", true,
-                "Allow poorly stabilized rotation after mouth/tongue actions.");
-            Tie(imperfectRot, v => settings.ImperfectRotation = v);
 
-            var flightSpeed = config.Bind(SectionH, "Transition H speed", 1f,
+            var flightSpeed = config.Bind(SectionH, "Transition speed", 1f,
                 new ConfigDescription(
-                    "Speed of progressive movement of the camera.",
+                    "Speed of the smooth transition.",
                     new AcceptableValueRange<float>(0.1f, 3f)));
             Tie(flightSpeed, v => settings.FlightSpeed = v);
 
-            var contRot = config.Bind(SectionRoaming, "Continuous rotation", true,
-                    "Enable continuous rotation of camera in roaming mode instead of snap turn. Influenced by the setting 'Rotation angle'.");
-            Tie(contRot, v => settings.ContinuousRotation = v);
+            var continuousRot = config.Bind(SectionRoaming, "Continuous rotation", true,
+                    "Rotate camera continuously instead of a snap turn. Influenced by the setting 'Rotation angle'.");
+            Tie(continuousRot, v => settings.ContinuousRotation = v);
 
             // Didn't meet expectations.
             //var directImpersonation = config.Bind(SectionPov, "DirectImpersonation", false, "");
             //Tie(directImpersonation, v => settings.DirectImpersonation = v);
 
-            var showGuideObjects = config.Bind(SectionIK, "ShowGuideObjects", true, "");
+            var showGuideObjects = config.Bind(SectionIK, "Visual cue", true,
+                new ConfigDescription(
+                    "Show visual cue during IK manipulation that represent attachment point of a corresponding part of the body. " +
+                    "The green hue signifies a possible attachment point.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 8 }));
             Tie(showGuideObjects, v => settings.ShowGuideObjects = v);
 
 
-            var showDebugIK = config.Bind(SectionIK, "DebugIK", false,
-                new ConfigDescription(
-                    "Show actual IK targets. Requires new scene.\n" +
-                    "yellow - ik",
-                    null,
-                    new ConfigurationManagerAttributes { IsAdvanced = true }
-                    )
-                );
+            //var showDebugIK = config.Bind(SectionIK, "DebugIK", false,
+            //    new ConfigDescription(
+            //        "Show actual IK targets. Requires new scene.\n" +
+            //        "yellow - ik",
+            //        null,
+            //        new ConfigurationManagerAttributes { IsAdvanced = true }
+            //        )
+            //    );
+            //Tie(showDebugIK, v => settings.IKShowDebug = v);
 
-            var pushParent = config.Bind(SectionIK, "PushParent", 0.05f,
+            var pushParent = config.Bind(SectionIK, "Push parent", 0.05f,
                 new ConfigDescription(
-                    "",
+                    "How well the limbs shall influence their parent joints.",
                     new AcceptableValueRange<float>(0f, 1f),
-                    new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
+                    new ConfigurationManagerAttributes { Order = -10, ShowRangeAsPercent = false }));
             Tie(pushParent, v => settings.PushParent = v);
 
-            var maintainLimbOrientation = config.Bind(SectionIK, "MaintainLimbOrientation", true, "");
+            var maintainLimbOrientation = config.Bind(SectionIK, "Maintain limb orientation", true,
+                new ConfigDescription(
+                    "The way ik handles arms. Use appropriate setting according to the taste/needs.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 9 }));
             Tie(maintainLimbOrientation, v => settings.MaintainLimbOrientation = v);
 
-            Tie(showDebugIK, v => settings.IKShowDebug = v);
 
-            var followRotationDuringKiss = config.Bind(SectionH, "FollowRotationDuringKiss", true, "");
-            Tie(followRotationDuringKiss, v => settings.FollowRotationDuringKiss = v);
-
-            var hideAibuHandOnUserInput = config.Bind(SectionH, "HideAibuHandOnUserInput", KoikatuSettings.HandType.Both,
-                    "");
+            var hideAibuHandOnUserInput = config.Bind(SectionH, "Hide caress hand", KoikatuSettings.HandType.Both,
+                    "Hide caress item model when assuming manual control over it.");
             Tie(hideAibuHandOnUserInput, v => settings.HideHandOnUserInput = v);
-
-            var proximityKiss = config.Bind(SectionH, "Kiss proximity", 0.1f,
-                new ConfigDescription(
-                    "Distance between camera and partner's head during initial phase of assisted kiss.",
-                    new AcceptableValueRange<float>(0.05f, 0.15f)));
-            Tie(proximityKiss, v => settings.ProximityDuringKiss = v);
 
 
             var ikBendConstraint = config.Bind(SectionIK, "Bend constraint", 0.1f,
                 new ConfigDescription(
-                    "How well limbs shall bend\n0 - twist in any way\n1 - won't bend at all",
+                    "Bendability of the limbs. 0 for no limits, 1 for full limitation.",
                     new AcceptableValueRange<float>(0f, 1f),
-                    new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
+                    new ConfigurationManagerAttributes { Order = -9, ShowRangeAsPercent = false }));
             Tie(ikBendConstraint, v => settings.IKDefaultBendConstraint = v);
 
-            var ikHeadEffector = config.Bind(SectionIK, "HeadEffector", KoikatuSettings.HeadEffector.OnDemand,
-                "HeadEffector is VERY finicky even on highly tailored settings." +
-                "Will make it or break it, if latter can be fixed manually (more often then not)." +
-                "'OnDemand' setting will disable effector on soft/hard reset");
+            var ikHeadEffector = config.Bind(SectionIK, "Head effector", KoikatuSettings.HeadEffector.OnDemand,
+                new ConfigDescription(
+                    "Head effector is very finicky, will make it or break it. In case of latter can be fixed (more often then not) by manually adjusting the pose." +
+                    "'OnDemand' setting will disable effector on soft/hard resets",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 10 }));
             Tie(ikHeadEffector, v => settings.IKHeadEffector = v);
 
-            var fixMirrors = config.Bind(SectionPerformance, "FixMirrors", true,
-                "Fix mirror reflections, adds about 10-20% to gpu load when mirror is being rendered.");
+            var fixMirrors = config.Bind(SectionPerformance, "Fix mirrors", true,
+                "Fix mirror reflections. Adds ~10-20% to gpu load when camera looks at a mirror.\n" +
+                "Otherwise the reflection is of subpar quality.");
             Tie(fixMirrors, v => settings.FixMirrors = v);
 
-            var touchReaction = config.Bind(SectionH, "TouchReactionProbability", 0.2f,
+            var touchReaction = config.Bind(SectionH, "Touch reaction", 0.2f,
                 new ConfigDescription(
-                    "Set probability of an alternative reaction on touch.",
+                    "Set probability of an alternative reaction to the touch.",
                     new AcceptableValueRange<float>(0f, 1f),
-                    new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
+                    new ConfigurationManagerAttributes { Order = -10, ShowRangeAsPercent = false }));
             Tie(touchReaction, v => settings.TouchReaction = v);
 
             //void updateKeySets()
