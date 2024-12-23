@@ -1,4 +1,5 @@
 ﻿using KK_VR.Grasp;
+using KK_VR.Interpreters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -181,6 +182,16 @@ namespace KK_VR.Settings
             }
         }
         private float _pushParent;
+        public ShadowType ShadowsOptimization
+        {
+            get => _shadowsOptimization;
+            set
+            {
+                _shadowsOptimization = value;
+                KoikatuInterpreter.TweakShadowSettings(value);
+            }
+        }
+        private ShadowType _shadowsOptimization;
         public float TouchReaction {  get; set; }
         public enum HeadEffector
         {
@@ -195,7 +206,11 @@ namespace KK_VR.Settings
             Girls,
             Both
         }
-
+        public enum ShadowType
+        {
+            Close,
+            Average
+        }
 
         public enum MovementTypeH
         {

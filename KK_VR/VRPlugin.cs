@@ -91,8 +91,6 @@ namespace KK_VR
             // an attempt to counter this.
             NativeMethods.DisableProcessWindowsGhosting();
 
-            TweakShadowSettings();
-
             //DontDestroyOnLoad(VRCamera.Instance.gameObject);
 
             // Probably unnecessary, but just to be safe
@@ -118,20 +116,7 @@ namespace KK_VR
         {
             VRCamera.Instance.SteamCam.origin.localScale = Vector3.one * settings.IPDScale;
         }
-        private static void TweakShadowSettings()
-        {
-            // Grab "KKS_BetterShadowQualitySettings.dll" from HongFire patch, and configure it to own taste.
-            // Otherwise my take on "looks fine". Results should vary depending on the VR hardware btw.
-
-            // Default shadows look too wobbly in VR.
-            QualitySettings.shadowProjection = ShadowProjection.StableFit;
-            QualitySettings.shadowCascades = 4;
-            QualitySettings.shadowCascade2Split = 0.33f;
-            QualitySettings.shadowCascade4Split = new Vector4(0.025f, 0.085f, 0.25f);
-            QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
-            QualitySettings.shadows = ShadowQuality.All;
-            QualitySettings.shadowDistance = 30;
-        }
+        
 
         private static class NativeMethods
         {

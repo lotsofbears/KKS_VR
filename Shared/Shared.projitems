@@ -89,7 +89,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\Extras\InputWait.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\Extras\MeshCollider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\Extras\SceneExtras.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Interpreters\HSceneHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\HSceneInterpreter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\InterpreterHooks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interpreters\KoikatuGameInterpreter.cs" />

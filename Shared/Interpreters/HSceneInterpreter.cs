@@ -129,10 +129,8 @@ namespace KK_VR.Interpreters
             male = traverse.Field("male").GetValue<ChaControl>();
             hAibu = (HAibu)lstProc[0];
 
-
             CrossFader.HSceneHooks.SetFlag(hFlag);
 
-            
             var charas = new List<ChaControl>() { male };
             charas.AddRange(lstFemale);
 
@@ -143,8 +141,6 @@ namespace KK_VR.Interpreters
             SceneExtras.AddHColliders(charas);
             GraspController.Init(charas);
 
-            //var gameObj = Util.CreatePrimitive(PrimitiveType.Sphere, new Vector3(0.1f, 0.1f, 0.1f), VR.Camera.transform, Color.magenta, 0.2f, true);
-            //gameObj.transform.localPosition = new Vector3(0, -0.07f, 0.03f);
             var mouthGuide = new GameObject("MouthGuide") { layer = 10 }.transform;
             mouthGuide.SetParent(VR.Camera.transform, false);
             mouthGuide.localScale = new Vector3(0.1f, 0.1f, 0.1f);
@@ -1104,53 +1100,49 @@ namespace KK_VR.Interpreters
             var nowAnim = hFlag.nowAnimStateName;
             if (mode == EMode.sonyu)
             {
-               //VRPlugin.Logger.LogDebug($"InsertHelper[1]");
                 if (IsInsertIdle(nowAnim) || IsAfterClimaxInside(nowAnim))
                 {
-                   //VRPlugin.Logger.LogDebug($"InsertHelper[1][1]");
                     // Sonyu start auto.
                     hFlag.click = ClickKind.modeChange;
-                    IntegrationSensibleH.OnUserInput();
+                    if (IntegrationSensibleH.active)
+                    {
+                        IntegrationSensibleH.OnUserInput();
+                    }
                 }
                 else// if (!hFlag.voiceWait)
                 {
-                    //VRPlugin.Logger.LogDebug($"InsertHelper[0]");
                     return true;
                 }
             }
             else if (mode == EMode.houshi)
             {
-                //VRPlugin.Logger.LogDebug($"InsertHelper[2]");
                 if (IsClimaxHoushiInside(nowAnim))
                 {
-                    //VRPlugin.Logger.LogDebug($"InsertHelper[2][1]");
                     hFlag.click = ClickKind.drink;
                 }
                 else if (IsIdleOutside(nowAnim))
                 {
-                    //VRPlugin.Logger.LogDebug($"InsertHelper[2][2]");
                     // Start houshi after pose change/long pause after finish.
                     hFlag.click = ClickKind.speedup;
-                    IntegrationSensibleH.OnUserInput();
+                    if (IntegrationSensibleH.active)
+                    {
+                        IntegrationSensibleH.OnUserInput();
+                    }
                 }
                 else if (IsAfterClimaxHoushiInside(nowAnim) || IsAfterClimaxOutside(nowAnim))
                 {
-                    //VRPlugin.Logger.LogDebug($"InsertHelper[2][3]");
                     // Restart houshi.
                     RandomButton();
                 }
                 else
                 {
-                    //VRPlugin.Logger.LogDebug($"InsertHelper[0]");
                     return true;
                 }
             }
             else
             {
-                //VRPlugin.Logger.LogDebug($"InsertHelper[0]");
                 return true;
             }
-
             return false;
         }
         private int _frameWait;
@@ -1163,17 +1155,14 @@ namespace KK_VR.Interpreters
                 if (IsIdleOutside(nowAnim) || IsAfterClimaxOutside(nowAnim))
                 {
                     // When outside pull back to get condom on. Extra plugin disables auto condom on denial.
-                    //VRPlugin.Logger.LogDebug($"Pull:CondomClick");
                     sprite.CondomClick();
                 }
                 else if (IsFinishLoop)
                 {
-                    //VRPlugin.Logger.LogDebug($"Pull:Outside");
                     hFlag.finish = FinishKind.outside;
                 }
                 else if (IsActionLoop)
                 {
-                    //VRPlugin.Logger.LogDebug($"Pull:StopAuto");
                     hFlag.click = ClickKind.modeChange;
                     WaitFrame(3);
                 }
@@ -1224,7 +1213,6 @@ namespace KK_VR.Interpreters
         {
             if (InsertHelper())
             {
-               //VRPlugin.Logger.LogDebug($"Insert");
                 if (IntegrationSensibleH.active)
                 {
                     IntegrationSensibleH.ClickButton(GetButtonName(anal, hFlag.isDenialvoiceWait || noVoice));
@@ -1257,7 +1245,6 @@ namespace KK_VR.Interpreters
                     name = "";
                     break;
             }
-            //VRPlugin.Logger.LogDebug($"GetButtonName:{name}");
             return name;
         }
         private void Pull()

@@ -220,7 +220,7 @@ namespace KK_VR.Settings
 
             var enablePOV = config.Bind(SectionPov, "Enable", KoikatuSettings.Impersonation.Boys,
                 new ConfigDescription(
-                    "The range of targets for impersonations.", 
+                    "The range of targets for impersonations.",
                     null,
                     new ConfigurationManagerAttributes { Order = 10 }));
             Tie(enablePOV, v => settings.PoV = v);
@@ -344,6 +344,13 @@ namespace KK_VR.Settings
                     new AcceptableValueRange<float>(0f, 1f),
                     new ConfigurationManagerAttributes { Order = -10, ShowRangeAsPercent = false }));
             Tie(touchReaction, v => settings.TouchReaction = v);
+
+            var shadowType = config.Bind(SectionGeneral, "Shadows", KoikatuSettings.ShadowType.Average,
+                new ConfigDescription(
+                    "Optimize shadows for preferred distance.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = -10 }));
+            Tie(shadowType, v => settings.ShadowsOptimization = v);
 
             //void updateKeySets()
             //{

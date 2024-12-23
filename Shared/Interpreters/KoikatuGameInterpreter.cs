@@ -55,6 +55,7 @@ namespace KK_VR.Interpreters
             _settings = VR.Context.Settings as KoikatuSettings;
             Features.LoadVoice.Init();
             IntegrationSensibleH.Init();
+            TweakShadowSettings(_settings.ShadowsOptimization);
         }
         protected override void OnUpdate()
         {
@@ -322,6 +323,43 @@ namespace KK_VR.Interpreters
         {
             yield return null;
             action.Invoke();
+        }
+        internal static void TweakShadowSettings(KoikatuSettings.ShadowType shadowType)
+        {
+            // Grab "KKS_BetterShadowQualitySettings.dll" from HongFire patch, and configure it to own taste.
+            // Otherwise my take on "looks fine". Results should vary depending on the VR hardware btw.
+
+            if (shadowType == KoikatuSettings.ShadowType.Close)
+            {
+                // Focus on proximity. Good while close, non-existent at mid range.
+                QualitySettings.shadowProjection = ShadowProjection.StableFit;
+                QualitySettings.shadowCascades = 4;
+                QualitySettings.shadowCascade2Split = 0.33f;
+                QualitySettings.shadowCascade4Split = new Vector3(0.025f, 0.085f, 0.25f);
+                QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
+                QualitySettings.shadows = ShadowQuality.All;
+#if KK
+                QualitySettings.shadowDistance = 30;
+#else
+                QualitySettings.shadowDistance = 20;
+#endif
+            }
+            else
+            {
+                // Official VR settings. Middle ground, not good not terrible.
+                QualitySettings.shadowProjection = ShadowProjection.CloseFit;
+                QualitySettings.shadowCascades = 4;
+                QualitySettings.shadowCascade2Split = 0.33f;
+#if KK
+                QualitySettings.shadowCascade4Split = new Vector3(0.06666667f, 0.2f, 0.4666667f);
+                QualitySettings.shadowDistance = 50;
+#else
+                QualitySettings.shadowCascade4Split = new Vector3(0.0478261f, 0.1362319f, 0.2565217f);
+                QualitySettings.shadowDistance = 200;
+#endif
+                QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
+                QualitySettings.shadows = ShadowQuality.All;
+            }
         }
     }
 }
