@@ -24,20 +24,18 @@ The studio part is a fork of the [KKS_CharaStudioVR](https://vr-erogamer.com/arc
 2. Download the latest [release](https://github.com/IllusionMods/KKS_VR/releases) for the corresponding game.
 3. Extract the zip into the game folder (where the abdata and BepInEx folders are).
 4. Create a shortcut to Koikatu.exe and/or KoikatsuSunshine.exe and/or CharaStudio.exe, and add `--vr` to the command line.  
-   The game (not the studio) also can be launched without any added arguments if SteamVR is running.
+The game (not the studio) also can be launched without any added arguments if SteamVR is running.
 
 ## Tip
- * Be advised to set InterPupillary Distance (IPD) in the settings to change the scale of the world according to a personal preference and used hardware.
+ * Be advised to set InterPupillary Distance (IPD) in the in-game settings to change the scale of the world according to a personal preference and used hardware.
 
 ## Controls Game
 ### Overview
 
 There are two controllers for each hand with identical functional without any tools or modes.  
-There is no input customization or helping texts.  
-Designed to be able to do any action with a single hand.  
+There is no input customization or helping texts. Designed to be able to do any action with a single hand.  
 The only means of movement are native in-game functions and *GripMove*, no *Warp*.  
-No double clicks, only *Short* or *LongPress*.  
-The sole function of *Menu* button is to toggle menu's visibility.  
+No double clicks, only *Short* or *LongPress*. The sole function of *Menu* button is to toggle menu's visibility.  
 The plugin assumes that VR controller has the following buttons:
 * **Grip** used as a **Grab** button. It grabs things to move them around.  
 * **Trigger** used as an **Action** button that performs actions where applicable or completes their wait period if one is already queued but not yet determined whether it's *Short* or *LongPress*.  
