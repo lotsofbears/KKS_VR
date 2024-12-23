@@ -35,7 +35,7 @@ The game (not the studio) also can be launched without any added arguments if St
 There are two controllers for each hand with identical functional without any tools or modes.  
 There is no input customization or helping texts. Designed to be able to do any action with a single hand.  
 The only means of movement are native in-game functions and *GripMove*, no *Warp*.  
-No double clicks, only *Short* or *LongPress*. The sole function of *Menu* button is to toggle menu's visibility.
+No double clicks, only *Short* or *LongPress* for buttons and *DirectionalInput* for *Touchpad*. The sole function of *Menu* button is to toggle a floating menu's visibility.
 
 The plugin assumes that VR controller has the following buttons:
 * **Grip** used as a **Grab** button. It grabs things to move them around.  
