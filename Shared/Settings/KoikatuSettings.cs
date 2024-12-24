@@ -208,6 +208,7 @@ namespace KK_VR.Settings
         }
         public enum ShadowType
         {
+            Disabled,
             Close,
             Average
         }

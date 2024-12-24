@@ -328,7 +328,7 @@ namespace KK_VR.Interpreters
         {
             // Grab "KKS_BetterShadowQualitySettings.dll" from HongFire patch, and configure it to own taste.
             // Otherwise my take on "looks fine". Results should vary depending on the VR hardware btw.
-
+            
             if (shadowType == KoikatuSettings.ShadowType.Close)
             {
                 // Focus on proximity. Good while close, non-existent at mid range.
@@ -344,7 +344,7 @@ namespace KK_VR.Interpreters
                 QualitySettings.shadowDistance = 20;
 #endif
             }
-            else
+            else if (shadowType == KoikatuSettings.ShadowType.Average)
             {
                 // Official VR settings. Middle ground, not good not terrible.
                 QualitySettings.shadowProjection = ShadowProjection.CloseFit;
